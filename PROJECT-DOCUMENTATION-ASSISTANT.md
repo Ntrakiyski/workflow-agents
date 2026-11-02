@@ -69,7 +69,7 @@ The platform has two experiences:
 
 **Technology Stack**
 - **Automation definition:** Versioned YAML, inspired by the declarative idea of Google's AX; AX itself is not adopted.
-- **Job definition:** Backend-generated per-request manifest, proposed as \`job.yaml\`.
+- **Job definition:** Backend-generated per-request manifest, proposed as `job.yaml`.
 - **Workflow execution:** Validated YAML-to-registered-task adapter backed by Hatchet.
 - **Definition schema, visual builder, testing, publishing and ownership:** Still to be designed.
 
@@ -85,7 +85,7 @@ The platform has two experiences:
 - Permit **restricted shell** operations inside the sandbox; never unrestricted host or filesystem access.
 - Load **global skills** from the golden environment and **automation-specific skills** for the selected workflow.
 - Run independent deterministic validators for file integrity, required content, structure, evidence rules, and rendering.
-- Start a **separate Pi reviewer session** after authoring, using a format-specific review skill (\`review-docx\`, \`review-xlsx\`, \`review-pptx\`, or supported \`review-pdf\`) and a YAML-defined checklist.
+- Start a **separate Pi reviewer session** after authoring, using a format-specific review skill (`review-docx`, `review-xlsx`, `review-pptx`, or supported `review-pdf`) and a YAML-defined checklist.
 - Challenge the author's "ready" claim by inspecting actual files and evidence. On defects, perform bounded author repair and revalidation.
 - Preserve unresolved uncertainty; do not imply that a screenshot or generated prose independently proves a passed test.
 
@@ -95,7 +95,7 @@ The platform has two experiences:
 - **Agent:** Pi, installed in the golden sandbox environment.
 - **Document engine:** OfficeCLI, installed in the same environment.
 - **Model access:** Existing LiteLLM proxy through a controlled internal inference gateway.
-- **Author and reviewer models:** Separate configured aliases, \`document-agent\` and \`document-review\`.
+- **Author and reviewer models:** Separate configured aliases, `document-agent` and `document-review`.
 - **Skills:** Global + automation-specific + format-specific review.
 - **Isolation:** Fresh E2B Embed microVM per job execution and later revision.
 - **Tool wrappers, restricted-shell allowlist, output schemas, validators and review checklists:** Specifications pending.
@@ -154,7 +154,7 @@ The platform has two experiences:
 
 ### Simple Architecture Flow
 
-\`\`\`text
+```text
 HPE Requester — React + Extend UI
              |
              v
@@ -186,7 +186,7 @@ Store artifacts, destroy microVM
              |
              v
 Requester UI — preview, feedback, later revisions
-\`\`\`
+```
 
 **Responsibility boundary:** Hatchet decides which workflow step runs; Pi interprets content and invokes approved tools; OfficeCLI changes documents; independent validators determine mechanical quality; Fastify authorizes requester actions. Skills are guidance, **not** security controls.
 
@@ -194,13 +194,13 @@ Requester UI — preview, feedback, later revisions
 
 ## 4. End-to-End Job Flow — SRT Example
 
-1. **Request:** The requester selects \`srt-docx-template\`, types rough deployment notes, and attaches screenshots and supporting documents.
+1. **Request:** The requester selects `srt-docx-template`, types rough deployment notes, and attaches screenshots and supporting documents.
 2. **Register:** Fastify authorizes the HPE project, stores originals, fixes the automation version, and creates a persistent job.
 3. **Orchestrate:** Hatchet dispatches registered handlers based on validated YAML (not arbitrary YAML commands).
 4. **Provision:** E2B Embed creates a **fresh microVM** from one prebuilt Pi + OfficeCLI golden template. No reinstall for each job.
 5. **Prepare:** Approved files, template, job manifest, automation rules, global/job skills, and execution limits are supplied.
-6. **Analyze:** One Pi author session uses \`document-agent\` through LiteLLM to prepare a structured content plan.
-7. **Clarify if needed:** Pi calls \`request_clarification()\` for blocking/material ambiguity. Hatchet persists the question/checkpoint and releases the microVM while waiting.
+6. **Analyze:** One Pi author session uses `document-agent` through LiteLLM to prepare a structured content plan.
+7. **Clarify if needed:** Pi calls `request_clarification()` for blocking/material ambiguity. Hatchet persists the question/checkpoint and releases the microVM while waiting.
 8. **Generate:** The validated plan is applied to a copy of the document using controlled OfficeCLI wrappers and permitted restricted shell operations.
 9. **Verify:** Deterministic validators run, then an independent Pi reviewer applies the required document-format skill and YAML checklist.
 10. **Repair if needed:** Hatchet routes defects for a bounded author repair and another validation pass; critical defects must not be silently approved.
@@ -213,7 +213,7 @@ Requester UI — preview, feedback, later revisions
 - **Clarification:** Maximum three rounds, with related questions batched. A question waits **15 minutes**.
 - **If requester answers:** Resume from saved state in a fresh microVM.
 - **If requester does not answer:** Resume automatically using a **conservative, permissible** choice (for example, visible unresolved gap instead of an unsupported claim). Tell the requester what was assumed, omitted, or left unresolved. Do not invent facts, approvals, evidence, or test results.
-- **Ready document:** Show status \`awaiting_requester\` and deliver the file/preview to the UI.
+- **Ready document:** Show status `awaiting_requester` and deliver the file/preview to the UI.
 - **If requester does not react within 15 minutes:** Automatically **finalize only an eligible version**, recording that this was timeout-finalized, **not human-approved**.
 - **If validation is blocked:** Do not turn the failed or incomplete document into a validated deliverable because the timer expired.
 - **Feedback:** General text + optional uploaded screenshots/images; no inline comment system required.
@@ -228,10 +228,10 @@ The following are **planned design artifacts**, not implemented files or native 
 
 | Contract | Purpose |
 |---|---|
-| \`automation.yaml\` | Reusable, versioned workflow: steps, templates, mappings, skills, checks, clarification and repair policy |
-| \`job.yaml\` | Backend-generated job ID, inputs, fixed automation version, model aliases, budget, output requirements |
-| \`content-plan.json\` | Pi's structured mapping of source-backed content and evidence into document destinations |
-| \`result.json\` | Machine-validated outcome, generated files, validation status, unresolved issues and execution references |
+| `automation.yaml` | Reusable, versioned workflow: steps, templates, mappings, skills, checks, clarification and repair policy |
+| `job.yaml` | Backend-generated job ID, inputs, fixed automation version, model aliases, budget, output requirements |
+| `content-plan.json` | Pi's structured mapping of source-backed content and evidence into document destinations |
+| `result.json` | Machine-validated outcome, generated files, validation status, unresolved issues and execution references |
 
 The automation YAML must specify **which skill to use and when**, including the format-specific reviewer and checklist. Only registered actions are executable. We will implement and validate the exact schemas and Hatchet adapter later.
 
@@ -268,10 +268,10 @@ The automation YAML must specify **which skill to use and when**, including the 
 
 Reported existing HPE Oden assets to evaluate and reuse:
 
-- \`docx-template-testscript\` — SRT creation and controlled-update guidance.
-- \`docx-template-usecase\` — Use Case drafting structure.
-- \`srt-video-and-screenshots-update\` — evidence handling and guarded SRT updates.
-- \`officecli\` and generic document skills.
+- `docx-template-testscript` — SRT creation and controlled-update guidance.
+- `docx-template-usecase` — Use Case drafting structure.
+- `srt-video-and-screenshots-update` — evidence handling and guarded SRT updates.
+- `officecli` and generic document skills.
 - Existing backup, source-evidence and verification conventions.
 
 The original handoff reported 12 passing regression tests on local synthetic fixtures; these **do not** establish that the new web app, sandbox service, document automation builder or multi-project workflow system exists. Existing controlled Oden documents also retain their original edit/access restrictions.
