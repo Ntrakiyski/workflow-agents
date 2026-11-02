@@ -14,7 +14,7 @@ Provide HPE employees with a simple browser interface for the **existing, workin
 
 The proven local workflow, as reported by its original operator, is:
 
-- A computer folder containing document templates, instructions, and \`SKILL.md\` files.
+- A computer folder containing document templates, instructions, and `SKILL.md` files.
 - **GitHub Copilot CLI** operating in that folder, with **OfficeCLI** and the supporting document skills/tools.
 - An operator supplying inputs and guiding the agent to create or update SRT and other project documents.
 - Reliable results in the operator's tests. This is a user-reported observation, **not yet a measured acceptance rate across different people and projects**.
@@ -61,7 +61,7 @@ The new requirement is primarily **accessibility**: other employees should be ab
 **Purpose:** Reuse existing document automations as approved, curated items rather than building a new automation designer.
 
 **Core Capabilities**
-- Package or reference the existing \`SKILL.md\` files, template assets, supporting scripts, and documented rules.
+- Package or reference the existing `SKILL.md` files, template assets, supporting scripts, and documented rules.
 - Maintain a curated list: automation ID, display name, description, required files, instructions, and skill directory.
 - Pin the version/commit of the skill bundle used for a job.
 - Permit the maintainer to update skills through Git and retest them; no visual YAML editor.
@@ -135,7 +135,7 @@ The new requirement is primarily **accessibility**: other employees should be ab
 
 ### Simple Architecture
 
-\`\`\`text
+```text
 Employee browser
   |
   v
@@ -155,7 +155,7 @@ Store outputs and status
   |
   v
 UI — preview or download; optional revision request
-\`\`\`
+```
 
 The execution environment might initially be a controlled test machine or server. **Do not claim this is production isolation** until agent process/container restrictions and organization policy are validated.
 
@@ -166,7 +166,7 @@ The execution environment might initially be a controlled test machine or server
 1. **Choose:** Employee picks **SRT — Create Test Script** from the curated library.
 2. **Describe:** Employee writes a short deployment/test description and attaches notes, screenshots and any required approved sources.
 3. **Register:** Backend checks permitted user, selected skill and file types, then creates a job ID.
-4. **Prepare:** Runner makes \`jobs/<job-id>/inputs\`, \`working\`, and \`output\` (illustrative paths), stages approved skill and template copies, and isolates job data as far as the chosen runtime supports.
+4. **Prepare:** Runner makes `jobs/<job-id>/inputs`, `working`, and `output` (illustrative paths), stages approved skill and template copies, and isolates job data as far as the chosen runtime supports.
 5. **Run:** The runner invokes Copilot CLI non-interactively with the approved skill instructions, the job's input paths, and restricted tool permissions.
 6. **Check:** Existing skill-specific document/evidence checks run, plus basic structural/render checks if available.
 7. **Deliver:** Return a DOCX download and concise status/issues report. Keep the original inputs intact.
@@ -174,11 +174,11 @@ The execution environment might initially be a controlled test machine or server
 
 **Example command shape, not a ready production command:**
 
-\`\`\`bash
+```bash
 copilot -p "Follow the approved SRT skill for this job using only the staged inputs. Create the requested document under the output directory."
-\`\`\`
+```
 
-GitHub documents non-interactive \`copilot -p\` execution and tool permission controls. The **actual prompt, working-directory setup, permission flags, authentication method, tool allowlist, and output capture** must be established by testing the current SRT skill. Do **not** enable unrestricted automatic tool approval on a shared host.
+GitHub documents non-interactive `copilot -p` execution and tool permission controls. The **actual prompt, working-directory setup, permission flags, authentication method, tool allowlist, and output capture** must be established by testing the current SRT skill. Do **not** enable unrestricted automatic tool approval on a shared host.
 
 Documentation: https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/run-cli-programmatically
 
@@ -189,7 +189,7 @@ Documentation: https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-c
 | Full Version 3 concept | Simpler alternative |
 |---|---|
 | Visual automation creator | Curated approved skill catalog maintained in Git |
-| New declarative YAML workflow DSL | Existing \`SKILL.md\` and small run configuration |
+| New declarative YAML workflow DSL | Existing `SKILL.md` and small run configuration |
 | Hatchet orchestration | One small background worker and job-status persistence |
 | E2B Embed microVM manager | Controlled pilot runner; introduce hardened per-job sandbox before broad multi-user production |
 | Pi agent replacing Copilot | Keep the **already-tested Copilot CLI** initially |
