@@ -157,6 +157,14 @@ export class Worker {
     result: Result | null = null,
     error: JobRow["error"] = null,
   ) {
+    if (status === "timed_out" && error === null) {
+      error = {
+        code: "deadline_exceeded",
+        message: "Execution deadline exceeded",
+        retryable: false,
+        correlation_id: j.correlation_id,
+      };
+    }
     await tx(c, async () => {
       const current = await this.read(c, j.job_id);
       if (!current || TERMINAL.has(current.status)) return;

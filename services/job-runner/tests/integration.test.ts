@@ -289,6 +289,53 @@ test(
         },
       );
       await t.test(
+        "unavailable sandbox setup times out with a durable safe classification and no attempt",
+        async () => {
+          provider.stats.rejectCreateAlways = true;
+          const executionsBefore = provider.stats.executions;
+          const createsBefore = provider.stats.creates;
+          const createRequestsBefore = provider.requests.filter(
+            (request) => request.path === "/v1/sandboxes",
+          ).length;
+          try {
+            const body = submission();
+            body.limits.max_duration_seconds = 1;
+            const j = await submit(body);
+            const done = await terminal(j.job_id);
+            assert.equal(done.status, "timed_out");
+            assert.equal(done.attempt_count, 0);
+            assert.equal(done.error.code, "deadline_exceeded");
+            assert.equal(done.error.message, "Execution deadline exceeded");
+            assert.equal(done.error.retryable, false);
+            assert.equal(done.error.correlation_id, "corr_fixture");
+            assert.equal(provider.stats.executions, executionsBefore);
+            assert.equal(provider.stats.creates, createsBefore);
+            assert.ok(
+              provider.requests.filter(
+                (request) => request.path === "/v1/sandboxes",
+              ).length >
+                createRequestsBefore + 1,
+            );
+            const audit = (
+              await pool.query(
+                "SELECT detail,status,actor_id,correlation_id FROM runner.audit_events WHERE job_id=$1 AND type='job.timed_out'",
+                [j.job_id],
+              )
+            ).rows[0];
+            assert.equal(audit.status, "timed_out");
+            assert.equal(
+              audit.detail.error_classification,
+              "deadline_exceeded",
+            );
+            assert.equal(audit.detail.attempt, 0);
+            assert.equal(audit.actor_id, "fixture-client");
+            assert.equal(audit.correlation_id, "corr_fixture");
+          } finally {
+            provider.stats.rejectCreateAlways = false;
+          }
+        },
+      );
+      await t.test(
         "expired deadlines prevent dispatch and running duration cancels the real HTTP mock run",
         async () => {
           const body = submission();

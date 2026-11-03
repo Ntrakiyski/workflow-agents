@@ -113,6 +113,7 @@ export async function mockProvider() {
     active: 0,
     maxActive: 0,
     ambiguousCreate: false,
+    rejectCreateAlways: false,
     ambiguousExecute: false,
     transientRuns: 0,
     delayMs: 100,
@@ -154,6 +155,8 @@ export async function mockProvider() {
     });
   api.post("/v1/sandboxes", async (req, reply) => {
     validate("provider", "CreateSandbox", req.body);
+    if (stats.rejectCreateAlways)
+      return error(reply, "runtime_unavailable", 503);
     const body = req.body as any;
     const ref = req.headers["x-owner-id"] + ":" + body.owner_ref;
     let sid = refs.get(ref);
