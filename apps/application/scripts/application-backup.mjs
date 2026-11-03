@@ -124,6 +124,7 @@ function referencedFiles(tables) {
 }
 function validateSnapshot(snapshot) {
   if (!snapshot || snapshot.format !== 'workflow-agents-application-snapshot' || snapshot.version !== 1 || snapshot.service !== 'application'
+    || typeof snapshot.application_version !== 'string' || !/^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$/.test(snapshot.application_version)
     || typeof snapshot.database !== 'string' || typeof snapshot.bucket !== 'string'
     || !Array.isArray(snapshot.tables) || snapshot.tables.length !== TABLES.length
     || !Array.isArray(snapshot.sequences) || !Array.isArray(snapshot.objects)
@@ -155,8 +156,9 @@ function validateSnapshot(snapshot) {
   }
 }
 
-export async function collect(client, objects, { bucket, runtimeKey, runtimeSha256 } = {}) {
+export async function collect(client, objects, { bucket, runtimeKey, runtimeSha256, applicationVersion } = {}) {
   if (typeof bucket !== 'string' || !bucket.length) fail('bucket_required');
+  if (typeof applicationVersion !== 'string' || !/^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$/.test(applicationVersion)) fail('application_version_required');
   if (runtimeKey && (typeof runtimeSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(runtimeSha256))) fail('runtime_checksum_required');
   await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ');
   const signal = AbortSignal.timeout(120000);
@@ -190,7 +192,7 @@ export async function collect(client, objects, { bucket, runtimeKey, runtimeSha2
     const meta = (await client.query('SELECT current_database() AS database,transaction_timestamp()::text AS snapshot_at')).rows[0];
     await client.query('COMMIT');
     const snapshot = { format: 'workflow-agents-application-snapshot', version: 1, service: 'application',
-      ...meta, bucket, tables, sequences: after, objects: data,
+      application_version: applicationVersion, ...meta, bucket, tables, sequences: after, objects: data,
       excluded_runtime: runtimeKey ? { object_key: runtimeKey, sha256: runtimeSha256,
         strategy: 'reconstruct from approved published checksum-verified runtime release' } : null,
       scope: 'application rows, immutable referenced objects and exported session files; no Cloud guest disk or infrastructure database' };
@@ -343,7 +345,8 @@ async function main() {
       process.stdout.write(JSON.stringify(result) + '\n');
     } else {
       const snapshot = await collect(database, objects, { bucket,
-        runtimeKey: process.env.RUNTIME_BUNDLE_OBJECT_KEY, runtimeSha256: process.env.RUNTIME_BUNDLE_SHA256 });
+        runtimeKey: process.env.RUNTIME_BUNDLE_OBJECT_KEY, runtimeSha256: process.env.RUNTIME_BUNDLE_SHA256,
+        applicationVersion: require('./package.json').version });
       process.stdout.write(JSON.stringify(seal(snapshot, password)) + '\n');
     }
   } catch (error) {
