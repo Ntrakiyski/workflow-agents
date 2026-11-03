@@ -12,6 +12,7 @@ ENV NODE_ENV=production PORT=8082
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --from=build --chown=node:node /app/public ./public
+COPY --chown=node:node scripts/application-backup.mjs ./scripts/application-backup.mjs
 COPY package.json ./
 USER node
 EXPOSE 8082

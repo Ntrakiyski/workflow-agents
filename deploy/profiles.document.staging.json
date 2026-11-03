@@ -2,7 +2,7 @@
   "version": 1,
   "sandboxes": {
     "pi-document-cloud:v1": {
-      "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+      "image": "docker.io/library/python@sha256:a5bab0ff300f91231c2e68bf73a8a8d60762ac39ce1c50eaf6803e4c38a9062b",
       "cpus": 2,
       "memory_mib": 2048,
       "disk_mib": 2048,

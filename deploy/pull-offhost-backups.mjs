@@ -9,6 +9,7 @@ import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { unseal } from './migration-archive.mjs';
+import { unseal as unsealApplication } from '../apps/application/scripts/application-backup.mjs';
 
 const origin = 'https://hosting.gccssofia.com';
 const commit = process.env.BACKUP_SOURCE_COMMIT;
@@ -18,6 +19,8 @@ for (const key of ['COOLIFY_TOKEN_FILE', 'BACKUP_CREDENTIAL_FILE', 'BACKUP_DIREC
 }
 const token = (await readFile(process.env.COOLIFY_TOKEN_FILE, 'utf8')).trim();
 const credentials = JSON.parse(await readFile(process.env.BACKUP_CREDENTIAL_FILE, 'utf8'));
+if (!process.env.APPLICATION_CREDENTIAL_FILE?.startsWith('/')) throw Error('Require absolute APPLICATION_CREDENTIAL_FILE');
+const applicationCredentials = JSON.parse(await readFile(process.env.APPLICATION_CREDENTIAL_FILE, 'utf8'));
 const project = 'ptombcqslsfcmfufdui4vk1z';
 const environment = 'tiiebld0vegfeegaapo3cdt3';
 const resources = [
@@ -25,6 +28,10 @@ const resources = [
     executable: 'node --input-type=module', password: credentials.provider_delegate_token },
   { name: 'sandbox-provider', uuid: 'b4safsmcuzzqdmgn7jqt7m8d', extension: 'py',
     executable: 'python', password: credentials.provider_operator_token },
+  { name: 'workflow-application', service: 'application', uuid: '7vdsilhnu96tifz7yosm61j1',
+    password: applicationCredentials.application_backup_password,
+    command: 'node /app/scripts/application-backup.mjs --quiescent',
+    publicOrigin: 'https://workflow-agents.68.210.88.115.sslip.io' },
 ];
 const source = 'https://raw.githubusercontent.com/Ntrakiyski/workflow-agents/' + commit;
 const directory = resolve(process.env.BACKUP_DIRECTORY);
@@ -37,7 +44,7 @@ const session = new Date().toISOString().replaceAll(/[-:.]/g, '') + '-' + random
 const destination = join(directory, session);
 await mkdir(destination, { mode: 0o700 });
 const manifest = { version: 1, session, source_origin: origin, destination_host: hostname(),
-  source_commit: commit, scope: 'logical rows, sequences and audits; excludes schema DDL, application objects and Cloud guest disks',
+  source_commit: commit, scope: 'service logical rows, sequences and audits; application referenced immutable input/result/session objects; excludes schema DDL and Cloud guest disks',
   outcome: 'incomplete', archives: [] };
 
 async function api(method, path, body) {
@@ -54,10 +61,11 @@ try {
   for (const resource of resources) {
     const app = await api('GET', '/applications/' + resource.uuid);
     if (app.name !== resource.name || app.environment?.uuid !== environment ||
-        app.environment?.project?.uuid !== project || app.fqdn || app.ports_mappings)
+        app.environment?.project?.uuid !== project ||
+        (resource.publicOrigin ? app.fqdn !== resource.publicOrigin : app.fqdn) || app.ports_mappings)
       throw Error('backup_source_scope_mismatch');
-    const command = 'curl -fsS --max-time 30 ' + source + '/deploy/migration-archive.' + resource.extension +
-      ' | ' + resource.executable;
+    const command = resource.command ?? ('curl -fsS --max-time 30 ' + source + '/deploy/migration-archive.' + resource.extension +
+      ' | ' + resource.executable);
     if (command.length > 255) throw Error('backup_command_exceeds_bound');
     const task = await api('POST', '/applications/' + resource.uuid + '/scheduled-tasks', {
       name: 'workflow-offhost-' + randomUUID(), command, frequency: '* * * * *',
@@ -79,15 +87,18 @@ try {
       if (execution?.status !== 'success') throw Error('backup_export_not_successful');
       const envelope = JSON.parse(execution.message.trim());
       // Check authentication and service identity before declaring this a backup.
-      const snapshot = unseal(envelope, resource.password, resource.name);
+      const snapshot = resource.service === 'application' ? unsealApplication(envelope, resource.password)
+        : unseal(envelope, resource.password, resource.name);
       const raw = JSON.stringify(envelope) + '\n';
-      await writeFile(join(destination, resource.name + '.encrypted.json'), raw, { mode: 0o600, flag: 'wx' });
-      manifest.archives.push({ service: resource.name, application_uuid: resource.uuid,
+      await writeFile(join(destination, (resource.service ?? resource.name) + '.encrypted.json'), raw, { mode: 0o600, flag: 'wx' });
+      manifest.archives.push({ service: resource.service ?? resource.name, application_uuid: resource.uuid,
         deployed_commit: app.git_commit_sha, task_uuid: taskId, execution_uuid: execution.uuid,
         sha256: createHash('sha256').update(raw).digest('hex'), authentication_verified: true,
         tables: snapshot.tables.map(table => ({ schema: table.schema, name: table.name,
           row_count: table.row_count, rows_sha256: table.rows_sha256 })),
-        sequences: snapshot.sequences.length });
+        sequences: snapshot.sequences.length,
+        ...(snapshot.objects ? { objects: snapshot.objects.map(object => ({ object_key: object.object_key,
+          size_bytes: object.size_bytes, sha256: object.sha256 })), excluded_runtime: snapshot.excluded_runtime } : {}) });
     } finally {
       await api('DELETE', '/applications/' + resource.uuid + '/scheduled-tasks/' + taskId);
     }

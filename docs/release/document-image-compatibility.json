@@ -1,0 +1,27 @@
+{
+  "operation": "document-guest-image-compatibility",
+  "outcome": "passed",
+  "image": "docker.io/library/python@sha256:a5bab0ff300f91231c2e68bf73a8a8d60762ac39ce1c50eaf6803e4c38a9062b",
+  "environment": "local Docker exact pinned guest image, no network",
+  "bundle_sha256": "9ffbbd3ed2856013192049986f1062396e46461aa81998f607eaeda9acb3d033",
+  "checks": {
+    "python": "Python 3.12.16",
+    "node": "v24.22.2",
+    "officecli": "1.0.160",
+    "icu": "72.1-3+deb12u1",
+    "schema_validation": {
+      "success": true,
+      "data": {
+        "count": 0,
+        "errors": []
+      }
+    }
+  },
+  "previous_image": {
+    "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+    "outcome": "failed",
+    "code": "missing_icu",
+    "exit_code": 139
+  },
+  "limits": "No hosted Pi/model, rendered layout, fonts or Cloud allowlist proof"
+}

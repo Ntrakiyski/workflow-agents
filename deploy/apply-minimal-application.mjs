@@ -70,10 +70,13 @@ await apply(providerId, 'sandbox-provider', { PROVIDER_AUTH_JSON: JSON.stringify
 await apply(runnerId, 'job-runner', { RUNNER_AUTH_JSON: JSON.stringify(runnerAuth),
   RUNNER_PROFILES_JSON: JSON.stringify(profiles) }, { domains: '' });
 const appOrigin = 'https://workflow-agents.68.210.88.115.sslip.io';
+const users = [{ username: secrets.application_username,
+  password_sha256: createHash('sha256').update(secrets.application_password).digest('hex'), owner_id: secrets.application_owner }];
+if (process.env.INCLUDE_QA_ACCOUNT === 'true') users.push({ username: secrets.qa_username,
+  password_sha256: createHash('sha256').update(secrets.qa_password).digest('hex'), owner_id: secrets.qa_owner });
 const variables = { DATABASE_URL: 'postgresql://workflow_application:' + encodeURIComponent(secrets.application_database_password) +
   '@' + ids.database.uuid + ':5432/workflow_application', APPLICATION_ORIGIN: appOrigin,
-  APPLICATION_USERS_JSON: JSON.stringify([{ username: secrets.application_username,
-    password_sha256: createHash('sha256').update(secrets.application_password).digest('hex'), owner_id: secrets.application_owner }]),
+  APPLICATION_USERS_JSON: JSON.stringify(users),
   S3_ENDPOINT: 'http://workflow-files:9000', S3_REGION: 'us-east-1', S3_BUCKET: 'workflow-application',
   S3_ACCESS_KEY_ID: secrets.storage_access_key, S3_SECRET_ACCESS_KEY: secrets.storage_secret_key,
   RUNNER_URL: 'http://workflow-phase1-job-runner:8080', RUNNER_TOKEN: secrets.runner_application_token,
@@ -82,6 +85,7 @@ const variables = { DATABASE_URL: 'postgresql://workflow_application:' + encodeU
   RUNTIME_BUNDLE_OBJECT_KEY: 'runtime/9ffbbd3ed2856013192049986f1062396e46461aa81998f607eaeda9acb3d033/runtime-bundle.tar.gz',
   RUNTIME_BUNDLE_SHA256: '9ffbbd3ed2856013192049986f1062396e46461aa81998f607eaeda9acb3d033',
   INITIALIZE_STORAGE: 'true', RUNTIME_BUNDLE_URL: 'https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.1/runtime-bundle.tar.gz',
+  APPLICATION_BACKUP_PASSWORD: secrets.application_backup_password,
   MAX_DURATION_SECONDS: '900', PORT: '8082' };
 await apply(ids.application.uuid, 'workflow-application', variables, { domains: appOrigin,
   custom_network_aliases: 'workflow-application', custom_internal_name: 'workflow-application',
