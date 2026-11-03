@@ -300,3 +300,11 @@ async def test_authenticated_metrics_scope_to_effective_owner(env):
     assert 'sandbox_provider_sandboxes{state="running"} 1' in a.text
     assert 'sandbox_provider_sandboxes{state=' not in b.text
     assert sid not in a.text and 'owner-a' not in a.text
+
+
+async def test_malformed_host_cannot_change_authentication_boundary(env):
+    _, client, _, runtime = env
+    r = await client.get('/v1/sandboxes/missing', headers={'Host': 'qa.invalid/not-protected?x='})
+    assert r.status_code == 401
+    conform('Error', r.json())
+    assert runtime.executes == 0
