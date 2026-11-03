@@ -1,0 +1,11 @@
+test_openapi_documents (__main__.Contracts.test_openapi_documents) ... ok
+test_profile_configuration (__main__.Contracts.test_profile_configuration) ... ok
+test_provider_payloads (__main__.Contracts.test_provider_payloads) ... ok
+test_response_and_error_fixtures (__main__.Contracts.test_response_and_error_fixtures) ... ok
+test_runner_payloads (__main__.Contracts.test_runner_payloads) ... ok
+test_scoped_transfer_addition_preserves_existing_wire_shapes (__main__.Contracts.test_scoped_transfer_addition_preserves_existing_wire_shapes) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.880s
+
+OK

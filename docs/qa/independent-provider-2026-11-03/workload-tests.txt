@@ -1,0 +1,31 @@
+
+> @workflow-agents/pi-document-agent@0.1.0 test
+> node --test tests/officecli-tool.test.mjs && python3 -m unittest discover -s tests -p 'test_*.py'
+
+TAP version 13
+# Subtest: tool cannot select another file, traverse a symlink or execute a command
+ok 1 - tool cannot select another file, traverse a symlink or execute a command
+  ---
+  duration_ms: 3.115285
+  type: 'test'
+  ...
+# Subtest: user text and shell metacharacters remain literal argv
+ok 2 - user text and shell metacharacters remain literal argv
+  ---
+  duration_ms: 1.746954
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 67.550785
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 0.185s
+
+OK
