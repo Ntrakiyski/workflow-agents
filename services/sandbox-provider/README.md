@@ -2,7 +2,7 @@
 
 Independent Python 3.12 / FastAPI / PostgreSQL service with BoxLite 0.11.0 behind `SandboxRuntime`. It owns its registry and never queries Runner tables. The API contains no application-specific behavior.
 
-**Release status: incomplete.** The actual Coolify execution host rejects a narrow `/dev/kvm` device mapping because the device is absent. Real microVM persistence/isolation and host recovery require qualified KVM hardware. Passing API/database tests with a fake runtime does not pass those gates.
+**Release status: incomplete.** Worfklow lacks `/dev/kvm`. The replacement GCC host exposes usable KVM to the restricted non-root container, but actual BoxLite creation fails at the bubblewrap user-namespace preflight (`clone(CLONE_NEWUSER)` returns `EPERM`). Real microVM execution, persistence/isolation and runtime recovery remain unverified. Passing API/database tests or the current minimal readiness probe does not pass those gates.
 
 ## Build and run
 
@@ -185,6 +185,88 @@ redacted exception chain and writes the fuller redacted traceback to a mode600
 error responses, permissions or runtime settings. The default CLI retains only
 safe error classifications and creates no traceback file. Never publish the
 private diagnostic file without reviewing its contents.
+
+Read bounded SDK operator logs from an existing session without opening the
+runtime or creating another session:
+
+```sh
+python -m scripts.read_runtime_diagnostic --session "$QUALIFICATION_SESSION"
+```
+
+The helper reads only the latest two 8KiB tails of that session's dated
+`boxlite.log` files, redacts configured secrets, and refuses symlinked log
+directories/files. BoxLite deliberately returns a sanitized Python error;
+its SDK log contains the native preflight cause. This is diagnostic evidence,
+not an execution test.
+
+### Restricted GCC container: observed blocker and proposed correction
+
+On 2026-11-03, the independently captured native SDK log showed:
+
+- Non-root UID10001, groups993/10001, `/dev/kvm` read/write, no effective
+  capabilities, `NoNewPrivs=1`, Docker seccomp mode2.
+- Successful image manifest/layer downloads and creation of a persistent COW
+  root disk, followed by failure before the VM subprocess could start.
+- `bwrap --unshare-user` denied; raw `clone(CLONE_NEWUSER)` returned errno1
+  (`EPERM`). The SDK detected
+  `kernel.apparmor_restrict_unprivileged_userns=1`, selected its bundled bwrap,
+  and generated an AppArmor profile inside the container. It did not load it.
+- The disposable failed box was explicitly removed; there was no successful
+  guest command, retained marker or running microVM.
+
+The enforced boundary is currently incompatible with BoxLite's standard
+bubblewrap jailer. The SDK's AppArmor diagnosis comes from a sysctl check;
+that log alone does not distinguish an AppArmor denial from Docker seccomp.
+Docker's default seccomp also gates namespace-bearing `clone`, `unshare` and
+mount operations when host `CAP_SYS_ADMIN` is absent. Host LSM audit records
+and a bounded syscall trace are needed to attribute each denied operation.
+KVM permission changes cannot resolve this namespace failure.
+
+The minimum candidate correction is a reviewed policy attached only to the
+new Provider container, followed by complete qualification. It has **not**
+been applied or verified:
+
+1. Retain UID10001, `--cap-drop=ALL`, no-new-privileges, narrow `/dev/kvm`
+   mapping, the dedicated persistent volume, resource caps and SDK standard
+   jailer/seccomp. Do not grant host `CAP_SYS_ADMIN`, disable the SDK jailer,
+   enable privileged mode or use an unconfined security profile.
+2. Derive a container-specific seccomp profile from the Docker default. After
+   confirming actual denied calls, permit only the namespace setup and mount
+   calls needed by unprivileged bubblewrap, constrain arguments where possible,
+   and retain all unrelated denials. Seccomp cannot itself determine whether
+   a mount call originates in the child user namespace; kernel namespace
+   permissions and the AppArmor policy must preserve that boundary. This
+   requires review, not a blanket syscall allowance copied from an example.
+3. If AppArmor audit records confirm a denial, prepare a separately named
+   Provider profile granting the necessary user namespace and bounded mount
+   operations. Have the host operator review/load that new profile and attach
+   it only to this application. Do not change global sysctls or existing
+   Docker/application profiles. The SDK-generated profile contains broad
+   permissions and is diagnostic input, not a reviewed production policy.
+4. Installing system `bubblewrap` in the image is a possible packaging step:
+   BoxLite prefers a working `bwrap` on PATH. It does **not** load an AppArmor
+   profile into the host kernel, remove the inherited Docker profile or bypass
+   outer seccomp. Debian image package contents and the host's AppArmor profile
+   must be verified; setuid packaging cannot bypass no-new-privileges. An image
+   package addition alone is not a demonstrated fix.
+5. Once explicitly approved policies are applied, first repeat the same
+   bubblewrap namespace probe under exact deployment restrictions, then real
+   BoxLite create/execute, stop/start retention, two-box isolation, API/Runner
+   integration, container-replacement recovery and backup/restore. Record
+   resource pressure and denied-operation logs. No host reboot is authorized.
+
+Current `/health/ready` checks PostgreSQL, `/dev/kvm` access/API version and
+the pinned SDK import. It does not execute bubblewrap, so it can return200 on
+this known-blocked host. Treat that response as prerequisites only until this
+readiness defect is fixed; it must never be used as evidence of workload
+readiness. The proposed follow-up is a bounded startup probe of the exact bwrap
+selected by the SDK, using its non-destructive `--unshare-user --ro-bind / /
+-- true` preflight in a child process. Cache the outcome briefly rather than
+forking on every public health request, fail closed with readiness503 on
+denial/timeout, and publish only a safe classification. Do not create a VM,
+download an image, remove a box or expose native operator diagnostics from
+readiness. Even a passing namespace probe leaves real execution acceptance
+dependent on the separate qualification suite.
 
 `GET /metrics` is an authenticated Prometheus endpoint requiring `sandbox:read`. It scopes sandbox/run state gauges to the effective credential owner (and honors explicit delegation), without owner IDs, paths, workload text or credentials in labels. `/health/live` and `/health/ready` remain public safe health endpoints. Scrape `/metrics` on the private network using a read-only credential.
 
