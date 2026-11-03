@@ -36,3 +36,11 @@ Reports separate executed real-PostgreSQL and HTTP tests, mocked runtime tests, 
 The user's instruction to move Phase 1 to GCC and delete it from Worfklow superseded the earlier deployment pause. Scope remained exactly our Phase 1 resources: one GCC project with separate apps/databases; no unrelated resource, host virtualization/security setting or shared network was changed. Historical database/audit state was restored and compared before source removal. New service/database credentials replaced source credentials. No working source VM existed to migrate; the source filesystem volume was not copied and that limitation is recorded.
 
 GCC exposes KVM, but the actual non-root restricted BoxLite create fails during bubblewrap user-namespace preflight. Preserve the agreed SDK/runtime and security model. Do not equate KVM/SDK readiness200 with a working VM, silently disable the jailer, or alter host-wide AppArmor/sysctl policy. A reviewed Provider-specific security policy and namespace-aware readiness remain required follow-up work; migration can be complete while Phase 1 consumption remains blocked.
+
+## Authorized BoxLite Cloud mode and closeout, 2026-11-03
+
+The user subsequently authorized BoxLite Cloud. The Provider remains self-hosted on GCC while an explicit adapter manages hosted BoxLite guests through SDK 0.11.0. Runner, the generic APIs, independent databases and host security boundaries remain unchanged. Cloud mode needs no GCC KVM device. It does not repair or qualify local mode, and no silent runtime fallback is permitted.
+
+Real HTTP workload execution, same-box stop/start filesystem retention and stopped-box recovery across independent application replacements passed. [Cloud validation](CLOUD-VALIDATION.md) and [readiness gates](readiness.json) supersede earlier deployment-status conclusions while preserving their historical evidence. Full acceptance remains incomplete for artifact transfer, active-command/output recovery, hosted failure injection, complete backup/restore, host restart and broader resource/security qualification.
+
+The closeout adds repository navigation, root and service agent instructions, and curated validation diagrams. Documentation commits do not redeploy the pinned applications. The separate local Pi/OfficeCLI experiment remains reference-only; it is not imported as a Phase 2 implementation.

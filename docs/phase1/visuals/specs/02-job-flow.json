@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "A job from request to durable result.",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1360,
+      570
+    ]
+  },
+  "components": [
+    {
+      "id": "submit",
+      "type": "external",
+      "label": "1  Submit job",
+      "sublabel": "POST /v1/jobs + idempotency key",
+      "pos": [
+        65,
+        90
+      ],
+      "size": [
+        260,
+        86
+      ]
+    },
+    {
+      "id": "authorize",
+      "type": "security",
+      "label": "2  Check policy",
+      "sublabel": "Authenticate owner and approved profile",
+      "pos": [
+        505,
+        90
+      ],
+      "size": [
+        285,
+        86
+      ]
+    },
+    {
+      "id": "queue",
+      "type": "messagebus",
+      "label": "3  Persist and queue",
+      "sublabel": "PostgreSQL + Graphile Worker",
+      "pos": [
+        975,
+        90
+      ],
+      "size": [
+        275,
+        86
+      ]
+    },
+    {
+      "id": "dispatch",
+      "type": "backend",
+      "label": "4  Dispatch over HTTP",
+      "sublabel": "Runner calls Sandbox Provider",
+      "pos": [
+        975,
+        365
+      ],
+      "size": [
+        275,
+        86
+      ]
+    },
+    {
+      "id": "execute",
+      "type": "cloud",
+      "label": "5  Execute in Cloud",
+      "sublabel": "Create or reuse the retained box",
+      "pos": [
+        505,
+        365
+      ],
+      "size": [
+        285,
+        86
+      ]
+    },
+    {
+      "id": "result",
+      "type": "database",
+      "label": "6  Inspect result",
+      "sublabel": "Poll job status and durable audit events",
+      "pos": [
+        65,
+        365
+      ],
+      "size": [
+        285,
+        86
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "submit-authorize",
+      "from": "submit",
+      "to": "authorize",
+      "variant": "emphasis",
+      "label": "Validate"
+    },
+    {
+      "id": "authorize-queue",
+      "from": "authorize",
+      "to": "queue",
+      "variant": "emphasis",
+      "label": "Accept"
+    },
+    {
+      "id": "queue-dispatch",
+      "from": "queue",
+      "to": "dispatch",
+      "variant": "emphasis",
+      "label": "Worker",
+      "labelDy": 108
+    },
+    {
+      "id": "dispatch-execute",
+      "from": "dispatch",
+      "to": "execute",
+      "variant": "emphasis",
+      "label": "Approved workload"
+    },
+    {
+      "id": "execute-result",
+      "from": "execute",
+      "to": "result",
+      "variant": "emphasis",
+      "label": "Result + status"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Designed for reuse",
+      "items": [
+        "Business logic stays in configured workload profiles.",
+        "Runner knows only the Provider HTTP contract."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Observed in staging",
+      "items": [
+        "Concurrent duplicate submissions produced one attempt.",
+        "Owner checks, cancellation fences and audits passed."
+      ]
+    }
+  ]
+}

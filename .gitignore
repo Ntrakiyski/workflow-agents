@@ -14,3 +14,7 @@ htmlcov/
 dist/
 *.log
 .DS_Store
+
+# Local diagrams, presentation exports and review captures. Curated assets live
+# in docs/phase1/visuals/; keep scratch copies and ZIP bundles out of Git.
+/output/

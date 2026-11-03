@@ -2,6 +2,8 @@
 
 This is **Phase 2**, the first consumer of Phase 1 infrastructure. Read `PHASE-2-DOCUMENT-ASSISTANT.md` and `PHASE-1-REUSABLE-SERVICES.md`.
 
+Read the root [AGENTS.md](../../AGENTS.md) first. **This directory currently contains instructions only.** Phase 1 remains `1.0.0-rc.1` with `ready_for_phase2=false`; see [readiness gates](../../docs/phase1/readiness.json). These instructions describe future work and do not authorize implementing or deploying Phase 2. The user's separate local Pi/OfficeCLI prototype is reference material, not an application already integrated here.
+
 ## Boundary
 - Own only `apps/application/**`. React/TypeScript + Fastify, application PostgreSQL DB, application-owned document/object storage.
 - Consume **released Phase 1 APIs only**. No imports from `services/job-runner` or `services/sandbox-provider`, no direct queries into their DBs, and no BoxLite SDK in this service.

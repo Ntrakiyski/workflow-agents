@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Same box. Same file. After redeployment.",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1380,
+      580
+    ]
+  },
+  "components": [
+    {
+      "id": "write",
+      "type": "cloud",
+      "label": "1  Write the marker",
+      "sublabel": "hello-world.txt in the Cloud rootfs",
+      "pos": [
+        60,
+        85
+      ],
+      "size": [
+        280,
+        86
+      ]
+    },
+    {
+      "id": "stop",
+      "type": "backend",
+      "label": "2  Stop without delete",
+      "sublabel": "Retain the external box and its disk",
+      "pos": [
+        535,
+        85
+      ],
+      "size": [
+        280,
+        86
+      ]
+    },
+    {
+      "id": "restart",
+      "type": "cloud",
+      "label": "3  Start and read",
+      "sublabel": "Original file checksum matches",
+      "pos": [
+        1010,
+        85
+      ],
+      "size": [
+        280,
+        86
+      ]
+    },
+    {
+      "id": "replace",
+      "type": "backend",
+      "label": "4  Replace both services",
+      "sublabel": "Provider first, then Runner independently",
+      "pos": [
+        1010,
+        375
+      ],
+      "size": [
+        310,
+        86
+      ]
+    },
+    {
+      "id": "recover",
+      "type": "database",
+      "label": "5  Recover the same box",
+      "sublabel": "External IDs, job records and audits match",
+      "pos": [
+        535,
+        375
+      ],
+      "size": [
+        310,
+        86
+      ]
+    },
+    {
+      "id": "verify",
+      "type": "cloud",
+      "label": "6  Read the file again",
+      "sublabel": "Same checksum; no reupload",
+      "pos": [
+        60,
+        375
+      ],
+      "size": [
+        280,
+        86
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "write-stop",
+      "from": "write",
+      "to": "stop",
+      "variant": "emphasis",
+      "label": "Complete"
+    },
+    {
+      "id": "stop-restart",
+      "from": "stop",
+      "to": "restart",
+      "variant": "emphasis",
+      "label": "Same identity"
+    },
+    {
+      "id": "restart-replace",
+      "from": "restart",
+      "to": "replace",
+      "variant": "emphasis",
+      "label": "Stop both test boxes",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "replace-recover",
+      "from": "replace",
+      "to": "recover",
+      "variant": "emphasis",
+      "label": "Registry reconnect"
+    },
+    {
+      "id": "recover-verify",
+      "from": "recover",
+      "to": "verify",
+      "variant": "emphasis",
+      "label": "Original disk"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Real retained-file proof",
+      "items": [
+        "Passed through actual Runner \u2192 Provider \u2192 BoxLite Cloud APIs.",
+        "Both original Cloud IDs survived independent service replacements."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Scope of this evidence",
+      "items": [
+        "Proves stopped-box recovery and completed-record retention.",
+        "Active-command recovery, host reboot and full backup remain open."
+      ]
+    }
+  ]
+}

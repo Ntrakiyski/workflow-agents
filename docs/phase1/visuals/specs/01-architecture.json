@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Reusable infrastructure. Cloud execution.",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1380,
+      640
+    ]
+  },
+  "components": [
+    {
+      "id": "consumer",
+      "type": "external",
+      "label": "API consumer",
+      "sublabel": "Generic approved workloads",
+      "pos": [
+        40,
+        210
+      ],
+      "size": [
+        185,
+        86
+      ]
+    },
+    {
+      "id": "runner",
+      "type": "backend",
+      "label": "Job Runner",
+      "sublabel": "Node.js + Graphile Worker",
+      "pos": [
+        365,
+        210
+      ],
+      "size": [
+        220,
+        86
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "backend",
+      "label": "Sandbox Provider",
+      "sublabel": "FastAPI + runtime adapter",
+      "pos": [
+        755,
+        210
+      ],
+      "size": [
+        230,
+        86
+      ]
+    },
+    {
+      "id": "cloud",
+      "type": "cloud",
+      "label": "BoxLite Cloud",
+      "sublabel": "Hosted execution API",
+      "pos": [
+        1150,
+        210
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "runnerDb",
+      "type": "database",
+      "label": "Runner PostgreSQL",
+      "sublabel": "Queue, jobs and audit",
+      "pos": [
+        365,
+        450
+      ],
+      "size": [
+        220,
+        86
+      ]
+    },
+    {
+      "id": "providerDb",
+      "type": "database",
+      "label": "Provider PostgreSQL",
+      "sublabel": "Identity, runs and audit",
+      "pos": [
+        755,
+        450
+      ],
+      "size": [
+        230,
+        86
+      ]
+    },
+    {
+      "id": "guest",
+      "type": "cloud",
+      "label": "Persistent box",
+      "sublabel": "Retained writable filesystem",
+      "pos": [
+        1150,
+        450
+      ],
+      "size": [
+        210,
+        86
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "consumer-runner",
+      "from": "consumer",
+      "to": "runner",
+      "variant": "emphasis",
+      "label": "Bearer / v1"
+    },
+    {
+      "id": "runner-provider",
+      "from": "runner",
+      "to": "provider",
+      "variant": "emphasis",
+      "label": "Private HTTP"
+    },
+    {
+      "id": "provider-cloud",
+      "from": "provider",
+      "to": "cloud",
+      "variant": "emphasis",
+      "label": "HTTPS / SDK"
+    },
+    {
+      "id": "runner-runnerDb",
+      "from": "runner",
+      "to": "runnerDb",
+      "variant": "default",
+      "label": "Durable queue",
+      "labelDy": 90
+    },
+    {
+      "id": "provider-providerDb",
+      "from": "provider",
+      "to": "providerDb",
+      "variant": "default",
+      "label": "Registry",
+      "labelDy": 90
+    },
+    {
+      "id": "cloud-guest",
+      "from": "cloud",
+      "to": "guest",
+      "variant": "default",
+      "label": "Exec + lifecycle",
+      "labelDy": 90
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Independent services",
+      "items": [
+        "One GCC Coolify staging project; two deployable applications.",
+        "Separate PostgreSQL credentials and persistent storage."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Cloud backend active",
+      "items": [
+        "GCC needs no KVM access for hosted execution.",
+        "No public guest tunnel; approved profiles control execution."
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "GCC COOLIFY / STAGING / PRIVATE SERVICES",
+      "wraps": [
+        "runner",
+        "provider",
+        "runnerDb",
+        "providerDb"
+      ],
+      "pad": 40
+    }
+  ]
+}
