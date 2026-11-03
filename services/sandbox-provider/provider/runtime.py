@@ -133,6 +133,8 @@ class BoxLiteRuntime:
             return data.decode('utf-8', errors='replace')[:32768]
         # Drain both pipes concurrently even after truncation to avoid deadlock.
         out, err, result = await asyncio.gather(drain(execution.stdout()), drain(execution.stderr()), execution.wait())
+        if getattr(result, 'error_message', None):
+            raise ServiceError(409, 'ambiguous_execution', 'Execution transport did not confirm a complete result. Environment requires recovery.')
         return {'exit_code': result.exit_code, 'stdout': out, 'stderr': err, 'output_truncated': truncated, 'artifacts': []}
 
     async def cancel(self, execution):

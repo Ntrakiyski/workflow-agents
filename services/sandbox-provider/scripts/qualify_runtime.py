@@ -322,6 +322,7 @@ def main():
     try:
         report['host'] = diagnostics()
         settings = Settings.from_env()
+        require(settings.runtime_mode == 'local', 'local_qualification_only')
         qualification = Qualification(settings, args.session, diagnostics_enabled=args.diagnostics)
         lock_path = qualification.anchor / '.lock'
         with os.fdopen(os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600), 'r+') as lock:

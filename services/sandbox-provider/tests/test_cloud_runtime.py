@@ -223,6 +223,33 @@ def test_backend_binding_survives_key_rotation_but_not_account_or_origin_change(
             Settings('postgresql://unused', policies(), profiles(), runtime_mode=mode)
 
 
+async def test_active_execution_recovery_refuses_reexecution_or_unverified_output(tmp_path):
+    settings = configured(tmp_path)
+    with cloud_server() as (stub, url):
+        runtime = runtime_for(settings, url)
+        with pytest.raises(ServiceError) as error:
+            await runtime.attach('cloud-box-1', 'exec-existing')
+        assert error.value.code == 'ambiguous_execution' and not error.value.retryable
+        assert stub.requests == []
+
+
+async def test_transport_error_cannot_be_reported_as_successful_empty_output(tmp_path):
+    class LostOutput:
+        async def stdout(self):
+            if False:
+                yield ''
+        async def stderr(self):
+            if False:
+                yield ''
+        async def wait(self):
+            return SimpleNamespace(exit_code=0, error_message='sensitive transport error ' + KEY)
+    runtime = configured_runtime(configured(tmp_path))
+    with pytest.raises(ServiceError) as error:
+        await runtime.collect(LostOutput(), 4096)
+    assert error.value.code == 'ambiguous_execution' and not error.value.retryable
+    assert KEY not in error.value.message
+
+
 @pytest.mark.integration
 async def test_real_postgres_create_fence_survives_failed_http_and_backend_changes_are_refused(tmp_path):
     database_url = os.getenv('TEST_DATABASE_URL')

@@ -207,8 +207,11 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
             raise
 
     async def attach(self, reference, execution_id):
-        box = await self._box(reference)
-        return await self._request(box.attach(execution_id=execution_id, stdin=False))
+        # SDK0.11 may recover a zero exit status after losing output, without
+        # exposing that loss to Python. Do not equate it with a recovered result.
+        # ProviderService will stop this same retained box and preserve a safe,
+        # nonretryable ambiguous execution rather than dispatching it again.
+        raise ServiceError(409, 'ambiguous_execution', 'Execution output cannot be safely recovered from this backend. Environment requires recovery.')
 
     async def cancel(self, execution):
         await self._request(execution.kill())
