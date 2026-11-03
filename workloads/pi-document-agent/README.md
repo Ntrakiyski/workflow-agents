@@ -2,7 +2,7 @@
 
 An approved workload for text requests and constrained editing of one DOCX working copy, with optional UTF-8 TXT/Markdown reference files. It uses the existing externally configured LiteLLM service. There are no infrastructure imports or database clients.
 
-This is a candidate package. Phase 1 readiness remains incomplete. [Verification](VERIFICATION.md) separates local binaries and safety tests from hosted integration.
+This is a candidate package. One uninterrupted synthetic DOCX journey passed through the actual hosted application, Runner, Provider, BoxLite Cloud, Pi/LiteLLM and OfficeCLI, with verified output/session export, protected download and same-sandbox stop. [Verification](VERIFICATION.md) records its exact scope and identities. Stable-release approval and broader Phase 1 readiness remain separate and incomplete.
 
 ## Runtime bundle
 
@@ -71,13 +71,15 @@ The model has no built-in shell, file, network or installation tool. Its explici
 
 ## Results, validation and safe stopping
 
-Result JSON always contains `schema_version:1`, the same `request_id`, `outcome:completed|failed`, `text`, `artifacts`, `validations` and `session_files`. Artifact/checkpoint entries contain safe single-basename `path`, `media_type`, `size_bytes` and `sha256`; artifact paths resolve under `outputs/`, checkpoints under `session/`. Validation findings use category `structural|content|rendered_layout`, status `passed|failed|not_performed`, plus `code` and `message`.
+Result JSON always contains `schema_version:1`, the same `request_id`, `outcome:completed|failed`, `text`, `artifacts`, `validations` and `session_files`. Artifact/checkpoint entries contain safe single-basename `path`, `media_type`, `size_bytes` and `sha256`; checkpoint `media_type` is exactly `application/x-ndjson`, including in the application's strict manifest schema; artifact paths resolve under `outputs/`, checkpoints under `session/`. Validation findings use category `structural|content|rendered_layout`, status `passed|failed|not_performed`, plus `code` and `message`.
 
 The workload requires a completed, nonempty Pi final response, checks actual OfficeCLI schema results in nonresident mode, validates the OOXML package and records advisory issue counts. It does not assert semantic accuracy, translation quality, rendered layout or pagination. Those findings remain `not_performed`. A headless HTML preview would not change that status.
 
 Stdout contains only a bounded manifest pointer `{schema_version:1,result_path:"outputs/result.json",size_bytes,sha256}` after the file has been flushed. Missing output or exit zero alone cannot prove delivery. Failure writes an actionable safe result where possible and returns nonzero. An interruption may leave only the durable fence; that is uncertain execution, not permission to rerun.
 
 The application must independently fetch/verify the result, checksums and actual file structure. `python3 validation.py <downloaded-output-directory>` provides a separate controller check; the application may implement equivalent checks in its own runtime. Treat the guest's report as data. After export of results, inputs and required session files to application-owned object storage is durable, the application stops the same sandbox through the API. This package neither stops nor destroys it.
+
+A completed external job whose result export fails must retain its request, job, sandbox and execution identities. Use only a reviewed, audited export-only reconciliation procedure against the existing result; never remove the guest fence or dispatch a new execution to repair a controller contract mismatch. See the [application operations skill](../../apps/application/.agents/skills/application-operations/SKILL.md).
 
 File checkpoints support an explicit future reconstruction procedure into a new isolated sandbox with a newly recorded identity. They are not a full Cloud disk backup, clone or proof of coordinated registry restore. Do not reopen an old registry mapping against a new disk silently.
 
