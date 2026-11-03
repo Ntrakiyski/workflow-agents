@@ -22,6 +22,7 @@ const contracts = {
 for (const [service, contract] of Object.entries(contracts)) ajv.addSchema(contract, service);
 const phase = process.env.QA_PHASE || process.argv[3] || "prepare";
 const sourceBase = process.argv[2];
+const sandboxProfile = process.env.QA_SANDBOX_PROFILE || "minimal-linux:v1";
 const invocation = process.env.QA_INVOCATION_ID || process.argv[4] || "gcc-phase1-migration-v1";
 const trace = "qa_gcc_" + randomUUID().replaceAll("-", "");
 const checks = [];
@@ -44,7 +45,7 @@ async function claimInvocation() {
   // finishes. Serialize the same operator invocation and replay its result.
   // A changed retained record/owner/source is a distinct invocation, so cached
   // success can never bypass validation of different cleanup targets.
-  const key = sha256(JSON.stringify({ version: 1, phase, invocation, owner: identity.owner_id, sourceBase,
+  const key = sha256(JSON.stringify({ version: 1, phase, invocation, owner: identity.owner_id, sourceBase, sandboxProfile,
     record: process.env.QA_RECORD_JSON || process.env.QA_RECORD_URL || "" }));
   const base = "/tmp/workflow-gcc-qa-results";
   mkdirSync(base, { recursive: true, mode: 0o700 });
@@ -136,7 +137,7 @@ async function audit(service, id) {
 
 function submission(ownerRef, workload) {
   return { client_reference: ownerRef, workload,
-    sandbox: { mode: "ensure", owner_ref: ownerRef, profile: "minimal-linux:v1", persistent: true },
+    sandbox: { mode: "ensure", owner_ref: ownerRef, profile: sandboxProfile, persistent: true },
     limits: { max_duration_seconds: 30, max_attempts: 1, retry_backoff_seconds: 1, deadline_at: future(300) } };
 }
 
@@ -296,7 +297,7 @@ async function loadRecord() {
   // Validate all live ownership/reference anchors before any start/stop/destroy.
   for (const suffix of ["a", "b"]) {
     const sandbox = await request("provider", "GET", "/v1/sandboxes/" + record["sandbox_" + suffix]);
-    expect(sandbox.owner_ref === record["owner_ref_" + suffix] && sandbox.profile === "minimal-linux:v1" && sandbox.persistent, "Recorded sandbox is not the expected QA fixture");
+    expect(sandbox.owner_ref === record["owner_ref_" + suffix] && sandbox.profile === sandboxProfile && sandbox.persistent, "Recorded sandbox is not the expected QA fixture");
     expect(sandbox.active_run_id === null, "Recorded QA sandbox has an active run");
   }
   const write = await request("runner", "GET", "/v1/jobs/" + record.write_job_id);
@@ -353,8 +354,9 @@ async function cleanup() {
 let error = null;
 try {
   expect(["prepare", "verify", "cleanup"].includes(phase), "Unknown operator phase");
+  expect(typeof sandboxProfile === "string" && /^[A-Za-z0-9_.-]+:v[1-9][0-9]*$/.test(sandboxProfile), "Invalid configured QA sandbox profile");
   const auth = JSON.parse(process.env.RUNNER_AUTH_JSON);
-  identity = auth.find((p) => ["job:submit", "job:read", "job:cancel", "schedule:write"].every((scope) => p.permissions.includes(scope)) && ["fixture-write-file:v1", "fixture-read-file:v1"].every((p2) => p.workload_profiles.includes(p2)) && p.allow_resume);
+  identity = auth.find((p) => ["job:submit", "job:read", "job:cancel", "schedule:write"].every((scope) => p.permissions.includes(scope)) && ["fixture-write-file:v1", "fixture-read-file:v1"].every((p2) => p.workload_profiles.includes(p2)) && p.sandbox_profiles.includes(sandboxProfile) && p.allow_resume);
   expect(identity, "Fixture-capable resume-authorized Runner principal is required");
   other = auth.find((p) => p.owner_id !== identity.owner_id && p.permissions.includes("job:read"));
   expect(other, "Independent second owner is required");
