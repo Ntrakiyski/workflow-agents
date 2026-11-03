@@ -4,11 +4,11 @@
   "phase": 1,
   "decision": "incomplete",
   "ready_for_phase2": false,
-  "release_version": "1.0.0-rc.1",
+  "release_version": "1.0.0-rc.2",
   "stable_release": false,
   "repository": "https://github.com/Ntrakiyski/workflow-agents",
-  "integration_branch": "phase1/integration",
-  "deployed_service_commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+  "integration_branch": "release/minimal-application",
+  "deployed_service_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
   "api_version": "v1",
   "contracts": [
     "contracts/v1/runner-v1.openapi.json",
@@ -21,55 +21,12 @@
     "environment": "staging",
     "environment_uuid": "tiiebld0vegfeegaapo3cdt3",
     "resource_ids": "deploy/staging-resources.json",
-    "latest_deployments": {
+    "historical_rc1_deployment_ids": {
       "job-runner": "xoirtvdhn7kofdlkekgdegry",
       "sandbox-provider": "byna6ecrish0jprg0dbywo37"
     },
-    "resource_statuses": [
-      {
-        "kind": "applications",
-        "name": "job-runner",
-        "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
-        "status": "running:healthy",
-        "fqdn": null,
-        "ports_mappings": null,
-        "is_public": false,
-        "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
-        "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=128"
-      },
-      {
-        "kind": "applications",
-        "name": "sandbox-provider",
-        "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
-        "status": "running:healthy",
-        "fqdn": null,
-        "ports_mappings": null,
-        "is_public": false,
-        "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
-        "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256"
-      },
-      {
-        "kind": "databases",
-        "name": "job-runner-db",
-        "uuid": "5alfx46nkf9d1vfzdivdybqh",
-        "status": "running:healthy",
-        "fqdn": null,
-        "ports_mappings": null,
-        "is_public": false,
-        "commit": null
-      },
-      {
-        "kind": "databases",
-        "name": "sandbox-provider-db",
-        "uuid": "vv6xrcopkfiry4naqltlvlfg",
-        "status": "running:healthy",
-        "fqdn": null,
-        "ports_mappings": null,
-        "is_public": false,
-        "commit": null
-      }
-    ],
-    "health": {
+    "deployment_identity_note": "Current finished application IDs/source and lead-confirmed health are recorded above. Historical rc1 IDs, inventory and health remain separate; this documentation update performs no live control-plane calls.",
+    "historical_rc1_health": {
       "job-runner": {
         "database": "ok",
         "queue": "ok",
@@ -84,13 +41,97 @@
         "actual_runtime_qualification": "passed_cloud_generic_fixture_journey",
         "local_runtime_qualification": "historical_namespace_preflight_blocked"
       }
-    }
+    },
+    "latest_deployments": {
+      "job-runner": "wuvkf6x1owxobcarqjtd7wbk",
+      "sandbox-provider": "qmdjylvn3d3zou4r6mawp8al",
+      "application": "v7mt8odnad40fnxbgfdxnojy"
+    },
+    "historical_rc1_resource_statuses": [
+      {
+        "kind": "applications",
+        "name": "job-runner",
+        "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+        "status": "running:healthy",
+        "fqdn": null,
+        "ports_mappings": null,
+        "is_public": false,
+        "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=128",
+        "observation_scope": "historical rc1 resource/status inventory; not refreshed by this documentation update",
+        "source_at_historical_observation": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9"
+      },
+      {
+        "kind": "applications",
+        "name": "sandbox-provider",
+        "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+        "status": "running:healthy",
+        "fqdn": null,
+        "ports_mappings": null,
+        "is_public": false,
+        "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256",
+        "observation_scope": "historical rc1 resource/status inventory; not refreshed by this documentation update",
+        "source_at_historical_observation": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9"
+      },
+      {
+        "kind": "databases",
+        "name": "job-runner-db",
+        "uuid": "5alfx46nkf9d1vfzdivdybqh",
+        "status": "running:healthy",
+        "fqdn": null,
+        "ports_mappings": null,
+        "is_public": false,
+        "observation_scope": "historical rc1 resource/status inventory; not refreshed by this documentation update",
+        "source_at_historical_observation": null
+      },
+      {
+        "kind": "databases",
+        "name": "sandbox-provider-db",
+        "uuid": "vv6xrcopkfiry4naqltlvlfg",
+        "status": "running:healthy",
+        "fqdn": null,
+        "ports_mappings": null,
+        "is_public": false,
+        "observation_scope": "historical rc1 resource/status inventory; not refreshed by this documentation update",
+        "source_at_historical_observation": null
+      }
+    ],
+    "resource_statuses": [
+      {
+        "kind": "applications",
+        "name": "job-runner",
+        "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+        "status": "running:healthy",
+        "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+        "is_public": false,
+        "observation_basis": "integration lead confirmation at 2026-11-03T19:03:19Z"
+      },
+      {
+        "kind": "applications",
+        "name": "sandbox-provider",
+        "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+        "status": "running:healthy",
+        "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+        "is_public": false,
+        "observation_basis": "integration lead confirmation at 2026-11-03T19:03:19Z"
+      },
+      {
+        "kind": "applications",
+        "name": "workflow-application",
+        "uuid": "7vdsilhnu96tifz7yosm61j1",
+        "status": "running:healthy",
+        "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+        "is_public": true,
+        "observation_basis": "integration lead confirmation at 2026-11-03T19:03:19Z"
+      }
+    ]
   },
   "gates": [
     {
       "id": "contracts",
       "outcome": "passed",
-      "evidence": "docs/qa/REPORT.md"
+      "evidence": "docs/qa/MINIMAL-RELEASE-REVIEW.md",
+      "checks_passed": 6,
+      "scope": "Actual contract validation and deterministic generation; service versions remain separately recorded."
     },
     {
       "id": "runner_real_database_mock_provider",
@@ -101,11 +142,14 @@
     {
       "id": "provider_real_database_fake_runtime",
       "outcome": "passed",
-      "pytest_passes": 52,
-      "hardware_conditional_negative_skips": 2,
+      "pytest_passes": 77,
+      "hardware_conditional_negative_skips": 0,
       "real_runtime_deselected": 1,
-      "evidence": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41647734872",
-      "scope": "Actual PostgreSQL; fake runtime and actual SDK against loopback HTTP stub, no hosted guest from CI"
+      "evidence": [
+        "services/sandbox-provider/VERIFICATION.md",
+        "docs/qa/MINIMAL-RELEASE-REVIEW.md"
+      ],
+      "scope": "Developer full 77 on 72c2738; independent full 75 on 909980b plus two focused preflight tests on 72c2738. Actual PostgreSQL / fake runtime/actual SDK loopback, not hosted execution."
     },
     {
       "id": "independent_boundary_security",
@@ -162,19 +206,23 @@
       "outcome": "partial",
       "backend": "boxlite-cloud",
       "evidence": [
-        "docs/phase1/cloud-evidence/http-prepare.json",
-        "docs/phase1/cloud-evidence/policy-before.json"
+        "docs/release/cloud-resource-journey.json",
+        "docs/release/cloud-hostname-network.json",
+        "docs/release/cloud-transfer-journey.json"
       ],
       "passed": [
-        "second real sandbox missing first marker",
-        "guest capacity observations",
-        "two fixed external TCP probes ENETUNREACH",
-        "both networking directions disabled in returned metadata"
+        "actual two-sandbox file separation and cross-owner/path/symlink negatives",
+        "two concurrent CPU workers for two seconds on one-vCPU guest",
+        "rootfs ENOSPC at observed capacity and removal of temporary fill",
+        "bounded memory pressure SIGKILL consistent with OOM, without kernel-counter attestation",
+        "network-denied fixed TCP probes and exact-hostname approved HTTPS response plus two unauthorized TLS EOFs"
       ],
       "incomplete": [
-        "stress quota enforcement",
-        "comprehensive escape and network boundary qualification"
-      ]
+        "sustained and multitenant resource enforcement",
+        "exact cause of memory SIGKILL and vendor backing-store quota attestation",
+        "per-port enforcement, complete TCP filtering, DNS/UDP and comprehensive network/escape qualification"
+      ],
+      "scope": "Actual Cloud direct SDK/local Provider fixtures; not GCC deployment stress proof. Raw TCP connects are accepted under hostname policy."
     },
     {
       "id": "real_boxlite_provider_restart_reattachment",
@@ -193,19 +241,29 @@
     },
     {
       "id": "scoped_artifact_transfer_export",
-      "outcome": "incomplete",
-      "reason": "no scoped transfer adapter implemented; nonempty artifact_output_ref returns 422"
+      "outcome": "passed",
+      "evidence": "docs/release/cloud-transfer-journey.json",
+      "scope": "Actual Cloud/private local Provider at exact 909980b:2,097,166-byte multichunk checksum/replay, ownership/path/symlink negatives and file checkpoint/reupload into a distinct sandbox. Legacy external artifact_output_ref remains 422. Hosted application result export is separately pending."
     },
     {
       "id": "off_host_backup",
-      "outcome": "incomplete",
-      "reason": "local daily database backup schedules configured; off-host destination not configured"
+      "outcome": "passed",
+      "evidence": [
+        "docs/release/offhost-restore-final-infrastructure.json",
+        "deploy/README.md"
+      ],
+      "scope": "Encrypted off-host Runner/Provider logical archives from 4bab06c restored to isolated resources twice with exact rows, audits and sequences. Daily pull timer is configured; this is not guest-disk or completed application-data recovery."
     },
     {
       "id": "coordinated_registry_vm_volume_restore",
-      "outcome": "blocked",
-      "reason": "Cloud disks are external; observed capabilities disable export/snapshot/import/clone. Approved remote data export/backup procedure and isolated restore proof missing.",
-      "evidence": "docs/contracts/boxlite-cloud-capabilities.md"
+      "outcome": "partial",
+      "reason": "Selected required-file checkpoint export/reupload and isolated forensic/off-host registry restore passed separately. Coordinated application/registry/required result/session reconstruction and cutover are pending. Full Cloud VM snapshot/export/import/clone remain unavailable.",
+      "evidence": [
+        "docs/release/cloud-transfer-journey.json",
+        "docs/release/offhost-restore-final-infrastructure.json",
+        "docs/release/application-restore-attempt-1.json",
+        "docs/contracts/boxlite-cloud-capabilities.md"
+      ]
     },
     {
       "id": "gcc_logical_database_migration",
@@ -263,9 +321,13 @@
     },
     {
       "id": "cloud_active_command_and_complete_output_recovery",
-      "outcome": "incomplete",
-      "reason": "Active attach fails closed ambiguous_execution; SDK may lose fresh-stream output with exit0/error_message=None. No generic complete-output or transport-recovery proof.",
-      "evidence": "docs/qa/CLOUD-REVIEW.md"
+      "outcome": "partial",
+      "reason": "Fresh Cloud execution requires nonce/checksummed completion and refuses missing output even with native exit0. Active attach remains nonretryable ambiguous_execution; provider-crash qualification preserved one observed effect and did not replay. Complete recovered output/journal attachment remains unqualified.",
+      "evidence": [
+        "docs/contracts/scoped-files-v1.md",
+        "docs/release/cloud-failure-journey-final.json",
+        "docs/qa/MINIMAL-RELEASE-REVIEW.md"
+      ]
     },
     {
       "id": "cloud_exact_fixture_explicit_destruction",
@@ -300,7 +362,7 @@
         "docs/phase1/cloud-evidence/temporary-resource-cleanup.json",
         "docs/phase1/cloud-evidence/cloud-cleanup-enumeration.json"
       ],
-      "scope": "No own Cloud fixtures or temporary Coolify tasks/QA envs remain"
+      "scope": "Historical rc1 exact fixtures/temporary resources only; later session-owned fixture cleanup is recorded in each rc2 evidence file. This is not a current account-wide inventory claim."
     },
     {
       "id": "unrelated_cloud_account_box_continuity",
@@ -310,13 +372,87 @@
     },
     {
       "id": "cloud_real_transient_retry_timeout_active_worker_recovery",
+      "outcome": "partial",
+      "reason": "Seven controlled proxy/SIGKILL scenarios passed against actual BoxLite Cloud with isolated local real Runner/Provider/PostgreSQL. They demonstrate bounded duplicate prevention and truthful provider-crash failure, not GCC container failure injection or active output reattachment.",
+      "evidence": "docs/release/cloud-failure-journey-final.json",
+      "passed_scenarios": [
+        "duplicate",
+        "transient_before_effect",
+        "timeout_before_effect",
+        "timeout_after_effect",
+        "worker_crash",
+        "provider_crash",
+        "cancellation_race"
+      ]
+    },
+    {
+      "id": "cloud_cancellation_descendants",
+      "outcome": "passed",
+      "evidence": "docs/release/cloud-transfer-journey.json",
+      "scope": "Actual Cloud/local Provider cancellation confirmed same-box stop; after restart and 10 seconds ready marker remained and delayed descendant marker was absent."
+    },
+    {
+      "id": "cloud_workload_hostname_https_policy",
+      "outcome": "passed",
+      "evidence": "docs/release/cloud-hostname-network.json",
+      "scope": "Actual cached pinned slim guest2 CPUs / 2048 MiB with exact-hostname metadata. LiteLLM HTTPS /v1/models returned 401; example.com/direct-IP HTTPS ended TLS before HTTP. Raw TCP accepted; no port/DNS/UDP/airgap/complete TCP filter claim."
+    },
+    {
+      "id": "cloud_profile_host_port_preflight",
+      "outcome": "passed",
+      "evidence": [
+        "services/sandbox-provider/VERIFICATION.md",
+        "docs/qa/MINIMAL-RELEASE-REVIEW.md"
+      ],
+      "scope": "Actual pinned SDK rejects hostname:port before HTTP; Provider rejects before sandbox/idempotency/audit insertion. Historical read paths remain available."
+    },
+    {
+      "id": "application_local_real_database_object_store_and_mocked_execution",
+      "outcome": "passed",
+      "evidence": [
+        "apps/application/VERIFICATION.md",
+        "docs/qa/MINIMAL-RELEASE-REVIEW.md"
+      ],
+      "scope": "10 backend checks with actual PostgreSQL/RustFS; two browser checks with mocked Runner/Provider/workload. Does not establish hosted document success."
+    },
+    {
+      "id": "pi_document_rc2_local_execution",
+      "outcome": "passed",
+      "evidence": [
+        "workloads/pi-document-agent/VERIFICATION.md",
+        "workloads/pi-document-agent/release.json"
+      ],
+      "scope": "Two identical95,977,914-byte builds; actual local exact-image Pi/LiteLLM/OfficeCLI DOCX execution with bundled ICU, independent structure/marker/checksum/session checks. Docker bridge networking; no Cloud/browser/layout/semantic-accuracy claim."
+    },
+    {
+      "id": "application_hosted_admission_list_failure_and_authorization",
+      "outcome": "passed",
+      "evidence": [
+        "docs/release/hosted-application-attempt-1.json",
+        "docs/release/hosted-application-failure-review.json"
+      ],
+      "scope": "Actual deployed 2f7820f browser attachment submission/replay/list/reopen and retained failed request; original-file protection/foreign-owner denials. No completed output exists for this request."
+    },
+    {
+      "id": "application_hosted_v2_document_delivery",
       "outcome": "incomplete",
-      "reason": "Deployed write used one attempt; transient failure/retry/provider timeout/active worker crash duplicate-prevention journeys have mocked regression coverage but no hosted failure-injection evidence.",
-      "evidence": "docs/qa/CLOUD-REVIEW.md"
+      "reason": "All three applications finished healthy at 8387b5d; fresh hosted QA is starting. No completed browser-to-Runner/Provider/Cloud/Pi/LiteLLM/OfficeCLI result, validated downloadable output or correlated successful full-path audit has been demonstrated.",
+      "evidence": "docs/release/hosted-application-attempt-1.json"
+    },
+    {
+      "id": "application_completed_result_persistence_and_stop",
+      "outcome": "incomplete",
+      "reason": "Hosted completed-result export-before-stop, protected output download and request/result identity/checksum persistence through application replacement remain pending."
+    },
+    {
+      "id": "application_offhost_rows_objects_restore",
+      "outcome": "partial",
+      "evidence": "docs/release/application-restore-attempt-1.json",
+      "scope": "Actual deployed 2f7820f snapshot restored twice into new local PostgreSQL/RustFS; all five tables, audit/sequence identities and one original object of 5,205 bytes matched. Snapshot has a failed request and no completed result/session objects; those require a new capture/restore."
     }
   ],
   "evidence_report": "docs/phase1/CLOUD-VALIDATION.md",
-  "independent_qa": "docs/qa/CLOUD-REVIEW.md",
+  "independent_qa": "docs/qa/MINIMAL-RELEASE-REVIEW.md",
   "migration": {
     "decision": "complete",
     "source_origin": "https://worfklow.org",
@@ -335,7 +471,49 @@
     "runner_tap_passes": 21,
     "provider_passes": 52,
     "provider_skips": 2,
-    "real_runtime_deselected": 1
+    "real_runtime_deselected": 1,
+    "scope": "Historical rc1 CI at the recorded source; later local and hosted evidence does not replace or extend this CI result."
   },
-  "runtime_backend": "boxlite-cloud"
+  "runtime_backend": "boxlite-cloud",
+  "recorded_at_utc": "2026-11-03T19:03:19Z",
+  "service_versions": {
+    "job-runner": "1.0.0-rc.1",
+    "sandbox-provider": "1.0.0-rc.2",
+    "application": "0.1.0-rc.1",
+    "pi-document-agent": "0.1.0-rc.2"
+  },
+  "deployments": {
+    "observation_time_utc": "2026-11-03T19:03:19Z",
+    "basis": "integration lead confirmed finished healthy deployments and trusted HTTPS authentication responses; documentation worker did not repeat control-plane calls",
+    "last_confirmed": {
+      "job-runner": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "sandbox-provider": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "application": "8387b5da2084e062e7409b1af5ce81ae57b45dfd"
+    },
+    "deployment_ids": {
+      "job-runner": "wuvkf6x1owxobcarqjtd7wbk",
+      "sandbox-provider": "qmdjylvn3d3zou4r6mawp8al",
+      "application": "v7mt8odnad40fnxbgfdxnojy"
+    },
+    "state": "finished and running:healthy",
+    "application_https": {
+      "trusted_certificate": true,
+      "anonymous_http": 401,
+      "primary_authenticated_http": 200
+    },
+    "hosted_document_v2_success": false,
+    "previous_backup_capture_sources": {
+      "infrastructure": "4bab06ca1c1b4560b68c1ff561fc5d33deb37bf8",
+      "application": "2f7820f619fe023b4278c2f97e43f7709d59d8cd"
+    }
+  },
+  "application_candidate": {
+    "origin": "https://workflow-agents.68.210.88.115.sslip.io",
+    "workload_release": "0.1.0-rc.2",
+    "sandbox_profile": "pi-document-cloud:v2",
+    "workload_profile": "pi-document-agent:v2",
+    "runtime_bundle_sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
+    "runtime_bundle_bytes": 95977914,
+    "hosted_qualified": false
+  }
 }

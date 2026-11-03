@@ -4,9 +4,9 @@
 
 Workflow Agents provides independent Job Runner and Sandbox Provider services plus a minimal Document Assistant consumer. The owner's 3 November continuation authorizes completing reusable infrastructure and building the initial application concurrently. Read [the narrowed release scope](docs/release/MINIMAL-SCOPE.md); it supersedes the broader Phase 2 feature list for this release.
 
-The current infrastructure contract candidate is `1.0.0-rc.2` with authenticated `/v1` REST APIs. **Phase 1 acceptance is incomplete and `ready_for_phase2` is false.** Read [the current validation report](docs/phase1/CLOUD-VALIDATION.md), [machine-readable gates](docs/phase1/readiness.json), and [independent QA](docs/qa/CLOUD-REVIEW.md) before making readiness claims.
+The current infrastructure contract candidate is `1.0.0-rc.2` with authenticated `/v1` REST APIs. **Phase 1 acceptance is incomplete and `ready_for_phase2` is false.** Read [the current validation report](docs/phase1/CLOUD-VALIDATION.md), [machine-readable gates](docs/phase1/readiness.json), and [independent QA](docs/qa/MINIMAL-RELEASE-REVIEW.md) before making readiness claims.
 
-The recorded staging deployment runs source commit `04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9`. Later documentation commits do not change that deployment. Inspect live state before an operational change. Do not equate branch HEAD, a healthy container, or passing mocked tests with the deployed release.
+As recorded at 2026-11-03 19:03 UTC, the integration lead confirmed Runner, Provider and application deployments finished healthy at `8387b5da2084e062e7409b1af5ce81ae57b45dfd`, with trusted HTTPS, anonymous 401 and authenticated 200. The hosted v2 document journey is still pending. Deployment IDs and source-specific evidence are in [readiness](docs/phase1/readiness.json). Documentation commits do not deploy themselves; inspect finished records and live identity before operations. Process health does not establish document delivery or stable acceptance.
 
 ## Read before working
 
@@ -92,15 +92,17 @@ git diff --exit-code -- contracts/v1
 
 ## Acceptance and recovery limits
 
-The recorded real Cloud journey passed workload execution, same-box marker retention across stop/start, bounded two-box file separation, duplicate admission, durable audits and stopped-box recovery across independent application replacements. This is not active-command recovery or comprehensive security qualification.
+Recorded actual Cloud evidence covers generic execution and stopped-box retention on GCC, plus scoped transfer/checkpoint reupload, descendant cancellation, seven controlled failure scenarios and bounded resource/hostname-HTTPS probes using isolated local service processes or the direct SDK. Scope and source identity remain attached to each evidence file. Encrypted off-host infrastructure archives were restored in isolation. The application checkpoint restored one original attachment; no completed document result/session checkpoint has yet been restored.
+
+Pi document workload `0.1.0-rc.2` passed reproducible builds and actual local Pi/LiteLLM/OfficeCLI document execution in the exact pinned slim image with bundled ICU. Its v2 hosted application journey is pending. The initial hosted browser request was retained as failed; it proves admission/list/failure/ownership behavior, not successful delivery. Local structural/content-marker checks do not prove rendered layout, pagination or semantic accuracy.
 
 Keep these gates open until new evidence closes them:
 
-- Generic scoped artifact transfer is implemented through separate file APIs in rc.2; hosted and deployed evidence is recorded separately. The legacy `artifact_output_ref` field remains unsupported and returns 422.
-- Active-command and complete-output recovery. Cloud attach fails closed with nonretryable `ambiguous_execution`; preserve the same box and do not replay uncertain work.
-- Final hosted transient retry, Provider timeout and active-worker crash failure evidence for the deployed source; earlier isolated-process results are in `docs/release/`.
-- Coordinated registry plus required Cloud data recovery. Encrypted off-host logical backups and isolated restore are implemented; application row/object/session checkpoints are separately versioned. Observed vendor capabilities disable full snapshot, export, import and cloning.
-- Host restart persistence and broader resource, network and escape qualification.
+- Hosted v2 browser submission through Runner/Provider/Pi to independently validated downloadable results, safe export/stop, and result persistence after application replacement. Generic scoped file transfer itself passed actual Cloud qualification through a private local Provider; the legacy external `artifact_output_ref` field remains unsupported and returns 422.
+- Active-command reattachment and complete recovered output. Fresh execution requires a nonce/checksummed completion envelope; active attach remains nonretryable `ambiguous_execution`. Preserve the same box and never replay uncertain work.
+- Deployed-source failure qualification. Seven controlled proxy/SIGKILL scenarios passed against actual Cloud with isolated local Runner/Provider/PostgreSQL; these are not GCC container failure tests.
+- Coordinated application/registry/required-file recovery including completed results and sessions. Off-host infrastructure logical restore and selected-file reconstruction into a new sandbox passed separately. Full Cloud snapshot/export/import/clone remain unavailable.
+- Host restart persistence, sustained/multitenant resource enforcement and comprehensive escape/network qualification. Exact-hostname HTTPS probes passed; raw TCP connects were accepted, and port-level, UDP/DNS and airgap claims remain unqualified.
 
 Do not use a Cloud snapshot or VM clone as a proven capability. The repository workload uploads a checksum-pinned runtime archive; it is not a VM clone or independent proof of infrastructure acceptance. See [the dated closeout](docs/phase1/CLOSEOUT-2026-11-03.md).
 
