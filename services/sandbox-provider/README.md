@@ -120,6 +120,13 @@ SDK0.11 encodes disabled inbound using its compatible outbound-only wire
 shape; returned metadata must still confirm disabled inbound. Enabled outbound
 with an empty allowlist would be unrestricted and is rejected by profile policy.
 
+`allowed_hosts` uses BoxLite hostname/wildcard-hostname or IPv4/CIDR rules,
+without a URL scheme or port suffix. For example, `model.example.com` is
+supported and `model.example.com:443` is rejected before creation intent. The
+allowlist does not provide per-port controls; an HTTPS workload still selects
+port443 itself. DNS/UDP behavior and rebinding boundaries require separate
+qualification. Never silently strip a scheme/port from an operator policy.
+
 Before approved execution/start, the adapter verifies returned identity,
 requested image string, CPU/RAM, zero automatic deletion/stop, disabled
 automatic resume, and inbound/outbound policy. A mismatch fails closed. Python

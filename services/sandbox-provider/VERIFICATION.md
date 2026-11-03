@@ -1,5 +1,20 @@
 # Provider candidate verification
 
+## Cloud allowlist preflight (2026-11-03)
+
+Full suite with the dedicated disposable PostgreSQL16 database:
+**77 passed,1 local-KVM deselected in20.68s**. New coverage proves that the
+actual pinned SDK rejects `hostname:443` before any HTTP request, and that
+Provider rejects it before sandbox/idempotency/audit insertion or runtime calls.
+Exact hostname passes profile preflight; no automatic policy rewriting occurs.
+
+One owned actual Cloud diagnostic reproduced the SDK rejection, then the
+supported hostname reached a distinct blocker while starting the pinned full
+Python image: Docker Hub registry-token transport to `index.docker.io` failed.
+The failed box was reconciled by its exact journaled name and deleted by its
+returned ID; exact-ID absence was confirmed. No guest network success is
+claimed by that attempt; see `docs/release/cloud-policy-rejection.json`.
+
 ## Hosted transfer transport, descendants and deletion reconciliation (2026-11-03)
 
 Latest full command with dedicated disposable local PostgreSQL16:
