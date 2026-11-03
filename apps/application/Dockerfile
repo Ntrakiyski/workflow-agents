@@ -1,4 +1,4 @@
-FROM node:22.22.3-bookworm-slim AS build
+FROM node:22.22.3-bookworm-slim@sha256:e21fc383b50d5347dc7a9f1cae45b8f4e2f0d39f7ade28e4eef7d2934522b752 AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -6,7 +6,7 @@ COPY tsconfig*.json vite.config.ts index.html ./
 COPY src ./src
 COPY web ./web
 RUN npm run build && npm prune --omit=dev
-FROM node:22.22.3-bookworm-slim
+FROM node:22.22.3-bookworm-slim@sha256:e21fc383b50d5347dc7a9f1cae45b8f4e2f0d39f7ade28e4eef7d2934522b752
 WORKDIR /app
 ENV NODE_ENV=production PORT=8082
 COPY --from=build --chown=node:node /app/node_modules ./node_modules

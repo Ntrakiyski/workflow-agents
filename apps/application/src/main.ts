@@ -4,12 +4,20 @@ import { S3Objects } from "./storage.js";
 import { HttpExecutionServices } from "./remote.js";
 import { createApi } from "./api.js";
 import { RequestWorker } from "./worker.js";
+import { initializeStorage } from "./initialize.js";
 
 const config = configuration();
 const db = new Database(config.databaseUrl);
 const objects = new S3Objects(config);
 const api = createApi(db, objects, config);
 await db.migrate();
+if (process.env.INITIALIZE_STORAGE === "true") {
+  await initializeStorage(
+    config,
+    objects,
+    process.env.RUNTIME_BUNDLE_URL ?? "",
+  );
+}
 await objects.ready();
 const worker = new RequestWorker(
   db,

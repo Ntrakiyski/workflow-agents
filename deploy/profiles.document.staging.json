@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "sandboxes": {
+    "pi-document-cloud:v1": {
+      "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+      "cpus": 2,
+      "memory_mib": 2048,
+      "disk_mib": 2048,
+      "network": "allowlist",
+      "allowed_hosts": [
+        "litellm.gccssofia.com:443"
+      ],
+      "entrypoint": [
+        "/usr/local/bin/python3",
+        "-c",
+        "import time; time.sleep(31536000)"
+      ],
+      "cmd": []
+    }
+  },
+  "workloads": {
+    "pi-document-agent:v1": {
+      "sandbox_profiles": [
+        "pi-document-cloud:v1"
+      ],
+      "working_directory": "/",
+      "max_duration_seconds": 900,
+      "max_output_bytes": 4096,
+      "environment": {
+        "LITELLM_BASE_URL": "https://litellm.gccssofia.com/v1",
+        "LITELLM_MODEL_ALIAS": "bots/claude-sonnet-5.5",
+        "PI_EXECUTION_TIMEOUT_SECONDS": "600"
+      },
+      "secret_environment": {
+        "LITELLM_API_KEY": "WORKLOAD_SECRET_LITELLM_API_KEY"
+      },
+      "argv": [
+        "/usr/local/bin/python3",
+        "-c",
+        "\"\"\"Fixed trusted profile bootstrap; the SHA256 comes from the operator, never a request.\"\"\"\nimport hashlib\nimport os\nfrom pathlib import Path, PurePosixPath\nimport platform\nimport re\nimport shutil\nimport sys\nimport tarfile\n\nROOT = Path('/opt/workflow-transfer')\nMAX_EXPANDED = 2 * 1024 * 1024 * 1024\n\n\ndef install(archive, target, expected_sha256):\n    if not re.fullmatch('[a-f0-9]{64}', expected_sha256):\n        raise ValueError('Pinned runtime checksum required')\n    with archive.open('rb') as source:\n        if hashlib.file_digest(source, 'sha256').hexdigest() != expected_sha256:\n            raise ValueError('Runtime bundle checksum mismatch')\n    if target.exists():\n        # No blind reinstall/replay; installed files are checked against the exact archive.\n        if target.is_symlink() or (target / '.bundle-sha256').read_text() != expected_sha256:\n            raise ValueError('Installed runtime identity mismatch')\n        expected = {'.bundle-sha256'}\n        with tarfile.open(archive) as source:\n            for item in source:\n                expected.add(item.name)\n                if not item.isfile():\n                    raise ValueError('Runtime archive contains non-regular entry')\n                data = source.extractfile(item)\n                path = target / item.name\n                if data is None or path.is_symlink() or not path.is_file():\n                    raise ValueError('Installed runtime file missing')\n                with path.open('rb') as installed:\n                    if hashlib.file_digest(data, 'sha256').digest() != hashlib.file_digest(installed, 'sha256').digest():\n                        raise ValueError('Installed runtime file changed')\n        actual = set()\n        for path in target.rglob('*'):\n            if path.is_symlink():\n                raise ValueError('Installed runtime contains a symlink')\n            if path.is_file():\n                actual.add(path.relative_to(target).as_posix())\n        if actual != expected:\n            raise ValueError('Installed runtime contains unexpected files')\n        return\n    temp = target.with_name(target.name + '.installing')\n    temp.mkdir(mode=0o700)\n    try:\n        with tarfile.open(archive) as source:\n            total, names = 0, set()\n            for item in source:\n                name = PurePosixPath(item.name)\n                if (not item.isfile() or name.is_absolute() or '..' in name.parts\n                        or '\\\\' in item.name or item.name in names or not name.parts):\n                    raise ValueError('Unsafe runtime archive entry')\n                names.add(item.name)\n                total += item.size\n                if total > MAX_EXPANDED or len(names) > 40000:\n                    raise ValueError('Runtime archive exceeds expansion bound')\n                path = temp.joinpath(*name.parts)\n                path.parent.mkdir(parents=True, exist_ok=True)\n                data = source.extractfile(item)\n                if data is None:\n                    raise ValueError('Runtime file missing')\n                with path.open('xb') as target_file:\n                    shutil.copyfileobj(data, target_file)\n                path.chmod(0o755 if item.mode & 0o111 else 0o644)\n        (temp / '.bundle-sha256').write_text(expected_sha256)\n        temp.rename(target)\n    except BaseException:\n        shutil.rmtree(temp)\n        raise\n\n\ndef main():\n    digest, request_id = sys.argv[1:]\n    if platform.machine() != 'x86_64' or not re.fullmatch('[a-f0-9-]{36}', request_id):\n        raise ValueError('Architecture or request identity mismatch')\n    runtime = ROOT / 'runtime' / digest\n    install(ROOT / 'runtime/runtime-bundle.tar.gz', runtime, digest)\n    os.execv(sys.executable, [sys.executable, '-B', str(runtime / 'guest.py'), request_id])\n\n\nif __name__ == '__main__':\n    main()\n",
+        "9ffbbd3ed2856013192049986f1062396e46461aa81998f607eaeda9acb3d033",
+        "${arg:request_id}"
+      ],
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          }
+        },
+        "required": [
+          "request_id"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}
