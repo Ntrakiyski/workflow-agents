@@ -15,5 +15,12 @@
   "backups": {
     "job-runner-db": "wbvt7ycjaxj49xoeowmicmah",
     "sandbox-provider-db": "krsnu4wl5mlvawjgoxexftqj"
+  },
+  "storage": {
+    "sandbox-provider": {
+      "uuid": "vblblih6u4dcojluminzocld",
+      "name": "v3kixl4u4st8khfpmx2xne7e-workflow-phase1-boxlite",
+      "mount_path": "/var/lib/sandbox-provider"
+    }
   }
 }

@@ -1,5 +1,8 @@
 {
-  "project": {"name": "workflow-agents-phase1", "description": "Phase 1 reusable infrastructure staging; release gates tracked in Git"},
+  "project": {
+    "name": "workflow-agents-phase1",
+    "description": "Phase 1 reusable infrastructure staging; release gates tracked in Git"
+  },
   "environment": "staging",
   "repository": "https://github.com/Ntrakiyski/workflow-agents",
   "branch": "phase1/integration",
@@ -18,7 +21,8 @@
       "health_check_path": "/health/ready",
       "health_check_port": 8080,
       "limits_cpus": "0.5",
-      "limits_memory": "384m"
+      "limits_memory": "384m",
+      "redact_all_env_values_in_logs": true
     },
     "sandbox-provider": {
       "base_directory": "/services/sandbox-provider",
@@ -35,13 +39,37 @@
       "health_check_port": 8000,
       "limits_cpus": "1.5",
       "limits_memory": "1024m",
-      "storage": {"name": "workflow-phase1-boxlite", "mount_path": "/var/lib/sandbox-provider"},
-      "qualification": "Liveness keeps API available for diagnostics when real runtime readiness is blocked. Acceptance independently requires /health/ready and real BoxLite tests. KVM device mapping is added only after host preflight."
+      "storage": {
+        "name": "workflow-phase1-boxlite",
+        "mount_path": "/var/lib/sandbox-provider"
+      },
+      "qualification": "Liveness keeps API available for diagnostics when real runtime readiness is blocked. Acceptance independently requires /health/ready and real BoxLite tests. KVM device mapping is added only after host preflight.",
+      "is_consistent_container_name_enabled": true,
+      "custom_internal_name": "workflow-phase1-sandbox-provider",
+      "stop_grace_period": 30,
+      "max_restart_count": 3,
+      "redact_all_env_values_in_logs": true
     }
   },
   "databases": {
-    "job-runner-db": {"type": "postgresql", "postgres_user": "job_runner", "postgres_db": "job_runner", "image": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab", "is_public": false, "limits_cpus": "0.5", "limits_memory": "256m"},
-    "sandbox-provider-db": {"type": "postgresql", "postgres_user": "sandbox_provider", "postgres_db": "sandbox_provider", "image": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab", "is_public": false, "limits_cpus": "0.5", "limits_memory": "256m"}
+    "job-runner-db": {
+      "type": "postgresql",
+      "postgres_user": "job_runner",
+      "postgres_db": "job_runner",
+      "image": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
+      "is_public": false,
+      "limits_cpus": "0.5",
+      "limits_memory": "256m"
+    },
+    "sandbox-provider-db": {
+      "type": "postgresql",
+      "postgres_user": "sandbox_provider",
+      "postgres_db": "sandbox_provider",
+      "image": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
+      "is_public": false,
+      "limits_cpus": "0.5",
+      "limits_memory": "256m"
+    }
   },
   "policy": {
     "resource_scope": "Only UUIDs returned for this new project may be mutated",
