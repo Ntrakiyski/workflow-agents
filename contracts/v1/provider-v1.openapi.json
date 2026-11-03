@@ -1309,6 +1309,224 @@
         }
       }
     },
+    "/v1/sandboxes/{sandbox_id}/runs/cancel-by-reference": {
+      "post": {
+        "operationId": "cancelExecutionByReference",
+        "description": "Durably fence execution_ref under the same sandbox serialization lock as execute. If no run exists, return run_id:null,status:fenced and reject future new execute for this reference with 409 execution_cancelled. If a run exists, return its ID/status and reconcile cancellation; completed terminal runs remain terminal. Repeated fences are idempotent. Never create a workload while cancelling an ambiguous execute request.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/sandbox_id"
+          },
+          {
+            "$ref": "#/components/parameters/OwnerId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Current durable resource",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancellationFence"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON, query or header",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Denied profile, permission or delegation",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown or wrong-owner resource",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency conflict, busy resource or illegal transition",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Payload or approved workload schema invalid",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Configured quota exceeded",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database, runtime or dependency unavailable",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelByReferenceRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/sandboxes/{sandbox_id}/runs/{run_id}": {
       "get": {
         "operationId": "getRun",
@@ -2816,6 +3034,67 @@
         "required": [
           "confirm",
           "reason"
+        ],
+        "additionalProperties": false
+      },
+      "CancelByReferenceRequest": {
+        "type": "object",
+        "properties": {
+          "execution_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "execution_ref"
+        ],
+        "additionalProperties": false
+      },
+      "CancellationFence": {
+        "type": "object",
+        "properties": {
+          "execution_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "fenced",
+              "queued",
+              "running",
+              "cancelling",
+              "completed",
+              "failed",
+              "cancelled",
+              "timed_out"
+            ]
+          }
+        },
+        "required": [
+          "execution_ref",
+          "run_id",
+          "status"
         ],
         "additionalProperties": false
       }
