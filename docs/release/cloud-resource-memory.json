@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "session": "1e8e8ba524cb4418bd3fa40472c364c4",
+  "outcome": "passed_bounded_scope",
+  "runtime": "actual BoxLite Cloud, SDK0.11.0",
+  "scope": "runtime adapter only; no Provider HTTP/PostgreSQL/GCC deployment proof",
+  "bounds": {
+    "cpus": 1,
+    "memory_mib": 1024,
+    "disk_mib": 1024,
+    "cpu_workers": 2,
+    "cpu_worker_seconds": 2,
+    "disk_max_write_mib": 1228,
+    "disk_deadline_seconds": 18,
+    "memory_max_touch_mib": 1536,
+    "memory_child_deadline_seconds": 24
+  },
+  "checks": [
+    {
+      "scenario": "approved_metadata",
+      "outcome": "passed",
+      "observations": {
+        "cpus": 1,
+        "memory_mib": 1024,
+        "network_inbound": "disabled",
+        "network_outbound": "disabled",
+        "disk_size_attestation": "SDK BoxInfo unavailable; guest filesystem observed below"
+      }
+    },
+    {
+      "scenario": "bounded_memory_pressure",
+      "outcome": "passed",
+      "observations": {
+        "upper_probe_bytes": 1610612736,
+        "last_completed_touched_bytes": 973078528,
+        "child_exit_code": -9,
+        "child_stdout_bytes": 0,
+        "child_stderr_bytes": 0,
+        "deadline_killed_by_probe": false,
+        "kernel_oom_kill_before": null,
+        "kernel_oom_kill_after": null,
+        "maximum_child_resident_bytes": 990605312,
+        "memory": {
+          "MemTotal": 1070071808,
+          "MemAvailable": 963710976,
+          "SwapTotal": 0
+        },
+        "elapsed_seconds": 3.8546689519999995,
+        "guest_rlimit_applied": false,
+        "progress_file_removed": true,
+        "termination_interpretation": "SIGKILL during bounded memory pressure without probe kill or guest RLIMIT; consistent with guest OOM, but missing kernel oom_kill counter prevents exact cause attestation"
+      }
+    }
+  ],
+  "cleanup": "confirmed stopped and removed by exact name/id",
+  "host_reboot": "not performed",
+  "full_escape_qualification": "not performed",
+  "vendor_host_claims": "not established",
+  "profile": {
+    "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+    "cpus": 1,
+    "memory_mib": 1024,
+    "disk_mib": 1024,
+    "network": "denied",
+    "allowed_hosts": [],
+    "entrypoint": [
+      "/usr/local/bin/python3",
+      "-c",
+      "import time; time.sleep(31536000)"
+    ],
+    "cmd": []
+  },
+  "runtime_id": "DpdA4zWXTaUD"
+}

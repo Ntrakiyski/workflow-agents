@@ -9,7 +9,7 @@ The reviewed candidate is suitable for continued isolated qualification. This re
 - Pi/OfficeCLI workload: `023fce7`.
 - Logical off-host restore tooling and evidence present in the integration checkout: `1592711` and `docs/release/offhost-restore.json`.
 
-These are reviewed source identities, not claims about the GCC deployment. Independent QA used a separate worktree and disposable PostgreSQL resources; it did not alter retained staging databases, Cloud resources or live deployment configuration.
+These are reviewed source identities, not claims about the GCC deployment. The initial implementation review used a separate worktree and disposable PostgreSQL resources. The bounded follow-up below created only fresh session-owned Cloud fixtures; it did not alter retained staging databases, unrelated Cloud resources or live deployment configuration.
 
 ## Independently executed checks
 
@@ -62,3 +62,14 @@ The lead's `docs/release/cloud-failure-journey.json` records actual BoxLite Clou
 The lead's `docs/release/offhost-restore.json` records two isolated logical database restores, matching table digests/audit identities and idempotent replay. Its source is deployed commit `04b7dc4`; all retained runtime entries are destroyed tombstones or have no runtime. It explicitly does not exercise guest restoration or application object restoration. A self-hosted object service on the GCC host is application storage, not by itself an off-host backup.
 
 This review has not independently executed or approved the complete deployed browser → Runner → Provider → Cloud → Pi/LiteLLM/OfficeCLI → validated download journey, application process/container replacement with persisted results, coordinated application/object/checkpoint restore, broad load/resource/network/escape qualification, host reboot or vendor-host recovery. The integration lead must record exact remaining gates and actual deployed commits. Stable Phase 2 readiness remains false while mandatory gates lack demonstrated evidence.
+
+## Independent bounded Cloud resource follow-up
+
+`docs/release/cloud-resource-journey.json` records actual SDK0.11.0/Provider runtime-adapter probes on new session-owned Cloud fixtures with the approved immutable Python image, 1 CPU, 1 GiB RAM, 1 GiB disk and inbound/outbound disabled. This uses the adapter directly, not the Provider HTTP API or a database. All three fixture attempts were confirmed stopped and removed by exact recorded name/server ID; private allocation/execution journals were written before dispatch. The first two attempts exposed harness assumptions, and their evidence remains alongside the final composite record.
+
+- Two concurrent CPU workers ran for two seconds: 1.999 CPU-seconds over 2.072 wall-seconds, with one advertised guest CPU.
+- The 1,039,155,200-byte root filesystem returned ENOSPC after 886,632,448 bytes of bounded writes; the fill file was removed and the observed available space restored exactly.
+- Memory pressure touched 973,078,528 bytes and reached 990,605,312-byte child RSS before SIGKILL. The guest reported 1,070,071,808-byte MemTotal and no swap. No guest RLIMIT or test-directed kill applied. The missing kernel `oom_kill` counter prevents direct attribution of the signal; the result is consistent with guest OOM and is reported as bounded termination evidence.
+- The external dummy interface was down, the IPv4 route table empty, and TCP connections to both fixed public IPv4 endpoints returned ENETUNREACH. This qualifies those probes for the network-denied profile; it does not qualify the Pi allowed-host policy or universal network isolation.
+
+These bounded results improve resource evidence but do not close sustained load, broad isolation/escape, host restart or vendor-host recovery gates.
