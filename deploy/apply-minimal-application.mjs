@@ -7,8 +7,13 @@ import { setTimeout as sleep } from 'node:timers/promises';
 const root = new URL('../', import.meta.url);
 const commit = process.argv[process.argv.indexOf('--commit') + 1];
 if (!/^[a-f0-9]{40}$/.test(commit ?? '')) throw Error('Require --commit <immutable SHA>');
-if (execFileSync('git', ['cat-file', '-t', commit], { cwd: root, encoding: 'utf8' }).trim() !== 'commit')
-  throw Error('Source commit must exist in the reviewed checkout');
+const appCommitIndex = process.argv.indexOf('--application-commit');
+const applicationCommit = appCommitIndex < 0 ? commit : process.argv[appCommitIndex + 1];
+if (!/^[a-f0-9]{40}$/.test(applicationCommit ?? '')) throw Error('Require immutable --application-commit');
+for (const sourceCommit of new Set([commit, applicationCommit])) {
+  if (execFileSync('git', ['cat-file', '-t', sourceCommit], { cwd: root, encoding: 'utf8' }).trim() !== 'commit')
+    throw Error('Source commit must exist in the reviewed checkout');
+}
 for (const key of ['COOLIFY_TOKEN_FILE', 'APPLICATION_CREDENTIAL_FILE', 'LITELLM_KEY_FILE', 'INFRA_CREDENTIAL_FILE'])
   if (!process.env[key]?.startsWith('/')) throw Error('Require absolute ' + key);
 const token = (await readFile(process.env.COOLIFY_TOKEN_FILE, 'utf8')).trim();
@@ -34,16 +39,17 @@ async function api(method, path, body) {
 const common = { git_branch: 'release/minimal-application', git_commit_sha: commit,
   is_auto_deploy_enabled: false, redact_all_env_values_in_logs: true };
 async function apply(uuid, expectedName, variables, settings) {
+  const sourceCommit = expectedName === 'workflow-application' ? applicationCommit : commit;
   const current = await api('GET', '/applications/' + uuid);
   if (current.name !== expectedName || current.environment?.uuid !== infra.environment_uuid ||
       current.environment?.project?.uuid !== infra.project_uuid) throw Error('Project/environment/name mismatch');
   await api('PATCH', '/applications/' + uuid + '/envs/bulk', { data: Object.entries(variables).map(([key, value]) => ({
     key, value: String(value), is_buildtime: false, is_runtime: true, is_preview: false, is_literal: true })) });
-  await api('PATCH', '/applications/' + uuid, { ...common, ...settings });
+  await api('PATCH', '/applications/' + uuid, { ...common, git_commit_sha: sourceCommit, ...settings });
   const actual = await api('GET', '/applications/' + uuid);
-  if (actual.git_commit_sha !== commit || actual.ports_mappings ||
+  if (actual.git_commit_sha !== sourceCommit || actual.ports_mappings ||
       (expectedName !== 'workflow-application' && actual.fqdn)) throw Error('Commit or private-network readback mismatch');
-  console.log(JSON.stringify({ operation: 'configure', name: expectedName, uuid, commit, fqdn: actual.fqdn }));
+  console.log(JSON.stringify({ operation: 'configure', name: expectedName, uuid, commit: sourceCommit, fqdn: actual.fqdn }));
 }
 async function auth(uuid, key) {
   const env = await api('GET', '/applications/' + uuid + '/envs');
@@ -136,6 +142,6 @@ await apply(ids.application.uuid, 'workflow-application', variables, { domains: 
   custom_docker_run_options: '--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=128',
   health_check_type: 'cmd', health_check_command: 'node /app/dist/healthcheck.js',
   health_check_path: '/health/ready', health_check_port: '8082', health_check_start_period: 60 });
-ids.application.source_commit = commit;
+ids.application.source_commit = applicationCommit;
 ids.application.url = appOrigin;
 await writeFile(new URL('deploy/application-resources.json', root), JSON.stringify(ids, null, 2) + '\n');

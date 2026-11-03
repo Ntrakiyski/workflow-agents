@@ -283,6 +283,59 @@ test("authentication, origin checks, owner scoped idempotency, and pagination re
     400,
   );
 });
+test("pagination preserves every same-millisecond request and timestamp tie", async () => {
+  const owner = "cursor-fixture";
+  const entries = ["123900", "123800", "123800", "123700"].map((fraction) => ({
+    id: uuid(),
+    at: `2026-01-02T03:04:05.${fraction}Z`,
+  }));
+  for (const entry of [
+    ...entries,
+    { id: uuid(), at: "2026-01-02T03:04:05.123850Z", foreign: true },
+  ]) {
+    await db.pool.query(
+      `INSERT INTO application.requests
+      (id,owner_id,title,instructions,status,submission_key,fingerprint,correlation_id,created_at)
+      VALUES ($1::uuid,$2,'Cursor fixture','Synthetic pagination fixture','failed',$1::text,$3,$1::text,$4::timestamptz)`,
+      [
+        entry.id,
+        "foreign" in entry ? "cursor-foreign" : owner,
+        digest(entry.id),
+        entry.at,
+      ],
+    );
+  }
+  const pager = createApi(db, objects, {
+    ...config,
+    users: [
+      ...config.users,
+      { username: "pager", owner_id: owner, password_sha256: digest(password) },
+    ],
+  });
+  try {
+    const seen: string[] = [];
+    let cursor: string | null = null;
+    for (let pageNumber = 0; pageNumber < 6; pageNumber++) {
+      const response = await pager.inject({
+        url: "/api/requests?limit=1" + (cursor ? "&cursor=" + cursor : ""),
+        headers: headers("pager"),
+      });
+      assert.equal(response.statusCode, 200);
+      const page = response.json();
+      seen.push(...page.requests.map((row: { id: string }) => row.id));
+      cursor = page.next_cursor;
+      if (!cursor) break;
+    }
+    const expected = [...entries]
+      .sort((a, b) => b.at.localeCompare(a.at) || b.id.localeCompare(a.id))
+      .map((entry) => entry.id);
+    assert.deepEqual(seen, expected);
+    assert.equal(new Set(seen).size, entries.length);
+    assert.equal(cursor, null);
+  } finally {
+    await pager.close();
+  }
+});
 test("immutable real S3 writes reject changed content and tolerate exact replay", async () => {
   const key = "test/immutable/" + uuid();
   await objects.put(

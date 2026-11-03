@@ -320,7 +320,9 @@ export function createApi(db: Database, objects: Objects, config: Config) {
       }
     }
     const rows = await db.pool.query(
-      "SELECT * FROM application.requests WHERE owner_id=$1 AND ($2::timestamptz IS NULL OR (created_at,id)<($2::timestamptz,$3::uuid)) ORDER BY created_at DESC,id DESC LIMIT $4",
+      `SELECT r.*, to_char(r.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_created_at
+       FROM application.requests r WHERE r.owner_id=$1 AND ($2::timestamptz IS NULL OR (r.created_at,r.id)<($2::timestamptz,$3::uuid))
+       ORDER BY r.created_at DESC,r.id DESC LIMIT $4`,
       [
         identity.owner_id,
         cursor?.created_at ?? null,
@@ -328,7 +330,10 @@ export function createApi(db: Database, objects: Objects, config: Config) {
         query.limit + 1,
       ],
     );
-    const list = rows.rows.map((v) => requestRow.parse(v));
+    const list = rows.rows.map((v) => ({
+      ...requestRow.parse(v),
+      cursorCreatedAt: z.iso.datetime().parse(v.cursor_created_at),
+    }));
     const page = list.slice(0, query.limit);
     const last = page.at(-1);
     return {
@@ -341,7 +346,7 @@ export function createApi(db: Database, objects: Objects, config: Config) {
       next_cursor:
         list.length > query.limit && last
           ? Buffer.from(
-              JSON.stringify({ created_at: last.created_at, id: last.id }),
+              JSON.stringify({ created_at: last.cursorCreatedAt, id: last.id }),
             ).toString("base64url")
           : null,
     };
