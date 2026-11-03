@@ -59,7 +59,7 @@ def operation(doc,path,method,opid,result,code=200,body=None,ids=(),idempotency=
  if idempotency: ps.append(param('IdempotencyKey'))
  if owner: ps.append(param('OwnerId'))
  if path.endswith('/events'): ps += [param('Cursor'),param('Limit')]
- op={'operationId':opid,'description':description,'parameters':ps,'responses':{str(code):response(result),**{str(c):response('Error',d) for c,d in ((400,'Malformed JSON, query or header'),(401,'Missing or invalid credentials'),(403,'Denied profile, permission or delegation'),(404,'Unknown or wrong-owner resource'),(409,'Idempotency conflict, busy resource or illegal transition'),(422,'Payload or approved workload schema invalid'),(429,'Configured quota exceeded'),(503,'Database, runtime or dependency unavailable'))}}}
+ op={'operationId':opid,'description':description,'parameters':ps,'responses':{str(code):response(result),**{str(c):response('Error',d) for c,d in ((400,'Malformed JSON, query or header'),(401,'Missing or invalid credentials'),(403,'Denied profile, permission or delegation'),(404,'Unknown or wrong-owner resource'),(409,'Idempotency conflict, busy resource or illegal transition'),(413,'Request body exceeds configured size bound'),(415,'Unsupported request media type'),(422,'Payload or approved workload schema invalid'),(429,'Configured quota exceeded'),(503,'Database, runtime or dependency unavailable'))}}}
  if body: op['requestBody']={'required':True,'content':{'application/json':{'schema':ref(body)}}}
  doc['paths'].setdefault(path,{})[method]=op
 
