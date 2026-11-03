@@ -5,6 +5,8 @@ description: Install, monitor, audit, recover, and upgrade the standalone BoxLit
 
 # Sandbox Provider operation procedure
 
+Candidate rc.2 adds scoped file endpoints and a durable file-operation fence. If a transfer is interrupted, inspect the same sandbox/upload; recovery stops the existing runtime before clearing its pending generation. Never clear a pending operation merely because the HTTP caller disappeared. Resume with the original upload and chunk bytes after explicitly starting the stopped environment. Same-guest completion journals do not replace off-host files or backups. Configure workload secrets as runtime-only `WORKLOAD_SECRET_*` variables referenced by `secret_environment`; profiles/DB snapshots contain names only. See `docs/contracts/scoped-files-v1.md`.
+
 1. Read `services/sandbox-provider/AGENTS.md`, the service `README.md`, and the published API version.
 2. Verify virtualization/KVM or supported host backend, BoxLite version, writable disk path, registry connectivity and capacity before starting work.
 3. Audit box create/start/run/stop/destroy by `sandbox_id`, actor, correlation ID, timestamp and lifecycle outcome.

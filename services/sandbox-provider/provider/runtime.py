@@ -1,6 +1,8 @@
 """Runtime boundary. Real entrypoint uses only BoxLite; test doubles live in tests."""
 import asyncio
 import os
+import json
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Protocol
 from .errors import ServiceError, unavailable
@@ -25,6 +27,7 @@ class SandboxRuntime(Protocol):
     async def attach(self, name, execution_id): ...
     async def collect(self, execution, max_output): ...
     async def cancel(self, execution): ...
+    async def transfer(self, name, request): ...
     async def close(self): ...
 
 
@@ -140,6 +143,49 @@ class BoxLiteRuntime:
     async def cancel(self, execution):
         await execution.kill()
         await execution.wait()
+
+    async def transfer(self, name, request):
+        """Run fixed guest code with bounded stdin; never use rootfs copy APIs.
+
+        Cloud copy_in(overwrite=False) is unsupported in SDK0.11.0. Its copy
+        APIs also do not provide the descriptor-relative symlink policy needed
+        here. Both backends use the same explicit Python3 guest helper instead.
+        """
+        from .transfers import MAX_BODY
+        box = await self._box(name)
+        source = Path(__file__).with_name('guest_files.py').read_text()
+        async def operation():
+            execution = await box.exec('python3', args=['-c', source], cwd='/', timeout_secs=30)
+            stdin = execution.stdin()
+            async def send():
+                await stdin.send_input(json.dumps(request, separators=(',', ':')).encode())
+                await stdin.close()
+            async def drain(stream):
+                data = bytearray()
+                async for part in stream:
+                    raw = part.encode() if isinstance(part, str) else bytes(part)
+                    if len(data) + len(raw) > MAX_BODY:
+                        raise ValueError('transfer_output_too_large')
+                    data.extend(raw)
+                return bytes(data)
+            _, out, _, result = await asyncio.gather(send(), drain(execution.stdout()), drain(execution.stderr()), execution.wait())
+            if getattr(result, 'error_message', None):
+                raise ValueError('incomplete_transfer_output')
+            envelope = json.loads(out)
+            if not isinstance(envelope, dict) or type(envelope.get('ok')) is not bool:
+                raise ValueError('incomplete_transfer_output')
+            if not envelope['ok']:
+                raise ServiceError(409, 'file_transfer_rejected', 'Guest file safety, checksum or path validation refused this transfer.')
+            if result.exit_code != 0 or not isinstance(envelope.get('value'), dict):
+                raise ValueError('incomplete_transfer_output')
+            return envelope['value']
+        try:
+            async with asyncio.timeout(35):
+                return await operation()
+        except ServiceError:
+            raise
+        except Exception:
+            raise ServiceError(409, 'ambiguous_transfer', 'File transfer outcome is unknown. Retry the same upload and chunk; do not overwrite a destination.') from None
 
     async def close(self):
         if self.runtime is not None:

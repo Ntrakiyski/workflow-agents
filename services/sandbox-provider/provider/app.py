@@ -17,6 +17,7 @@ from .config import ID, Settings
 from .errors import ServiceError, unavailable
 from .runtime import configured_runtime
 from .service import ProviderService, sandbox_json, run_json
+from . import transfers
 
 OPENAPI = json.loads(Path(__file__).with_name('openapi.json').read_text())
 REGISTRY = Registry().with_resource('urn:workflow:provider:openapi', Resource.from_contents(OPENAPI, default_specification=DRAFT202012))
@@ -64,7 +65,8 @@ def create_app(settings=None, runtime=None, dispatcher=True):
                     request.state.identity = settings.authenticate(request.headers.get('authorization'), request.headers.get('x-owner-id'))
                 if request.headers.get('content-length'):
                     try:
-                        if int(request.headers['content-length']) > settings.max_body:
+                        maximum = transfers.MAX_BODY if '/files/' in request.scope['path'] else settings.max_body
+                        if int(request.headers['content-length']) > maximum:
                             raise ServiceError(413, 'invalid_request', 'Request body exceeds the allowed size.')
                     except ValueError:
                         raise ServiceError(400, 'invalid_request', 'Content length is invalid.')
@@ -88,13 +90,13 @@ def create_app(settings=None, runtime=None, dispatcher=True):
     async def database_error(request, exc):
         return err_response(unavailable('dependency_unavailable'), request.state.correlation)
 
-    async def body(request, schema):
+    async def body(request, schema, maximum=None):
         if request.headers.get('content-type', '').split(';')[0].strip().lower() != 'application/json':
             raise ServiceError(415, 'invalid_request', 'Content type must be application/json.')
         data = bytearray()
         async for part in request.stream():
             data.extend(part)
-            if len(data) > settings.max_body:
+            if len(data) > (maximum or settings.max_body):
                 raise ServiceError(413, 'invalid_request', 'Request body exceeds the allowed size.')
         try:
             value = json.loads(data, parse_constant=lambda value: (_ for _ in ()).throw(ValueError()))
@@ -205,6 +207,34 @@ def create_app(settings=None, runtime=None, dispatcher=True):
         ids(sandbox_id)
         payload = await body(request, 'ExecuteRequest')
         return response(await service.execute(request.state.identity, sandbox_id, key(request), payload, request.state.correlation), 202)
+
+    @app.post('/v1/sandboxes/{sandbox_id}/files/uploads')
+    async def create_upload(sandbox_id: str, request: Request):
+        require(request, 'file:write')
+        ids(sandbox_id)
+        payload = await body(request, 'FileUploadRequest')
+        return response(await transfers.create_upload(service, request.state.identity, sandbox_id, key(request), payload, request.state.correlation), 201)
+
+    @app.patch('/v1/sandboxes/{sandbox_id}/files/uploads/{upload_id}')
+    async def upload_chunk(sandbox_id: str, upload_id: str, request: Request):
+        require(request, 'file:write')
+        ids(sandbox_id, upload_id)
+        payload = await body(request, 'FileChunkRequest', transfers.MAX_BODY)
+        return response(await transfers.update_upload(service, request.state.identity, sandbox_id, upload_id, payload, request.state.correlation))
+
+    @app.post('/v1/sandboxes/{sandbox_id}/files/uploads/{upload_id}/complete')
+    async def complete_upload(sandbox_id: str, upload_id: str, request: Request):
+        require(request, 'file:write')
+        ids(sandbox_id, upload_id)
+        await body(request, 'Empty')
+        return response(await transfers.update_upload(service, request.state.identity, sandbox_id, upload_id, {}, request.state.correlation, complete=True))
+
+    @app.post('/v1/sandboxes/{sandbox_id}/files/read')
+    async def read_file(sandbox_id: str, request: Request):
+        require(request, 'file:read')
+        ids(sandbox_id)
+        payload = await body(request, 'FileReadRequest')
+        return response(await transfers.read_file(service, request.state.identity, sandbox_id, payload, request.state.correlation))
 
     @app.post('/v1/sandboxes/{sandbox_id}/runs/cancel-by-reference')
     async def cancel_by_reference(sandbox_id: str, request: Request):
