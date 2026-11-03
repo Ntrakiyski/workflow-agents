@@ -15,6 +15,7 @@ from .runtime import BoxLiteRuntime, RuntimeIdentity
 class JournalExecution:
     native: object
     nonce: str
+    runtime_reference: str | None = None
 
     def id(self):
         return self.native.id()
@@ -22,6 +23,7 @@ class JournalExecution:
 
 class BoxLiteCloudRuntime(BoxLiteRuntime):
     requires_create_fence = True
+    cancellation_stops_environment = True
 
     def __init__(self, settings):
         self.settings, self.runtime = settings, None
@@ -219,7 +221,7 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
             native = await self._request(box.exec('python3', args=['-c', source, nonce, result_reference,
                 str(min(profile['max_output_bytes'], 32768)), json.dumps(list(profile.get('secret_environment', {}))), *argv],
                 env=list(profile.get('environment', {}).items()), cwd=profile['working_directory'], timeout_secs=timeout))
-            return JournalExecution(native, nonce)
+            return JournalExecution(native, nonce, reference)
         except ServiceError as error:
             if error.retryable:
                 raise ServiceError(409, 'ambiguous_execution', 'Execution outcome is unknown. Environment requires recovery.') from None
@@ -271,7 +273,12 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
         raise ServiceError(409, 'ambiguous_execution', 'Execution output cannot be safely recovered from this backend. Environment requires recovery.')
 
     async def cancel(self, execution):
-        if isinstance(execution, JournalExecution):
-            execution = execution.native
-        await self._request(execution.kill())
-        await self._request(execution.wait())
+        # A wrapper kill alone cannot prove its subprocess tree terminated.
+        # Confirm same-box stop before reporting cancellation; retain the disk.
+        if not isinstance(execution, JournalExecution) or not execution.runtime_reference:
+            raise ServiceError(409, 'ambiguous_execution', 'Execution cancellation requires same-environment recovery.')
+        try:
+            await self._request(execution.native.kill())
+        except ServiceError:
+            pass  # Stop confirmation below is authoritative for descendants.
+        await self.stop(execution.runtime_reference)
