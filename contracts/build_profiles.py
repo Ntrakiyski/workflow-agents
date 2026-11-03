@@ -13,8 +13,8 @@ schema=obj({'version':{'const':1},'sandboxes':{'type':'object','minProperties':1
 schema['$schema']='https://json-schema.org/draft/2020-12/schema'
 schema['$id']='https://workflow-agents.invalid/contracts/v1/profiles.schema.json'
 file_schema={'type':'string','minLength':1,'maxLength':64,'pattern':'^[A-Za-z0-9][A-Za-z0-9_.-]*$'}
-common={'sandbox_profiles':['minimal-linux:v1'],'working_directory':'/tmp','max_duration_seconds':120,'max_output_bytes':32768,'environment':{}}
-write={**common,'argv':['/usr/local/bin/python3','-c','import pathlib,sys; p=pathlib.Path("/tmp/workflow-fixture")/sys.argv[1]; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(sys.argv[2]); print("written")','${arg:file}','${arg:text}'],'arguments_schema':obj({'file':file_schema,'text':{'type':'string','maxLength':4096}},['file','text'])}
-read={**common,'argv':['/usr/local/bin/python3','-c','import pathlib,sys; print((pathlib.Path("/tmp/workflow-fixture")/sys.argv[1]).read_text(),end="")','${arg:file}'],'arguments_schema':obj({'file':file_schema},['file'])}
-template={'version':1,'sandboxes':{'minimal-linux:v1':{'image':'${FIXTURE_IMAGE_DIGEST}','cpus':1,'memory_mib':256,'disk_mib':512,'network':'denied','allowed_hosts':[]}},'workloads':{'fixture-write-file:v1':write,'fixture-read-file:v1':read}}
+common={'sandbox_profiles':['minimal-linux:v1'],'working_directory':'/','max_duration_seconds':120,'max_output_bytes':32768,'environment':{}}
+write={**common,'argv':['/usr/local/bin/python3','-c','import pathlib,sys; p=pathlib.Path("/opt/workflow-fixture")/sys.argv[1]; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(sys.argv[2]); print("written")','${arg:file}','${arg:text}'],'arguments_schema':obj({'file':file_schema,'text':{'type':'string','maxLength':4096}},['file','text'])}
+read={**common,'argv':['/usr/local/bin/python3','-c','import pathlib,sys; print((pathlib.Path("/opt/workflow-fixture")/sys.argv[1]).read_text(),end="")','${arg:file}'],'arguments_schema':obj({'file':file_schema},['file'])}
+template={'version':1,'sandboxes':{'minimal-linux:v1':{'image':'${FIXTURE_IMAGE_DIGEST}','cpus':1,'memory_mib':256,'disk_mib':1024,'network':'denied','allowed_hosts':[]}},'workloads':{'fixture-write-file:v1':write,'fixture-read-file:v1':read}}
 for name,value in [('profiles.schema.json',schema),('profiles.template.json',template)]: (P/name).write_text(json.dumps(value,indent=2)+'\n')
