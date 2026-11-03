@@ -2,11 +2,13 @@
 
 Candidate `1.0.0-rc.2` adds [generic scoped file transfer](../../docs/contracts/scoped-files-v1.md) and explicit Cloud result completion. The published `/v1` schemas remain compatible with existing consumers. Add `sandbox:file:read`/`sandbox:file:write` permissions only to the appropriate private service credentials. Approved guest images require Python3. Uploads use at most1 MiB chunks and256 MiB files under `/opt/workflow-transfer`; application object storage retains originals/results outside the sandbox.
 
-File-operation generations are committed before guest side effects. An interrupted/unconfirmed operation stops that same retained environment; unresolved stop keeps a fence until recovery. Retry only the original upload/offset/bytes, starting the stopped environment explicitly where necessary. Chunk/download bodies and JSON responses are bounded to1500000 bytes; ordinary API bodies retain their existing64 KiB limit. Full-file checksums are recalculated during reads, which trades download CPU/I/O for mutation detection in this candidate.
+File-operation generations are committed before guest side effects. An interrupted/unconfirmed operation stops that same retained environment; unresolved stop keeps a fence until recovery. Retry only the original upload/offset/bytes, starting the stopped environment explicitly where necessary. Chunk/download bodies and JSON responses are bounded to1500000 bytes; ordinary API bodies retain their existing64 KiB limit. Cloud uses fixed-helper argv with64 KiB internal writes and32 KiB internal reads while preserving the public1 MiB chunk contract. Full-file hashes bookend each public read and descriptor metadata is checked between fragments. Consumers must independently verify the final exported checksum.
+
+Actual hosted qualification observed roughly11.5 seconds per public MiB uploaded; an80 MiB runtime bundle can take about15 minutes. This is an observed candidate limitation, not a vendor guarantee or a precise backend limit. Allow sufficient application lease/request deadlines and reuse original upload identities after interrupted transfers.
 
 Cloud results require a nonce/checksummed completion envelope even when the child is silent. Bounded same-guest result journals are diagnostic retention; active-command attach still returns nonretryable `ambiguous_execution`, never a fresh replay. Operator profiles may map `secret_environment` names to runtime-only `WORKLOAD_SECRET_*` variables. Only references persist in profile snapshots. Missing secrets prevent dispatch, and exact currently configured secret strings are redacted from returned stdout/stderr. Workloads must separately avoid secrets in their output files/session data.
 
-These are implementation capabilities pending independent hosted qualification. No Cloud snapshot, whole-VM backup, host reboot persistence or stable Phase2 readiness is implied. Nonempty external `artifact_output_ref` remains rejected; use the scoped file endpoints instead.
+The scoped hosted journey uses a local Provider and disposable PostgreSQL against actual Cloud guests; see [curated evidence](../../docs/release/cloud-transfer-journey.json). It verifies file checkpoint export/reupload into a distinct sandbox and forensic database restore separately. It does not qualify GCC deployment, Cloud snapshots, whole-VM backups, host reboot persistence or stable Phase2 readiness. Nonempty external `artifact_output_ref` remains rejected; use the scoped file endpoints instead.
 
 Independent Python 3.12 / FastAPI / PostgreSQL service with BoxLite 0.11.0 behind `SandboxRuntime`. It owns its registry and never queries Runner tables. The API contains no application-specific behavior.
 
@@ -58,6 +60,7 @@ or bypass Docker/seccomp/AppArmor restrictions.
 | `BOXLITE_REST_PATH_PREFIX` | Optional server-provided routing prefix; distinct from the operator account label |
 | `RUNTIME_REQUEST_TIMEOUT_SECONDS` | `30`, range1..120; bounded Cloud control requests/state polling; no automatic create/exec replay |
 | `PORT` | `8000` |
+| `HOST` | `0.0.0.0`; qualification harnesses set `127.0.0.1` |
 | `LOG_LEVEL` | `INFO`; request bodies, tokens and workload output are never logged |
 | `MAX_CONCURRENT_RUNS` | `4`; operator may lower to1..4 to fit host capacity; hard ceiling leaves DB pool capacity for API/recovery |
 | `MAX_SANDBOXES_PER_OWNER` | `20`; retained non-destroyed boxes per effective owner |
@@ -146,7 +149,10 @@ for another account or change routing/origin to rebind existing records.
 
 Stop polls bounded metadata until the same ID is retained in a settled stopped
 state; start similarly waits for running. Explicit deletion waits for stop and
-confirms absence, allowing bounded reconciliation of a transition refusal.
+polls the same ID until absence, allowing bounded reconciliation of a transition refusal.
+An acknowledgement without disappearance returns retryable `runtime_transition_pending`;
+replay the explicit destroy operation, without clearing its retained intent or stopping a
+registry entry already in `destroying` state.
 SDK `close()` is a no-op in this pinned version and never invokes account-wide
 shutdown. No code enumerates then deletes unrelated account resources.
 
@@ -166,6 +172,10 @@ reconciliation, preserving its disk and never rerunning the command. Native
 `error_message` results also fail closed. Fresh stream-disconnection behavior
 still needs failure-injection qualification; a successful normal stream does
 not establish reconnect/replay guarantees.
+
+Cloud cancellation first attempts the native execution kill, then confirms the same
+box stopped before marking cancellation/timeout terminal. This terminates descendants
+and preserves disk. Native leader-kill acknowledgement alone is insufficient.
 
 Cloud owns the guest disk and physical execution host. GCC backups cover the
 Provider registry/audits/configuration, not that remote disk. The reviewed

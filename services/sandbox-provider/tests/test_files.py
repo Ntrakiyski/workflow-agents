@@ -72,6 +72,18 @@ def test_actual_guest_files_reject_paths_symlinks_special_files_and_conflicting_
     assert (outside / 'secret.txt').read_bytes() == b'secret'
 
 
+def test_internal_fragmented_read_rejects_file_mutation_even_with_expected_hash(tmp_path,monkeypatch):
+    run=helper(tmp_path/'guest',monkeypatch)
+    file=tmp_path/'guest'/'file.bin';file.write_bytes(b'original')
+    first=run({'operation':'read','path':'file.bin','offset':0,'max_bytes':2,'_include_stat':True})
+    second={'operation':'read','path':'file.bin','offset':2,'max_bytes':2,
+            '_expected_stat':first['_stat'],'_expected_sha256':first['sha256'],'_verify_sha256':True}
+    assert base64.b64decode(run(second)['data_base64'])==b'ig'
+    file.write_bytes(b'modified')
+    with pytest.raises(ValueError,match='file_changed'):
+        run(second)
+
+
 @pytest.mark.integration
 async def test_files_api_owner_auth_checksum_idempotency_and_busy_run(env, tmp_path, monkeypatch):
     app, client, settings, runtime = env
