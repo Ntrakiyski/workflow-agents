@@ -179,10 +179,13 @@ async function main() {
   record("future_schedule_and_cancellation");
   stage = "runtime_dispatch";
   const immediate = submission(randomUUID());
-  immediate.limits.deadline_at = future(18);
+  // Cold real image creation is setup, not the five-second workload budget.
+  // Retain the short unavailable-runtime bound; real setup gets a finite 5min.
+  const setupSeconds = runtimeKind === "unavailable" ? 18 : 300;
+  immediate.limits.deadline_at = future(setupSeconds);
   const accepted = (await request("runner", "POST", "/v1/jobs", { body: immediate, key: trace + "_runtime", expected: 202 })).payload;
   resources.runtime_job_id = accepted.job_id;
-  const done = await pollJob(accepted.job_id);
+  const done = await pollJob(accepted.job_id, setupSeconds + 30);
   if (runtimeKind === "unavailable") {
     // Setup can fail before the first workload attempt is allocated.
     expect(["failed", "timed_out"].includes(done.status) && done.result === null && done.error && done.attempt_count >= 0 && done.attempt_count <= 2, "Unavailable runtime returned success or unbounded attempts");
