@@ -61,6 +61,7 @@ try {
     if (command.length > 255) throw Error('backup_command_exceeds_bound');
     const task = await api('POST', '/applications/' + resource.uuid + '/scheduled-tasks', {
       name: 'workflow-offhost-' + randomUUID(), command, frequency: '* * * * *',
+      container: app.settings?.custom_internal_name || resource.name,
       enabled: true, timeout: 120,
     });
     const taskId = task.uuid ?? task.data?.uuid;
