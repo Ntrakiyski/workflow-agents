@@ -25,7 +25,11 @@
       "redact_all_env_values_in_logs": false,
       "is_consistent_container_name_enabled": true,
       "custom_internal_name": "workflow-phase1-job-runner",
-      "stop_grace_period": 30
+      "stop_grace_period": 30,
+      "profile_file": "deploy/profiles.cloud.staging.json",
+      "runtime_environment": {
+        "PROVIDER_TIMEOUT_MS": "45000"
+      }
     },
     "sandbox-provider": {
       "base_directory": "/services/sandbox-provider",
@@ -36,7 +40,7 @@
       "autogenerate_domain": false,
       "is_auto_deploy_enabled": false,
       "custom_network_aliases": "workflow-phase1-sandbox-provider",
-      "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --device=/dev/kvm:/dev/kvm:rw",
+      "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256",
       "health_check_enabled": true,
       "health_check_path": "/health/live",
       "health_check_port": 8000,
@@ -46,14 +50,18 @@
         "name": "workflow-phase1-boxlite",
         "mount_path": "/var/lib/sandbox-provider"
       },
-      "qualification": "Liveness keeps API available for diagnostics when real runtime readiness is blocked. Acceptance independently requires /health/ready and real BoxLite tests. KVM device mapping is added only after host preflight.",
+      "qualification": "Explicit BoxLite Cloud runtime. No local KVM device required. Readiness authenticates to configured Cloud; real HTTP lifecycle/persistence/isolation evidence remains a separate release gate.",
       "is_consistent_container_name_enabled": true,
       "custom_internal_name": "workflow-phase1-sandbox-provider",
       "stop_grace_period": 30,
       "max_restart_count": 3,
       "redact_all_env_values_in_logs": false,
-      "build_environment": {
-        "KVM_GID": "993"
+      "profile_file": "deploy/profiles.cloud.staging.json",
+      "runtime_environment": {
+        "SANDBOX_RUNTIME_MODE": "cloud",
+        "BOXLITE_REST_URL": "https://api.boxlite.ai",
+        "BOXLITE_ACCOUNT_SCOPE": "workflow-agents-phase1-gcc",
+        "RUNTIME_REQUEST_TIMEOUT_SECONDS": "30"
       }
     }
   },

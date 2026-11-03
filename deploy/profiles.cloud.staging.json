@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "sandboxes": {
+    "minimal-linux:v1": {
+      "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+      "cpus": 1,
+      "memory_mib": 256,
+      "disk_mib": 1024,
+      "network": "denied",
+      "allowed_hosts": []
+    },
+    "cloud-minimal-linux:v1": {
+      "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+      "cpus": 1,
+      "memory_mib": 1024,
+      "disk_mib": 1024,
+      "network": "denied",
+      "allowed_hosts": [],
+      "entrypoint": [
+        "/usr/local/bin/python3",
+        "-c",
+        "import time; time.sleep(31536000)"
+      ],
+      "cmd": []
+    }
+  },
+  "workloads": {
+    "fixture-write-file:v1": {
+      "sandbox_profiles": [
+        "minimal-linux:v1",
+        "cloud-minimal-linux:v1"
+      ],
+      "working_directory": "/",
+      "max_duration_seconds": 120,
+      "max_output_bytes": 32768,
+      "environment": {},
+      "argv": [
+        "/usr/local/bin/python3",
+        "-c",
+        "import pathlib,sys; p=pathlib.Path(\"/opt/workflow-fixture\")/sys.argv[1]; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(sys.argv[2]); print(\"written\")",
+        "${arg:file}",
+        "${arg:text}"
+      ],
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "file",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "fixture-read-file:v1": {
+      "sandbox_profiles": [
+        "minimal-linux:v1",
+        "cloud-minimal-linux:v1"
+      ],
+      "working_directory": "/",
+      "max_duration_seconds": 120,
+      "max_output_bytes": 32768,
+      "environment": {},
+      "argv": [
+        "/usr/local/bin/python3",
+        "-c",
+        "import pathlib,sys; print((pathlib.Path(\"/opt/workflow-fixture\")/sys.argv[1]).read_text(),end=\"\")",
+        "${arg:file}"
+      ],
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "fixture-runtime-policy:v1": {
+      "sandbox_profiles": [
+        "cloud-minimal-linux:v1"
+      ],
+      "working_directory": "/",
+      "max_duration_seconds": 15,
+      "max_output_bytes": 4096,
+      "environment": {},
+      "argv": [
+        "/usr/local/bin/python3",
+        "-c",
+        "import errno,json,os,pathlib,socket\nmemory_kib=int(next(line.split()[1] for line in pathlib.Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemTotal:')))\nfs=os.statvfs('/')\nattempts=[]\nfor host in ('1.1.1.1','8.8.8.8'):\n    try:\n        connection=socket.create_connection((host,443),timeout=2)\n        connection.close()\n        attempts.append({'errno':0,'connected':True})\n    except OSError as exc:\n        attempts.append({'errno':exc.errno,'connected':False})\nprint(json.dumps({'cpu_count':os.cpu_count(),'memory_total_bytes':memory_kib*1024,'rootfs_capacity_bytes':fs.f_blocks*fs.f_frsize,'interfaces':sorted(p.name for p in pathlib.Path('/sys/class/net').iterdir()),'external_tcp_attempts':attempts},separators=(',',':')))\n"
+      ],
+      "arguments_schema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    }
+  }
+}

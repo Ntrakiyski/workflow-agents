@@ -33,7 +33,7 @@ for (const [name,uuid] of Object.entries(ids.applications)) {
   const current = await api('GET','/applications/'+uuid);
   if (current.environment_id !== environment.id || current.name !== name) throw new Error('Application scope mismatch');
   if (current.destination?.server?.uuid !== ids.server_uuid) throw new Error('Application execution server mismatch');
-  const {storage,qualification,autogenerate_domain,build_environment,...settings} = manifest.applications[name];
+  const {storage,qualification,autogenerate_domain,build_environment,runtime_environment,profile_file,...settings} = manifest.applications[name];
   const body = {...settings,git_commit_sha:commit,git_branch:manifest.branch,is_auto_deploy_enabled:false,domains:''};
   if (process.argv.includes('--kvm-probe')) throw new Error('Set reviewed KVM access in the target manifest; legacy probe flag is disabled');
   if (process.argv.includes('--dry-run')) {
@@ -43,6 +43,17 @@ for (const [name,uuid] of Object.entries(ids.applications)) {
   if (build_environment) {
     await api('PATCH','/applications/'+uuid+'/envs/bulk',{data:Object.entries(build_environment).map(([key,value])=>({key,value,is_buildtime:true,is_runtime:false,is_literal:true}))});
   }
+  const runtimeVariables = [];
+  for (const [key,value] of Object.entries(runtime_environment ?? {})) {
+    if (/PASSWORD|TOKEN|API_KEY|AUTH_JSON|DATABASE_URL/.test(key)) throw new Error('Secret values must come from the secret manager');
+    runtimeVariables.push({key,value:String(value),is_buildtime:false,is_runtime:true,is_literal:true,is_shown_once:false});
+  }
+  if (profile_file) {
+    if (!/^deploy\/[A-Za-z0-9._-]+\.json$/.test(profile_file)) throw new Error('Unexpected profile configuration path');
+    const profiles = JSON.parse(await readFile(new URL(profile_file,root)));
+    runtimeVariables.push({key:name==='job-runner'?'RUNNER_PROFILES_JSON':'PROVIDER_PROFILES_JSON',value:JSON.stringify(profiles),is_buildtime:false,is_runtime:true,is_literal:true,is_shown_once:false});
+  }
+  if (runtimeVariables.length) await api('PATCH','/applications/'+uuid+'/envs/bulk',{data:runtimeVariables});
   await api('PATCH','/applications/'+uuid,body);
   const actual = await api('GET','/applications/'+uuid);
   if (actual.git_commit_sha !== commit || actual.fqdn || actual.ports_mappings)

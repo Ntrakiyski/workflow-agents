@@ -1,0 +1,27 @@
+{
+  "probe": "cloud-live-policy-attestation",
+  "sdk": "0.11.0",
+  "name": "workflow-phase1-attest-b376aa6525934ef6acc738064ceb22f7",
+  "runtime_id": "2oBkHoqbZo7z",
+  "metadata": {
+    "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+    "cpus": 1,
+    "memory_mib": 1024,
+    "auto_delete": 0,
+    "auto_stop": 0,
+    "auto_resume": false,
+    "network": "{\n  \"inbound\": {\n    \"allow_net\": [],\n    \"mode\": \"disabled\"\n  },\n  \"outbound\": {\n    \"allow_net\": [],\n    \"mode\": \"disabled\"\n  },\n  \"published_ports\": null\n}"
+  },
+  "guest": {
+    "cpus": 1,
+    "memory_kib": 1044992,
+    "rootfs_capacity_bytes": 1039155200,
+    "network_interfaces": [
+      "dummy0",
+      "lo"
+    ]
+  },
+  "outcome": "passed",
+  "explicit_cleanup_verified": true,
+  "scope": "Own disposable Cloud box; metadata plus bounded guest policy/capacity observations. Not HTTP/DB or stress-enforcement proof."
+}
