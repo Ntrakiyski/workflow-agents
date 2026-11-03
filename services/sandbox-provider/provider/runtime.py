@@ -2,6 +2,8 @@
 import asyncio
 import os
 import json
+import base64
+import hashlib
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Protocol
@@ -154,11 +156,15 @@ class BoxLiteRuntime:
         from .transfers import MAX_BODY
         box = await self._box(name)
         source = Path(__file__).with_name('guest_files.py').read_text()
-        async def operation():
-            execution = await box.exec('python3', args=['-c', source], cwd='/', timeout_secs=30)
+        async def operation(payload):
+            framed = json.dumps(payload, separators=(',', ':')).encode()
+            argv_input = getattr(self, 'file_transfer_input', 'stdin') == 'argv'
+            arguments = ['--json-args', *[framed[i:i+65536].decode() for i in range(0,len(framed),65536)]] if argv_input else [str(len(framed))]
+            execution = await box.exec('python3', args=['-c', source, *arguments], cwd='/', timeout_secs=30)
             stdin = execution.stdin()
             async def send():
-                await stdin.send_input(json.dumps(request, separators=(',', ':')).encode())
+                if not argv_input:
+                    await stdin.send_input(framed)
                 await stdin.close()
             async def drain(stream):
                 data = bytearray()
@@ -175,13 +181,59 @@ class BoxLiteRuntime:
             if not isinstance(envelope, dict) or type(envelope.get('ok')) is not bool:
                 raise ValueError('incomplete_transfer_output')
             if not envelope['ok']:
-                raise ServiceError(409, 'file_transfer_rejected', 'Guest file safety, checksum or path validation refused this transfer.')
+                import re
+                classification = envelope.get('code', '')
+                allowed = {'invalid_path','unsafe_file','file_changed','invalid_offset','invalid_upload','invalid_chunk',
+                           'checksum_mismatch','chunk_conflict','incomplete_write','invalid_operation','file_conflict',
+                           'file_too_large','incomplete_transfer_input','file_transfer_rejected'}
+                if classification not in allowed and not re.fullmatch(r'guest_filesystem_error_[0-9]{1,3}', str(classification)):
+                    classification = 'file_transfer_rejected'
+                count = envelope.get('input_bytes')
+                detail = '; input_bytes=' + str(count) if type(count) is int and 0 <= count <= MAX_BODY + 1 else ''
+                raise ServiceError(409, 'file_transfer_rejected', 'Guest file safety or checksum validation refused this transfer (' + classification + detail + ').')
             if result.exit_code != 0 or not isinstance(envelope.get('value'), dict):
                 raise ValueError('incomplete_transfer_output')
             return envelope['value']
         try:
             async with asyncio.timeout(35):
-                return await operation()
+                if getattr(self, 'file_transfer_input', 'stdin') == 'argv' and request['operation'] == 'chunk':
+                    # The hosted exec backend has a bounded argv budget. Keep
+                    # each fixed-helper request below it; the public1MiB chunk
+                    # remains one fenced idempotent operation, including after
+                    # a partial internal chunk or lost acknowledgement.
+                    data = base64.b64decode(request['data_base64'], validate=True)
+                    result = None
+                    for offset in range(0,len(data),65536):
+                        part = data[offset:offset+65536]
+                        result = await operation(request | {'offset':request['offset']+offset,
+                            'data_base64':base64.b64encode(part).decode(),'sha256':hashlib.sha256(part).hexdigest()})
+                    return result
+                if getattr(self, 'file_transfer_input', 'stdin') == 'argv' and request['operation'] == 'read':
+                    data = bytearray()
+                    metadata = None
+                    stamp = None
+                    while len(data) < request['max_bytes']:
+                        payload = request | {'offset':request['offset']+len(data),
+                            'max_bytes':min(32768,request['max_bytes']-len(data)),'_include_stat':True,
+                            '_verify_sha256':len(data)+32768 >= request['max_bytes']}
+                        if metadata:
+                            payload.update(_expected_stat=stamp,_expected_sha256=metadata[1])
+                        part = await operation(payload)
+                        raw = base64.b64decode(part['data_base64'],validate=True)
+                        observed = (part['size_bytes'],part['sha256'])
+                        if metadata is None:
+                            metadata,stamp = observed,part['_stat']
+                        if (metadata != observed or part['_stat'] != stamp or part['path'] != request['path']
+                                or part['offset'] != request['offset']+len(data) or len(raw)>payload['max_bytes']
+                                or not raw and not part['eof']):
+                            raise ValueError('file_changed')
+                        data.extend(raw)
+                        if part['eof']:
+                            break
+                    return {'path':request['path'],'offset':request['offset'],'data_base64':base64.b64encode(data).decode(),
+                            'size_bytes':metadata[0],'sha256':metadata[1],
+                            'eof':request['offset']+len(data)==metadata[0]}
+                return await operation(request)
         except ServiceError:
             raise
         except Exception:

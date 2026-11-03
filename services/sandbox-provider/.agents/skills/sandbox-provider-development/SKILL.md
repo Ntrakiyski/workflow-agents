@@ -5,7 +5,7 @@ description: Develop and validate the generic FastAPI BoxLite Sandbox Provider, 
 
 # Sandbox Provider development procedure
 
-For rc.2 file transfer/result completion work, read `docs/contracts/scoped-files-v1.md`. Test the actual guest helper filesystem boundary, chunk replay after partial writes/publication lost acknowledgement, durable pending-operation fencing and stale generation protection. The SDK HTTP/WebSocket stub exercises1 MiB stdin/output but remains mocked Cloud evidence. Keep existing strict result schemas unchanged. Workload secret references must resolve only at dispatch and never be serialized into profile snapshots. Use Python3 in approved guest images.
+For rc.2 file transfer/result completion work, read `docs/contracts/scoped-files-v1.md`. Test the actual guest helper filesystem boundary, chunk replay after partial writes/publication lost acknowledgement, durable pending-operation fencing and stale generation protection. Cloud public1 MiB chunks use64 KiB writes/32 KiB reads with fixed bounded argv. Test mutations even when file size/timestamps remain unchanged: rehash each public read before returning it. SDK loopback remains mocked evidence; consume its client's stdin EOF before closing WebSockets to avoid TCP resets. Keep strict result schemas unchanged. Workload secret references resolve only at dispatch. Use Python3 in approved guest images.
 
 1. Read `services/sandbox-provider/AGENTS.md` and `PHASE-1-REUSABLE-SERVICES.md`. Check the frozen generic API before writing code.
 2. Confirm the pinned BoxLite SDK version and actual persistent create/get/start/stop/exec/remove semantics; do not rely on auto-removing convenience wrappers.

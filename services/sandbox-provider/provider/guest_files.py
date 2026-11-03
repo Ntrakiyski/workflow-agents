@@ -1,4 +1,4 @@
-"""Fixed Python guest helper. Its source is sent as argv; bounded data uses stdin.
+"""Fixed Python guest helper with bounded argv or length-framed stdin input.
 
 This module also executes on the controller in subprocess-based security tests.
 Only the fixed root is used in deployed guests. No caller-supplied executable,
@@ -11,6 +11,7 @@ import os
 import re
 import stat
 import sys
+import time
 
 ROOT = '/opt/workflow-transfer'
 MAX_FILE = 268435456
@@ -73,15 +74,28 @@ def operate(value):
         finally:
             os.close(parent)
         try:
-            size, checksum = digest(fd)
+            before = os.fstat(fd)
+            stamp = [before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns,before.st_ctime_ns]
+            if '_expected_stat' in value:
+                if stamp != value['_expected_stat'] or not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
+                    raise ValueError('file_changed')
+                size,checksum = before.st_size,value['_expected_sha256']
+            else:
+                size, checksum = digest(fd)
             offset, maximum = value['offset'], value['max_bytes']
             if not 0 <= offset <= size or not 1 <= maximum <= MAX_CHUNK:
                 raise ValueError('invalid_offset')
             data = os.pread(fd, maximum, offset)
-            if digest(fd) != (size, checksum):
+            if (not value.get('_include_stat') or value.get('_verify_sha256') or offset + maximum >= size) and digest(fd) != (size, checksum):
                 raise ValueError('file_changed')
-            return dict(path=value['path'], offset=offset, data_base64=base64.b64encode(data).decode(),
-                        size_bytes=size, sha256=checksum, eof=offset + len(data) == size)
+            after = os.fstat(fd)
+            if stamp != [after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns,after.st_ctime_ns]:
+                raise ValueError('file_changed')
+            result = dict(path=value['path'], offset=offset, data_base64=base64.b64encode(data).decode(),
+                          size_bytes=size, sha256=checksum, eof=offset + len(data) == size)
+            if value.get('_include_stat'):
+                result['_stat'] = stamp
+            return result
         finally:
             os.close(fd)
     upload = value['upload_id']
@@ -158,9 +172,37 @@ def operate(value):
 
 
 if __name__ == '__main__':
+    raw = b''
     try:
-        request = json.loads(sys.stdin.buffer.read(1500001))
+        if sys.argv[1] == '--json-args':
+            raw = ''.join(sys.argv[2:]).encode()
+            if not 1 <= len(raw) <= 1500000:
+                raise ValueError('invalid_chunk')
+        else:
+            expected = int(sys.argv[1])
+            if not 1 <= expected <= 1500000:
+                raise ValueError('invalid_chunk')
+            # Frame stdin by exact length rather than accepting partial input.
+            deadline = time.monotonic() + 25
+            while len(raw) < expected and time.monotonic() < deadline:
+                part = os.read(sys.stdin.fileno(), min(65536, expected - len(raw)))
+                if part:
+                    raw += part
+                else:
+                    time.sleep(.01)
+            if len(raw) != expected:
+                raise json.JSONDecodeError('incomplete input', '', 0)
+        request = json.loads(raw)
         print(json.dumps({'ok': True, 'value': operate(request)}, separators=(',', ':')))
-    except (ValueError, KeyError, TypeError, OSError):
-        print(json.dumps({'ok': False, 'code': 'file_transfer_rejected'}))
+    except (ValueError, KeyError, TypeError, OSError) as error:
+        code = 'file_transfer_rejected'
+        allowed = {'invalid_path','unsafe_file','file_changed','invalid_offset','invalid_upload','invalid_chunk',
+                   'checksum_mismatch','chunk_conflict','incomplete_write','invalid_operation','file_conflict','file_too_large'}
+        if isinstance(error, json.JSONDecodeError):
+            code = 'incomplete_transfer_input'
+        elif isinstance(error, ValueError) and str(error) in allowed:
+            code = str(error)
+        elif isinstance(error, OSError):
+            code = 'guest_filesystem_error_' + str(error.errno)
+        print(json.dumps({'ok': False, 'code': code, 'input_bytes': len(raw)}))
         sys.exit(1)

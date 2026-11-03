@@ -40,6 +40,9 @@ class CloudStub:
         self.boxes, self.requests = {}, []
         self.fail_create, self.unauthorized, self.mutate, self.pending_stops = False, False, None, {}
         self.transfer_response, self.stdin_bytes = None, None
+        self.execution_request = None
+        self.pending_deletes,self.defer_delete_reads = {},0
+        self.execution_count = 0
 
     def box(self, payload):
         network = payload['network']
@@ -63,7 +66,7 @@ def cloud_server():
         def log_message(self, *_):
             pass
         def do_GET(self):
-            if self.path.endswith('/executions/exec-1/attach') and stub.transfer_response:
+            if '/executions/exec-' in self.path and self.path.endswith('/attach') and stub.transfer_response:
                 self.transfer_socket()
                 return
             self.respond('GET')
@@ -84,6 +87,10 @@ def cloud_server():
             self.end_headers()
             self.connection.settimeout(10)
             data = bytearray()
+            args = (stub.execution_request or {}).get('args', [])
+            argv_input = len(args)>2 and args[2]=='--json-args'
+            if argv_input:
+                data.extend(''.join(args[3:]).encode())
             while True:
                 head = self.rfile.read(2)
                 if len(head) != 2:
@@ -97,7 +104,8 @@ def cloud_server():
                 if mask:
                     payload = bytes(byte ^ mask[index % 4] for index, byte in enumerate(payload))
                 if opcode in (0,2):
-                    data.extend(payload)
+                    if not argv_input:
+                        data.extend(payload)
                 elif opcode == 1 and json.loads(payload).get('type') == 'stdin_eof':
                     break
                 elif opcode == 8:
@@ -132,13 +140,22 @@ def cloud_server():
             elif parts[0] in stub.boxes:
                 box = stub.boxes[parts[0]]
                 result = box
-                if len(parts) == 1 and method == 'GET' and parts[0] in stub.pending_stops:
+                if len(parts)==1 and method=='GET' and parts[0] in stub.pending_deletes:
+                    stub.pending_deletes[parts[0]]-=1
+                    if stub.pending_deletes[parts[0]]<=0:
+                        del stub.pending_deletes[parts[0]]
+                        del stub.boxes[parts[0]]
+                        code,result=404,{'message':'not found'}
+                elif len(parts) == 1 and method == 'GET' and parts[0] in stub.pending_stops:
                     stub.pending_stops[parts[0]] -= 1
                     if stub.pending_stops[parts[0]] <= 0:
                         box['status'] = 'stopped'
                         del stub.pending_stops[parts[0]]
                 elif len(parts) == 1 and method == 'DELETE':
-                    del stub.boxes[parts[0]]
+                    if stub.defer_delete_reads:
+                        stub.pending_deletes[parts[0]]=stub.defer_delete_reads
+                    else:
+                        del stub.boxes[parts[0]]
                     code, result = 204, None
                 elif parts[1:] == ['start'] and method == 'POST':
                     box['status'] = 'running'
@@ -146,7 +163,9 @@ def cloud_server():
                     box['status'] = 'stopping'
                     stub.pending_stops[parts[0]] = 2
                 elif parts[1:] == ['exec'] and method == 'POST':
-                    result = {'execution_id': 'exec-1'}
+                    stub.execution_request = payload
+                    stub.execution_count += 1
+                    result = {'execution_id': 'exec-' + str(stub.execution_count)}
                 elif len(parts) > 1:
                     code, result = 503, {'message': 'stub has no guest execution or WebSocket'}
             else:
@@ -193,6 +212,13 @@ async def test_real_sdk_wire_retention_policy_stop_settles_and_reconnect_uses_sa
         await runtime.stop(found.runtime_id)
         assert stub.boxes[found.runtime_id]['status'] == 'stopped' and found.runtime_id not in stub.pending_stops
         await runtime.close()
+        assert not any(method == 'DELETE' for method, _, _ in stub.requests)
+        replacement = runtime_for(settings, url)
+        assert (await replacement.start(found.runtime_id)).runtime_id == found.runtime_id
+        await replacement.destroy(found.runtime_id)
+        assert not stub.boxes
+        assert sum(method == 'DELETE' for method, _, _ in stub.requests) == 1
+        await replacement.close()
 
 
 async def test_real_sdk_loopback_transfers_large_stdin_and_output(tmp_path):
@@ -201,6 +227,7 @@ async def test_real_sdk_loopback_transfers_large_stdin_and_output(tmp_path):
         runtime = runtime_for(settings, url)
         found = await runtime.ensure(NAME, settings.profiles['sandboxes']['minimal-linux:v1'])
         raw = b'x' * 1048576
+        runtime.file_transfer_input = 'stdin'  # Explicitly test SDK stdin framing, not hosted policy.
         encoded = base64.b64encode(raw).decode()
         request = {'operation': 'chunk', 'path': 'inputs/large.bin', 'upload_id': 'upl_' + 'a' * 32,
                    'size_bytes': len(raw), 'offset': 0, 'data_base64': encoded, 'sha256': hashlib.sha256(raw).hexdigest()}
@@ -212,13 +239,60 @@ async def test_real_sdk_loopback_transfers_large_stdin_and_output(tmp_path):
         stub.transfer_response = lambda value: {'ok': True, 'value': returned}
         assert await runtime.transfer(found.runtime_id, {'operation': 'read', 'path': returned['path'], 'offset': 0, 'max_bytes': 1048576}) == returned
         await runtime.close()
-        assert not any(method == 'DELETE' for method, _, _ in stub.requests)
-        replacement = runtime_for(settings, url)
-        assert (await replacement.start(found.runtime_id)).runtime_id == found.runtime_id
-        await replacement.destroy(found.runtime_id)
+
+
+async def test_real_sdk_cloud_fragmented_transfer_preserves_public_one_mib_contract(tmp_path):
+    settings=configured(tmp_path)
+    with cloud_server() as (stub,url):
+        runtime=runtime_for(settings,url)
+        found=await runtime.ensure(NAME,settings.profiles['sandboxes']['minimal-linux:v1'])
+        data=b'x'*1048576
+        chunk={'operation':'chunk','path':'inputs/file.bin','upload_id':'upl_'+'a'*32,
+               'size_bytes':len(data),'offset':0,'data_base64':base64.b64encode(data).decode(),'sha256':hashlib.sha256(data).hexdigest()}
+        seen=[]
+        def upload(value):
+            raw=base64.b64decode(value['data_base64'],validate=True)
+            assert len(raw)<=65536 and hashlib.sha256(raw).hexdigest()==value['sha256']
+            seen.append(value['offset'])
+            return {'ok':True,'value':{'offset':value['offset']+len(raw)}}
+        stub.transfer_response=upload
+        assert await runtime.transfer(found.runtime_id,chunk)=={'offset':len(data)}
+        assert seen==list(range(0,len(data),65536))
+        checksum=hashlib.sha256(data).hexdigest()
+        def download(value):
+            start=value['offset'];part=data[start:start+value['max_bytes']]
+            assert value['max_bytes']<=32768
+            if start:
+                assert value['_expected_stat']==[1,2,len(data),3,4] and value['_expected_sha256']==checksum
+            return {'ok':True,'value':{'path':value['path'],'offset':start,
+                    'data_base64':base64.b64encode(part).decode(),'size_bytes':len(data),
+                    'sha256':checksum,'eof':start+len(part)==len(data),'_stat':[1,2,len(data),3,4]}}
+        stub.transfer_response=download
+        result=await runtime.transfer(found.runtime_id,{'operation':'read','path':'outputs/result.bin','offset':0,'max_bytes':1048576})
+        assert base64.b64decode(result['data_base64'])==data and result['sha256']==checksum and result['eof']
+        assert '_stat' not in result
+        executions=[payload for method,path,payload in stub.requests if method=='POST' and path.endswith('/exec')]
+        assert len(executions)==48 and all(sum(len(value) for value in p['args'])<131072 for p in executions)
+        await runtime.close()
+
+
+async def test_real_sdk_destroy_waits_for_same_id_absence_and_retains_retryable_pending(tmp_path):
+    settings=configured(tmp_path)
+    with cloud_server() as (stub,url):
+        runtime=runtime_for(settings,url)
+        found=await runtime.ensure(NAME,settings.profiles['sandboxes']['minimal-linux:v1'])
+        stub.defer_delete_reads=2
+        await runtime.destroy(found.runtime_id)
+        assert found.runtime_id not in stub.boxes
+        second=await runtime.ensure(NAME,settings.profiles['sandboxes']['minimal-linux:v1'])
+        stub.defer_delete_reads=1000
+        with pytest.raises(ServiceError) as error:
+            await runtime.destroy(second.runtime_id)
+        assert error.value.code=='runtime_transition_pending' and error.value.retryable
+        stub.defer_delete_reads=0
+        await runtime.destroy(second.runtime_id)
         assert not stub.boxes
-        assert sum(method == 'DELETE' for method, _, _ in stub.requests) == 1
-        await replacement.close()
+        await runtime.close()
 
 
 async def test_create_transport_failure_is_not_replayed_and_fenced_retry_cannot_create(tmp_path):

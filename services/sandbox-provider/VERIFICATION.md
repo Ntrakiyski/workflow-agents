@@ -1,5 +1,22 @@
 # Provider candidate verification
 
+## Hosted transfer transport, descendants and deletion reconciliation (2026-11-03)
+
+Latest full command with dedicated disposable local PostgreSQL16:
+`python -m pytest -q -m 'not real_runtime'` → **75 passed,1 deselected in19.57s**.
+The deselected case requires local KVM. The suite includes actual pinned SDK
+loopback1 MiB fragmented writes/reads, exact-ID eventual deletion polling,
+same-box cancellation, and mutation detection when same-size writes retain
+the same timestamp. Runtime calls in this suite remain mocked.
+
+Actual hosted evidence is separately retained in
+`docs/release/cloud-transfer-journey.json` and
+`docs/release/cloud-cancellation-descendant.json`. It uses new disposable local
+databases and a private local Provider against BoxLite Cloud, without GCC
+deployment or host reboot claims. File checkpoint/reupload is distinct from
+forensic registry restore and from a coordinated whole-environment backup.
+Exact test sandbox cleanup is required; any pending cleanup remains a failure.
+
 ## rc.2 scoped transfer and explicit Cloud completion (2026-11-03)
 
 From the merged main baseline `3f550ba95ca684aeea29a630675d33040724a961`:

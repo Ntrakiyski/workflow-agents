@@ -24,6 +24,7 @@ class JournalExecution:
 class BoxLiteCloudRuntime(BoxLiteRuntime):
     requires_create_fence = True
     cancellation_stops_environment = True
+    file_transfer_input = 'argv'
 
     def __init__(self, settings):
         self.settings, self.runtime = settings, None
@@ -209,8 +210,12 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
                         raise
                     await asyncio.sleep(.25)
                     await self._wait_settled(reference)
-            if await self.inspect(reference) is not None:
-                raise ServiceError(409, 'invalid_state', 'Execution backend did not confirm explicit deletion.')
+            try:
+                async with asyncio.timeout(self.settings.runtime_request_timeout):
+                    while await self.inspect(reference) is not None:
+                        await asyncio.sleep(.25)
+            except TimeoutError:
+                raise unavailable('runtime_transition_pending') from None
 
     async def execute(self, reference, argv, profile, timeout):
         box = await self._box(reference)
