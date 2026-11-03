@@ -51,6 +51,10 @@ class Contracts(unittest.TestCase):
   valid(validator(doc,'ExecuteRequest'),{'execution_ref':'job_a.attempt_1','profile':'fixture-write-file:v1','arguments':{'file':'a.txt','text':'hello'},'timeout_seconds':120})
   invalid(validator(doc,'ExecuteRequest'),{'execution_ref':'a','profile':'fixture-write-file:v1','arguments':{},'timeout_seconds':0})
   invalid(validator(doc,'ExecuteRequest'),{'execution_ref':'a','profile':'fixture-write-file:v1','arguments':{},'timeout_seconds':120,'shell':'whoami'})
+  valid(validator(doc,'CancelByReferenceRequest'),{'execution_ref':'attempt-a','reason':'Cancelled after unknown HTTP outcome'})
+  invalid(validator(doc,'CancelByReferenceRequest'),{'execution_ref':'attempt-a','shell':'ignored'})
+  valid(validator(doc,'CancellationFence'),{'execution_ref':'attempt-a','run_id':None,'status':'fenced'})
+  invalid(validator(doc,'CancellationFence'),{'execution_ref':'attempt-a','status':'fenced'})
   invalid(validator(doc,'DestroyRequest'),{'confirm':False,'reason':'test cleanup'})
   valid(validator(doc,'DestroyRequest'),{'confirm':True,'reason':'test cleanup'})
  def test_profile_configuration(self):
