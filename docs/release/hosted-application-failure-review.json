@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "operation": "read-only-hosted-failure-authorization-review",
+  "recorded_at_utc": "2026-11-03T18:43:55Z",
+  "outcome": "passed_bounded_failure_scope",
+  "deployed_commit": "2f7820f619fe023b4278c2f97e43f7709d59d8cd",
+  "request_id": "e4ce9738-c52d-4bb7-a862-93d18a2c2962",
+  "request_status": "failed",
+  "failed_request_retained_in_list": true,
+  "final_text_exposed": false,
+  "original_download": {
+    "file_id": "22ff5d95-fcae-44e1-8841-2025c297ad42",
+    "bytes": 5205,
+    "sha256": "8ea713e66ba55ac0ed017c48be1b54f72b72b5690bb9960f0c251171c42fffc9",
+    "matches_uploaded_bytes": true
+  },
+  "negative_checks": [
+    {
+      "resource": "request",
+      "identity": "anonymous",
+      "http": 401
+    },
+    {
+      "resource": "request",
+      "identity": "authenticated_foreign_owner",
+      "http": 404
+    },
+    {
+      "resource": "original_attachment",
+      "identity": "anonymous",
+      "http": 401
+    },
+    {
+      "resource": "original_attachment",
+      "identity": "authenticated_foreign_owner",
+      "http": 404
+    }
+  ],
+  "cross_origin_mutation_http": 403,
+  "screenshot": "/tmp/workflow-hosted-app-initial-failure.png",
+  "limits": "No completed output exists for this failed request; output download authorization and browser-to-Pi success remain unproved. No request/database/deployment mutation or replay performed; denied-origin POST was rejected before admission."
+}
