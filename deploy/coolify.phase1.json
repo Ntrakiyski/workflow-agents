@@ -36,12 +36,12 @@
       "autogenerate_domain": false,
       "is_auto_deploy_enabled": false,
       "custom_network_aliases": "workflow-phase1-sandbox-provider",
-      "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256",
+      "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --device=/dev/kvm:/dev/kvm:rw --group-add=993",
       "health_check_enabled": true,
       "health_check_path": "/health/live",
       "health_check_port": 8000,
       "limits_cpus": "1.5",
-      "limits_memory": "1024m",
+      "limits_memory": "2048m",
       "storage": {
         "name": "workflow-phase1-boxlite",
         "mount_path": "/var/lib/sandbox-provider"
@@ -61,7 +61,7 @@
       "postgres_db": "job_runner",
       "image": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
       "is_public": false,
-      "limits_cpus": "0.5",
+      "limits_cpus": "0.25",
       "limits_memory": "256m"
     },
     "sandbox-provider-db": {
@@ -70,7 +70,7 @@
       "postgres_db": "sandbox_provider",
       "image": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
       "is_public": false,
-      "limits_cpus": "0.5",
+      "limits_cpus": "0.25",
       "limits_memory": "256m"
     }
   },
@@ -80,5 +80,6 @@
     "network": "No host port mappings or public domains. Stable aliases on the selected private Docker destination; bearer ownership/profile authorization still required.",
     "deployment": "Pin each application git_commit_sha before deploy. Record returned application/database/deployment UUIDs separately; keep original project untouched.",
     "provider_storage": "One writer only; no rolling overlap of Provider instances sharing BoxLite home. SDK state and disks stay together in the named volume."
-  }
+  },
+  "coolify_url": "https://hosting.gccssofia.com"
 }

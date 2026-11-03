@@ -1,25 +1,26 @@
 {
-  "project_uuid": "6nshux1lmrsmsfeqar9wess9",
-  "environment_uuid": "vulhjgp8rvlruf3rlwchwc6v",
+  "coolify_url": "https://hosting.gccssofia.com",
+  "project_uuid": "ptombcqslsfcmfufdui4vk1z",
+  "environment_uuid": "tiiebld0vegfeegaapo3cdt3",
   "environment": "staging",
-  "server_uuid": "qk48swgog4kok0og8848wwg8",
-  "destination_uuid": "a48owkoog444c84oo844wgow",
+  "server_uuid": "jg8gsskgw44okokksco0k84c",
+  "destination_uuid": "jgkwk80w0ko08gog0k4sc0w0",
   "applications": {
-    "job-runner": "hpuishi3ewj80863sqj7wucd",
-    "sandbox-provider": "v3kixl4u4st8khfpmx2xne7e"
+    "job-runner": "yf0aaiivjr9k3qqaiawnlz8d",
+    "sandbox-provider": "b4safsmcuzzqdmgn7jqt7m8d"
   },
   "databases": {
-    "job-runner-db": "cbru9p9dh6sucbea2adudwco",
-    "sandbox-provider-db": "b2d87fuzrb1cpw6noy0kpo48"
+    "job-runner-db": "5alfx46nkf9d1vfzdivdybqh",
+    "sandbox-provider-db": "vv6xrcopkfiry4naqltlvlfg"
   },
   "backups": {
-    "job-runner-db": "wbvt7ycjaxj49xoeowmicmah",
-    "sandbox-provider-db": "krsnu4wl5mlvawjgoxexftqj"
+    "job-runner-db": "87mercash2kltyvea5rq2kdp",
+    "sandbox-provider-db": "roocdjayxvxzbtwcxoltfdye"
   },
   "storage": {
     "sandbox-provider": {
-      "uuid": "vblblih6u4dcojluminzocld",
-      "name": "v3kixl4u4st8khfpmx2xne7e-workflow-phase1-boxlite",
+      "uuid": "kle6n9haj4u7hurihsbu3ub8",
+      "name": "b4safsmcuzzqdmgn7jqt7m8d-workflow-phase1-boxlite",
       "mount_path": "/var/lib/sandbox-provider"
     }
   }

@@ -1,0 +1,15 @@
+{
+  "task_uuid": "vaksdrmpdcv9yq8tgubhnzbh",
+  "execution": {
+    "uuid": "ie6uzoo7vd9uudyirb85qmmf",
+    "duration": 1.31,
+    "error_details": null,
+    "finished_at": "2026-11-03T12:47:03.000000Z",
+    "message": "{\"uid\": 10001, \"groups\": [10001], \"kvm_exists\": true, \"kvm_rw\": false}",
+    "retry_count": 0,
+    "started_at": "2026-11-03T12:47:01.000000Z",
+    "status": "success",
+    "created_at": "2026-11-03T12:47:01.000000Z",
+    "updated_at": "2026-11-03T12:47:03.000000Z"
+  }
+}
