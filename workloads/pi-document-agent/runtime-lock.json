@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "workload_version": "0.1.0",
+  "architecture": "x86_64",
+  "node": {
+    "version": "24.22.2",
+    "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.xz",
+    "sha256": "48cc0e21e048790e54c0cf5749c2725005313d652651c40b7a21feb9697aaf75"
+  },
+  "pi": { "package": "@earendil-works/pi-coding-agent", "version": "1.5.0" },
+  "officecli": {
+    "version": "1.0.160",
+    "url": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.160/officecli-linux-x64",
+    "sha256": "baa084b64ec634bd9d41a0592db3ed85f11658b358bab898679537ea7f3e73a9"
+  }
+}
