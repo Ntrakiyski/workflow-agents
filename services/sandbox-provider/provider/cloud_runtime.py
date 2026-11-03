@@ -105,6 +105,8 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
     def validate_profile(profile):
         if profile['cpus'] > 16 or profile['memory_mib'] < 1024 or profile['memory_mib'] % 1024:
             raise ServiceError(422, 'runtime_policy_rejected', 'Cloud profiles require at most 16 CPUs and whole-GiB memory; rounding is forbidden.')
+        if any(':' in host for host in profile.get('allowed_hosts', [])):
+            raise ServiceError(422, 'runtime_policy_rejected', 'Cloud network allowlists accept hostnames or IPv4 rules without schemes or ports; port-level controls are unsupported.')
 
     @staticmethod
     def _verify_profile(info, profile):

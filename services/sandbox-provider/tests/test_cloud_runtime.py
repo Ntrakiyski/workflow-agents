@@ -353,6 +353,50 @@ async def test_legacy_small_profile_remains_readable_but_is_refused_before_cloud
         assert stub.requests == []
 
 
+@pytest.mark.integration
+async def test_cloud_host_port_policy_rejected_before_registry_intent_or_runtime_requests(tmp_path):
+    database_url = os.getenv('TEST_DATABASE_URL')
+    if not database_url:
+        pytest.skip('Requires a dedicated disposable PostgreSQL database.')
+    settings = configured(tmp_path)
+    settings.database_url = database_url
+    profile = settings.profiles['sandboxes']['minimal-linux:v1']
+    profile.update(network='allowlist', allowed_hosts=['model.example.com:443'])
+    with cloud_server() as (stub, url):
+        runtime = runtime_for(settings, url)
+        app = create_app(settings, runtime, dispatcher=False)
+        async with app.router.lifespan_context(app):
+            async with app.state.service.db.tx() as c:
+                await c.execute('TRUNCATE sandboxes,runs,idempotency,audit_events RESTART IDENTITY CASCADE')
+            stub.requests.clear()
+            async with AsyncClient(transport=ASGITransport(app=app), base_url='http://provider.test') as client:
+                response = await client.post('/v1/sandboxes',
+                    headers={'Authorization':'Bearer '+settings.auth[0]['token'],'Idempotency-Key':'invalid-port'},
+                    json={'owner_ref':'invalid-port','profile':'minimal-linux:v1','persistent':True})
+                assert response.status_code == 422 and response.json()['code'] == 'runtime_policy_rejected'
+                assert 'ports' in response.json()['message']
+                assert stub.requests == []
+                async with app.state.service.db.tx() as c:
+                    for table in ('sandboxes', 'idempotency', 'audit_events'):
+                        assert (await (await c.execute('SELECT count(*) AS count FROM '+table)).fetchone())['count'] == 0
+            profile['allowed_hosts'] = ['model.example.com']
+            runtime.validate_profile(profile)
+
+
+async def test_native_sdk_rejects_host_port_rule_before_http_dispatch(tmp_path):
+    import boxlite
+    with cloud_server() as (stub, url):
+        settings = configured(tmp_path)
+        runtime = runtime_for(settings, url)
+        native = await runtime._runtime()
+        options = boxlite.BoxOptions(image=settings.profiles['sandboxes']['minimal-linux:v1']['image'], cpus=1, memory_mib=1024, disk_size_gb=1,
+            network=boxlite.NetworkSpec(outbound=boxlite.OutboundNetworkSpec(mode='enabled',
+                allow_net=['model.example.com:443']), inbound=boxlite.InboundNetworkSpec(mode='disabled')))
+        with pytest.raises(boxlite.errors.InvalidArgumentError, match='invalid allow_net rule'):
+            await native.create(options, name=NAME)
+        assert stub.requests == []
+
+
 def test_backend_binding_survives_key_rotation_but_not_account_or_origin_change(tmp_path):
     settings = configured(tmp_path)
     original = configured_runtime(settings).backend_id
