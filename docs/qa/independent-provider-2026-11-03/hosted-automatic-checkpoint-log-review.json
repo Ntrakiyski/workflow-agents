@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "operation": "independent-hosted-automatic-checkpoint-log-review",
+  "recorded_at_utc": "2026-11-03T19:56:28.668847+00:00",
+  "outcome": "passed_bounded_evidence_review",
+  "request_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+  "job_id": "job_c28141c3-1008-4539-a041-6141b01ee45b",
+  "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+  "run_id": "run_08ef722652fc4acb8b4ceb5d3e7904bb",
+  "source_checkpoints_sha256": "59d31e005a5a2db95fa15ac9f016b44ad2caf273bbeef1d4897e970658916f69",
+  "source_logs_sha256": "ad6b5ed59df6bb66355a15a81f07ee4b578d1244998c0298057040342a213950",
+  "browser_output_identity_bytes_sha_match": true,
+  "original_input_identity_bytes_sha_match": true,
+  "required_file_roles": [
+    "input",
+    "output",
+    "request_manifest",
+    "result_manifest",
+    "session"
+  ],
+  "exported_session": {
+    "file_id": "097469e7-188d-4af1-a8cd-8f19ac8cc796",
+    "bytes": 11189,
+    "sha256": "5b8460af81a44f10198effe6a243f84631897af4642a10395193f84701db5faa"
+  },
+  "durable_application_actions": [
+    "request.submitted",
+    "sandbox.prepared",
+    "request.dispatched",
+    "request.completed",
+    "sandbox.stopped"
+  ],
+  "attempt_count": 1,
+  "provider_started_runs": 1,
+  "provider_completed_runs": 1,
+  "provider_stopped": true,
+  "correlated_log_records": {
+    "application": 1,
+    "provider": 178,
+    "runner": 34
+  },
+  "limits": [
+    "Lead collected owning-app database/object/API and safe allowlisted log evidence; independent QA inspected and checked it against independently downloaded browser files.",
+    "Logs bounded to at most10000 recent lines per service; no exhaustive logging/secrecy guarantee.",
+    "No additional service/database/Cloud calls or mutations by this reviewer."
+  ]
+}
