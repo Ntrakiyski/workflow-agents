@@ -1,271 +1,274 @@
-# Project Documentation Assistant — Lightweight Approach
-**Product Definition & Implementation Direction — Pi + LiteLLM Alternative to Version 3**
+# Project Documentation Assistant — Lightweight Microservices Approach
+**Product Definition & Architecture — Pi + LiteLLM + OfficeCLI + BoxLite**
 
-**Status:** Proposed simpler approach; not an implemented application  
-**Date:** November 2, 2026  
-**Audience:** HPE internal pilot  
-**Reference:** [Full Version 3 architecture](./PROJECT-DOCUMENTATION-ASSISTANT.md)
+**Status:** Proposed architecture; not implemented  
+**Updated:** November 3, 2026  
+**Organization:** HPE (one organization initially)  
+**Companion:** [Full Enterprise Architecture — Version 3](./PROJECT-DOCUMENTATION-ASSISTANT.md)
 
 ---
 
 ## 1. Project Vision
 
-Provide HPE employees with a simple browser interface for the **existing, working document skills** rather than rebuilding those skills as a generic AI automation platform.
+Give HPE employees a simple web interface for the **document skills that already work locally**, rather than first developing a general-purpose document-automation platform.
 
-The proven local workflow, as reported by its original operator, is:
+**Existing baseline:** The original operator reports high-quality SRT/Use Case results when running GitHub Copilot CLI in a folder containing `SKILL.md` instructions, templates and OfficeCLI. Those successes are the **comparison baseline**, not an endorsement that the new Pi runtime has already achieved identical quality.
 
-- A computer folder containing document templates, instructions, and `SKILL.md` files.
-- **GitHub Copilot CLI** operating in that folder, with **OfficeCLI** and the supporting document skills/tools.
-- An operator supplying inputs and guiding the agent to create or update SRT and other project documents.
-- Reliable results in the operator's tests. This is a user-reported observation, **not yet a measured acceptance rate across different people and projects**.
-
-The new requirement is primarily **accessibility**: other employees should be able to perform the same task without learning a CLI or navigating skill directories. **The lightweight implementation uses Pi + LiteLLM + OfficeCLI**; the existing Copilot CLI workflow remains the comparison baseline, not the runtime we are deploying.
+**Current direction:** Expose those skills using **Pi + the existing LiteLLM proxy + OfficeCLI**, running in persistent request-specific BoxLite environments.
 
 **Core principles**
+- Reuse and version the approved skills and templates; do not reproduce them as a new generic YAML workflow language.
+- Keep the requester experience simple: choose skill, provide rough instructions and files, inspect output, request changes.
+- Build **three independently deployable microservices** with narrow APIs and independent databases.
+- Keep the worker and sandbox infrastructure reusable for other workloads.
+- Assign **one persistent BoxLite microVM per document request**; stop it when idle without losing files or the saved Pi conversation.
+- Save important documents and session checkpoints outside the VM as well.
+- Preserve originals; use validation and source-grounded reasoning rather than inventing content.
+- Treat security, data classification and hosting approval as necessary gates for any HPE pilot.
 
-- **Reuse first:** Preserve working skills, prompts, templates, and document operations.
-- **Add an interface, not a platform:** Expose a short list of approved skills through a small UI.
-- **Simple model integration:** Use Pi as the agent runtime, connected to the existing LiteLLM proxy. Benchmark Pi on the same SRT fixtures previously used with Copilot CLI instead of assuming equivalent results.
-- **Don't over-generalize:** No arbitrary workflow builder or universal document-template interpretation in the first delivery.
-- **Preserve originals and document quality:** Operate on job copies and retain evidence/validation appropriate to the skill.
-- **Expand only after employee testing:** Let demonstrated needs justify more infrastructure.
-
-**Goal:** A second employee can select an existing SRT/Use Case skill, provide materials, and obtain an acceptable document through a browser.
+**Goal:** A second employee can obtain an acceptable document from an approved skill through a browser, including revisions days later, without using a CLI.
 
 ---
 
-## 2. Four Project Pillars
+## 2. Four Product Pillars
 
-### Pillar 01 — User Experience
+### Pillar 01 — User Experience & Application
 
-**Purpose:** A small web interface for using the document skills we already have.
-
-**Core Capabilities**
-- Show a short catalog of **approved automations** (for example SRT creation and Use Case drafting).
-- Select an automation and see a short explanation of its inputs and limitations.
-- Enter free-form instructions and attach notes, screenshots, and other supported files.
-- Click **Generate** and see a straightforward queued/running/completed/error status.
-- Download and, when practical, preview generated files.
-- Submit general text feedback and optional annotated screenshots; trigger a new document version.
-- Return to previously generated outputs if the pilot needs persistent history.
-
-**Goal:** Remove the need for users to operate Pi or any CLI, or understand skills, templates, or command-line instructions.
-
-**Technology Stack**
-- **Frontend:** Small React UI (Extend UI components optional, not a requirement).
-- **Backend interaction:** A few REST endpoints; simple status polling initially, SSE only if useful.
-- **Preview:** Basic download first; rendered preview only after checking fidelity on real templates.
-
-### Pillar 02 — Skill Library & Configuration
-
-**Purpose:** Reuse existing document automations as approved, curated items rather than building a new automation designer.
+**Purpose:** Own the employee-facing product, API, identity, requests, document versions and feedback.
 
 **Core Capabilities**
-- Package or reference the existing `SKILL.md` files, template assets, supporting scripts, and documented rules.
-- Maintain a curated list: automation ID, display name, description, required files, instructions, and skill directory.
-- Pin the version/commit of the skill bundle used for a job.
-- Permit the maintainer to update skills through Git and retest them; no visual YAML editor.
-- Keep distinct operations distinct: new SRT generation, guarded SRT evidence update, and Use Case drafting.
-- Reject unsupported templates, formats, and uncontrolled edits rather than improvising.
+- Hybrid request screen: choose SRT/Use Case skill, type informal instructions, attach screenshots and documents.
+- Authenticate local HPE users and authorize project membership.
+- Create persistent requests; show steps, progress and errors via SSE.
+- Offer in-app document preview where reliable, and downloadable files.
+- Display targeted agent clarification questions and their deadlines.
+- Accept general natural-language change requests plus screenshot/image attachments.
+- Keep all output versions available; a requester can return five days later for another revision.
+- Keep application business data and source/output files under application ownership.
 
-**Goal:** Share the existing working workflows without recreating their knowledge in a second framework.
+**Goal:** Employees use a simple document application instead of operating Pi, OfficeCLI or sandbox infrastructure.
 
 **Technology Stack**
-- **Primary assets:** Current document skills, templates, scripts, and OfficeCLI.
-- **Catalog:** Small checked-in config (JSON or YAML; exact representation unimportant at this stage).
-- **Versioning:** Git commits/tags for approved skill releases.
-- **Out of scope initially:** User-created arbitrary automations, graphical template editor, generic workflow DSL.
+- **UI:** React + TypeScript; Extend UI is a preferred component candidate, not yet validated.
+- **Application API:** Fastify + TypeScript/Node.js. A browser must not access the database or sandbox directly.
+- **Application database:** Separate PostgreSQL logical database, owned only by the Application Service.
+- **Files:** Self-hosted S3-compatible object store for originals, output versions, previews and critical checkpoints.
+- **Updates:** SSE from the Application to its browser clients; Runner-to-Application event transport to be specified.
+
+### Pillar 02 — Approved Skill Library
+
+**Purpose:** Distribute the existing tested document automations without implementing a visual automation builder.
+
+**Core Capabilities**
+- Maintain a small catalog of approved skills, descriptions, required inputs and output families.
+- Bundle existing `SKILL.md`, templates, examples, scripts and verification instructions.
+- Pin a Git version/commit for each execution so outputs are traceable.
+- Keep different workflows distinct: SRT creation, guarded SRT evidence updates, and Use Case drafting.
+- Make skill changes through Git and test them before publishing to users.
+- Reject unsupported formats/templates instead of guessing how to fill them.
+
+**Goal:** Share the existing document capabilities as curated, reliable automations.
+
+**Technology Stack**
+- **Source of truth:** Existing skill/template files maintained in Git.
+- **Catalog:** Small versioned JSON or YAML listing, not an executable workflow DSL.
+- **No initial visual builder:** Adding arbitrary user-created automations is deferred.
 
 ### Pillar 03 — Agent & Document Execution
 
-**Purpose:** Reproduce the existing document-skill behavior behind the UI using Pi + LiteLLM + OfficeCLI.
+**Purpose:** Run Pi, OfficeCLI and the selected skill for the duration of a document request and its later revisions.
 
 **Core Capabilities**
-- Run **Pi non-interactively** with the approved skill/task prompt, staged job files, and the configured LiteLLM model alias; verify the chosen Pi integration before implementation.
-- Install/configure Pi, OfficeCLI, and global skills in a versioned runner image; load approved automation-specific skills and files for each job.
-- Create a **new per-job working directory**; copy approved templates and source inputs; never edit originals.
-- Expose controlled OfficeCLI tools and a tightly restricted shell where needed; apply filesystem, network, process, and model-budget limits outside the agent's prompts.
-- Capture exit status, agent output, produced files, and relevant validation results.
-- Use the existing skill's document-specific checks, plus basic file-open/render checks.
-- Show errors or missing information explicitly rather than inventing technical results.
-- Apply revision feedback to a copy of the prior output in a new job workspace.
+- Run Pi headlessly inside the request-specific BoxLite VM.
+- Connect Pi to the **existing LiteLLM endpoint** using a backend-selected model alias.
+- Load global skills and the approved request-specific document skill.
+- Use OfficeCLI to inspect, generate, edit and render documents; validate the resulting artifacts.
+- Preserve the original uploaded files and operate on working copies.
+- Save the Pi session to durable files on the VM's retained writable disk.
+- On a later revision, restart the **same** BoxLite VM and explicitly reopen the saved Pi session.
+- Record missing information, blocked claims and failures instead of inventing test results.
+- Keep tool/network permissions restricted; trusted skills are not a security boundary.
 
-**Goal:** Reproduce the quality of the established document skills using Pi + LiteLLM + OfficeCLI, without introducing a general-purpose orchestration platform.
+**Goal:** Reproduce the original document-generation quality using Pi + LiteLLM + OfficeCLI while retaining conversational continuity between revisions.
 
 **Technology Stack**
-- **Agent runtime:** **Pi** — selected for the lightweight implementation; verify headless operation, skill loading, and permitted tool execution.
-- **Document engine:** OfficeCLI + current skill-defined scripts and validation.
-- **Runner:** Simple backend-managed background worker; no Hatchet or custom YAML interpreter initially.
-- **Isolation:** Separate per-job workspaces **inside isolated execution containers or an equivalent approved sandbox** before exposing the service to multiple HPE users. Per-job directories alone are **not a security boundary**. E2B microVMs can be adopted later if required.
-- **Model selection:** Existing **LiteLLM** proxy with backend-selected model alias (for example, `document-agent`); configure Pi as an OpenAI-compatible client using a verified model/provider configuration.
-- **Credentials:** Inject limited job-scoped access to LiteLLM; keep upstream provider secrets and persistent tokens out of skills and runner images. Exact key/gateway strategy is pending.
-- **Optional later infrastructure:** E2B Embed for stronger fresh microVM isolation if required by policy or concurrency; not required just to validate the UI concept.
+- **Agent:** Pi runtime (Node.js) executing within the microVM.
+- **Inference:** Existing LiteLLM; scoped job credentials or internal gateway design to be verified.
+- **Document tools:** OfficeCLI, existing `SKILL.md` assets and skill-defined checks.
+- **Sandbox:** BoxLite persistent microVM, allocated by the Sandbox Provider.
+- **Session persistence:** Explicit Pi session files and job workspace on retained VM disk, backed up/exported according to policy.
+- **No extra agent framework:** The Sandbox Provider is not a Pi-specific system; it launches approved commands in generic boxes.
 
-### Pillar 04 — Lightweight Platform & Operations
+### Pillar 04 — Independent Execution Infrastructure
 
-**Purpose:** Handle users, files, jobs, and delivery without deploying a full automation infrastructure.
+**Purpose:** Run two reusable microservices independently of the Application: a durable Job Runner and a generic Sandbox Provider.
 
 **Core Capabilities**
-- Restrict access to a small authorized HPE pilot group.
-- Accept requests, assign a job ID, create an isolated execution workspace, and report status.
-- Queue jobs with **one active execution initially**, or a deliberately small fixed concurrency limit.
-- Keep original inputs and output versions; apply a clear deletion/retention policy.
-- Retain enough logs to troubleshoot unsuccessful jobs.
-- Back up retained project artifacts according to the organization’s policy.
-- Add stronger authentication, project authorization, audit, and container isolation **before broader organizational rollout**.
+- Job Runner accepts authorized execution requests from the Application.
+- Queue, dispatch, deduplicate and retry jobs; enforce concurrency limits and timeouts.
+- Schedule **five-minute idle stops** and **15-minute clarification/requester deadlines** where applicable.
+- Sandbox Provider creates, starts, stops, inspects and executes inside persistent BoxLite environments.
+- Sandbox Provider maintains the mapping from public sandbox IDs to BoxLite runtime/disk identities.
+- The Runner calls the Provider's authenticated API, never BoxLite's library directly.
+- Three services own their own database schemas and credentials; no cross-database access.
+- Preserve disk, agent session and request-to-sandbox mapping across service restarts; test physical host recovery.
+- Enforce project isolation, sandbox networking and operational audit events.
 
-**Goal:** Provide a manageable internal service without premature multi-tenant orchestration, microVM infrastructure, or platform governance.
+**Goal:** Keep job execution and sandbox operation portable, independently deployable and reusable for future projects beyond document generation.
 
 **Technology Stack**
-- **Backend:** Fastify/Node.js (compatible with the larger architecture if we later scale).
-- **Queue:** A minimal local background worker backed by a durable job record. No orchestration platform required for the first controlled pilot.
-- **Persistence:** SQLite + job directories is one pilot option; PostgreSQL and self-hosted S3 remain alternatives where approved data-handling requirements call for them. **No storage choice is finalized for this lighter variant.**
-- **Auth/security:** Scope to a trusted pilot, but do not treat an operator login or work directory as sufficient protection for unrelated users' documents.
-- **Deployment:** One approved execution host initially; verify Pi runtime compatibility, LiteLLM connectivity, sandbox controls, and organizational data-processing policies.
+- **Job Runner:** TypeScript/Node.js + [Graphile Worker](https://github.com/graphile/worker) + its own PostgreSQL database.
+- **Runner API:** Small authenticated HTTP API (Fastify is a candidate), used by the Application.
+- **Sandbox Provider:** Python + FastAPI + [BoxLite Python SDK](https://github.com/boxlite-ai/boxlite).
+- **Sandbox Registry:** Its own PostgreSQL database with box IDs, disk references and lifecycle state.
+- **VM storage:** BoxLite's persistent writable disk; this is not the same thing as the registry database.
+- **Physical database hosting:** One PostgreSQL server may initially hold three **separate logical databases** using separate users; each service owns only its own database.
+- **No Hatchet, Procrastinate or extra broker** in this choice.
 
 ---
 
-## 3. How the Four Pillars Work Together
+## 3. Architecture Diagram & Ownership
 
-| Pillar | Main question | Primary output |
+```text
+┌──────────────────────────────────────────────┐
+│ 01 — APPLICATION SERVICE                     │
+│ React + Fastify (TypeScript)                 │
+│ Application PostgreSQL DB + S3 document store│
+│ Users · Projects · Requests · Versions       │
+└───────────────────────┬──────────────────────┘
+                        │ Authenticated HTTP + events
+                        ▼
+┌──────────────────────────────────────────────┐
+│ 02 — JOB RUNNER SERVICE                      │
+│ Graphile Worker (TypeScript / Node.js)       │
+│ Runner PostgreSQL DB                        │
+│ Execution IDs · Queue · Retries · Deadlines │
+└───────────────────────┬──────────────────────┘
+                        │ Authenticated provider API
+                        ▼
+┌──────────────────────────────────────────────┐
+│ 03 — SANDBOX PROVIDER SERVICE                │
+│ FastAPI (Python) + BoxLite Python SDK        │
+│ Sandbox Registry PostgreSQL DB              │
+│ Sandbox IDs · Create · Start · Stop · Inspect│
+│                                              │
+│ ┌──────────────────────────────────────────┐ │
+│ │ BoxLite — persistent VM per request     │ │
+│ │ Pi (Node.js) + OfficeCLI + SKILL.md     │ │
+│ │ Saved Pi session + document workspace   │ │
+│ └───────────────────┬──────────────────────┘ │
+└─────────────────────┼────────────────────────┘
+                      │ Controlled model access
+                      ▼
+             Existing LiteLLM Proxy
+```
+
+**Three stable identifiers:** `request_id` is the Application's document-history identity, `execution_id` belongs to the Runner for each attempt or revision, and `sandbox_id` belongs to the Provider and identifies the persistent VM.
+
+**Ownership rules**
+- Application DB: User/project identity, requests, comments/feedback, document versions and links to files.
+- Runner DB: Queue records, execution attempts, retries, scheduled deadlines, job events and links to request/sandbox IDs.
+- Sandbox Provider DB: BoxLite runtime identifiers, persistent disk location, state and recovery metadata.
+- Pi session files and working documents: Inside the VM, backed up/exported for resilience.
+- Original uploaded and final output artifacts: Application-owned object storage.
+
+None of these services should directly query another service's database. A logical database split does not require three separate PostgreSQL installations.
+
+---
+
+## 4. Complete Request Lifecycle
+
+1. **Create request:** User selects SRT skill, supplies notes/screenshots. Application stores originals and creates `request_id`.
+2. **Queue execution:** Application calls the Runner API with a request reference, authorized file references, skill version and idempotency key.
+3. **Create sandbox:** Graphile Worker dispatches to Provider. The Provider creates a BoxLite VM from the prepared agent image and stores its `sandbox_id` and disk reference.
+4. **Run Pi:** Provider stages the approved files and launches Pi with LiteLLM and OfficeCLI. Pi's session is saved on the persistent VM disk.
+5. **Version 1 ready:** Provider exports output. Runner records execution result and notifies Application; Application stores Version 1 and publishes the status to UI.
+6. **Five minutes idle:** A scheduled Runner action asks Provider to **stop** the VM; BoxLite files and saved Pi session remain. Stop only after active execution and result export have ended.
+7. **Five days later:** Requester submits text and screenshot feedback against `request_id`. Application creates a new revision request.
+8. **Resume:** Runner creates another `execution_id`, Provider restarts the **same** BoxLite environment, and Pi reopens the saved session plus new feedback.
+9. **Version 2 ready:** Export and retain Version 2; repeat the idle-stop policy. Old document versions remain accessible.
+10. **Host restart:** Restore Provider registry plus persistent BoxLite storage; reconstruct the mapping and resume only through an explicitly tested recovery path.
+
+### Clarification and delivery timeouts
+
+The earlier product decision remains applicable: **HITL only when Pi needs material clarification**. Questions are shown in the UI. After **15 minutes** without a response, the runner can resume with a conservative authorized default or a visible unresolved gap, **not a fabricated technical result**. An eligible delivered version can be timeout-finalized after its separate 15-minute requester window, without claiming human approval. Implement these deadlines as persistent jobs/state transitions rather than leaving a VM processing in a wait loop.
+
+### Job reliability
+
+Graphile Worker provides **at-least-once execution**, not exactly-once guaranteed physical effects. Use deduplication keys and transactional execution records so a retried job does not accidentally start two Pi processes against the same persistent VM. The Runner must enforce one active execution per `sandbox_id`, cancellation rules, and bounded retries for external-service failures.
+
+---
+
+## 5. Why Graphile Worker Rather Than Procrastinate?
+
+| Requirement | Graphile Worker | Procrastinate |
 |---|---|---|
-| 01 — User Experience | How can an employee submit a skill-driven document request? | Small upload/request/status/download UI |
-| 02 — Skill Library | Which existing, tested document skill should execute? | Versioned curated skill + template bundle |
-| 03 — Agent Execution | How do we reproduce the proven skill behavior? | Pi + LiteLLM + OfficeCLI output |
-| 04 — Platform & Operations | How do we manage jobs and files safely for the pilot? | Limited-access job runner and retained results |
+| Language executing tasks | **TypeScript / Node.js** | Python |
+| PostgreSQL-backed | Yes | Yes |
+| Queue, retries and delayed jobs | Yes | Yes |
+| Separate Redis requirement | No | No |
+| Calls Python Sandbox Provider | Through HTTP API | Native Python HTTP client |
+| Best fit for this chosen stack | **Selected for standalone Runner** | Not selected |
 
-### Simple Architecture
+**Graphile Worker does not have an official Python worker runtime.** It executes JavaScript/TypeScript tasks. A Python program can enqueue through PostgreSQL SQL functions, but cannot directly register a native Python Graphile task. Source: [Graphile Worker documentation](https://worker.graphile.org/docs).
 
-```text
-Employee browser
-  |
-  v
-Simple React UI
-  |  Select skill + instructions + attachments
-  v
-Fastify API
-  |  Authorize, save, create job
-  v
-Small background job runner (start with concurrency = 1)
-  |  Create fresh job workspace
-  v
-Pi + approved SKILL.md + OfficeCLI
-  |  Model inference through existing LiteLLM
-  |  Generate / update copies + run existing checks
-  v
-Store outputs and status
-  |
-  v
-UI — preview or download; optional revision request
-```
+**Why Procrastinate was proposed earlier:** When the Runner was tentatively Python, [Procrastinate](https://github.com/procrastinate-org/procrastinate) was a reasonable PostgreSQL-native Python queue. It is not required now that the Runner is TypeScript. Its project also publicly notes that it is looking for more maintainers.
 
-The execution environment might initially be a controlled test machine or server. **Do not claim this is production isolation** until agent process/container restrictions and organization policy are validated.
+**Selected decision:** Use Graphile Worker in the TypeScript Runner and use Python **only for the BoxLite Sandbox Provider**, where its SDK is directly useful.
 
 ---
 
-## 4. End-to-End Example — Existing SRT Skill
+## 6. What We Deliberately Avoid
 
-1. **Choose:** Employee picks **SRT — Create Test Script** from the curated library.
-2. **Describe:** Employee writes a short deployment/test description and attaches notes, screenshots and any required approved sources.
-3. **Register:** Backend checks permitted user, selected skill and file types, then creates a job ID.
-4. **Prepare:** Runner makes `jobs/<job-id>/inputs`, `working`, and `output` (illustrative paths), stages approved skill and template copies, and isolates job data as far as the chosen runtime supports.
-5. **Run:** The worker invokes Pi with approved SRT instructions, staged files, and the backend-selected LiteLLM model; only approved document tools and constrained shell operations are available.
-6. **Check:** Existing skill-specific document/evidence checks run, plus basic structural/render checks if available.
-7. **Deliver:** Return a DOCX download and concise status/issues report. Keep the original inputs intact.
-8. **Revise:** Employee adds feedback and a screenshot if useful; a new execution works on a copy and yields another version.
-
-**Conceptual Pi invocation (not executable configuration):**
-
-```text
-Pi agent runner
-  task: "Follow the approved SRT skill using only staged inputs."
-  model_provider: LiteLLM (OpenAI-compatible endpoint)
-  model_alias: document-agent
-  skills: approved global + SRT-specific skills
-  tools: approved OfficeCLI wrappers + restricted shell
-  output_directory: per-job workspace/output
-```
-
-The actual Pi CLI/SDK invocation, `models.json` configuration, tool restrictions, and LiteLLM credentials must be validated on the same permitted SRT fixtures used in the existing Copilot CLI workflow. That workflow is our **quality baseline**, not a runtime dependency.
+- **No general-purpose YAML automation interpreter or visual template builder.** Use the tested skill catalog and Git-managed documents.
+- **No Hatchet or second orchestration engine.** The Runner owns modest state transitions around Graphile jobs.
+- **No E2B control plane.** The Provider embeds BoxLite through Python.
+- **No separate desktop automation.** Pi and OfficeCLI operate headlessly.
+- **No assumption of full process-memory resume.** Store Pi's conversation sessions explicitly; BoxLite stop/restart guarantees must be validated separately from Pi session restoration.
+- **No one-way ephemeral sandbox per job** when the product requires days-later continuity. One request retains the Box and creates new execution records for revisions.
+- **No provider-specific API in the Application or Runner.** Runtime replacement is designed into the Provider; **migration of existing persistent VM disks is not automatic**.
+- **No unconditional agent trust.** Keep tool restrictions, model egress controls and document validation despite VM isolation.
 
 ---
 
-## 5. What We Deliberately Do Not Build Yet
+## 7. Known Foundations and Validation Gates
 
-| Full Version 3 concept | Simpler alternative |
+**Reusable originals:** `docx-template-testscript`, `docx-template-usecase`, `srt-video-and-screenshots-update`, OfficeCLI skill, templates and local document verification rules. The original operator's successful Copilot CLI results are a baseline, not proof of equivalent Pi reliability.
+
+**Before organizational use, verify:**
+- Pi can run the actual existing SRT skill with LiteLLM and OfficeCLI, with output quality comparable to the baseline.
+- BoxLite SDK can create, stop and restart a box **without deleting the writable disk**, including after Sandbox Provider and host restarts.
+- A saved Pi session can reopen correctly and use previous document files after several days.
+- Persistent VM disks, registry and critical Pi session checkpoints are backed up and recoverable.
+- Graphile delayed tasks reliably stop idle boxes; clarification and delivery deadlines can survive worker restarts.
+- Graphile retries do not run duplicate active Pi sessions in the same sandbox.
+- Service-to-service authentication, project permissions, allowlisted networking, file scanning and HPE data policies are enforced.
+- Changes to skill bundles are versioned and tested before being made available to other users.
+
+**Not yet fixed:** Exact authentication library, object-store product, API schemas, logging and tracing, retention/deletion approval, concurrency count, CPU/RAM allocation, Pi model alias, BoxLite host specification and whether all document families are in the first release.
+
+---
+
+## 8. Current Decisions and Next Test
+
+| Component | Proposed/selected |
 |---|---|
-| Visual automation creator | Curated approved skill catalog maintained in Git |
-| New declarative YAML workflow DSL | Existing `SKILL.md` and small run configuration |
-| Hatchet orchestration | One small background worker and job-status persistence |
-| E2B Embed microVM manager | Controlled pilot runner; introduce hardened per-job sandbox before broad multi-user production |
-| Agent choice | **Pi** using the same approved skills; compare output against Copilot CLI baseline |
-| Separate LiteLLM model gateway | Use existing **LiteLLM** directly via a scoped model credential or small approved gateway; do not build a new model platform |
-| Separate Pi author and reviewer | Start with existing skill-defined verification; add independent review only if defects justify it |
-| Fully generalized DOCX/XLSX/PPTX/PDF automation | Only approved, already-tested formats and skills |
-| Visual template mappings | Explicit mappings already defined in the skill/template package |
-| Complex 15-minute durable HITL workflow | Prefer a simple status and follow-up submission; add live clarification if testing shows it is necessary |
-| Enterprise multi-organization management | Small HPE pilot with minimal authorization |
+| Frontend | React + TypeScript |
+| Application API | Fastify / Node.js |
+| Application DB | Own PostgreSQL logical database |
+| Document files | Self-hosted S3-compatible storage |
+| Job Runner | **Graphile Worker + TypeScript**, independently deployed |
+| Runner DB | Own PostgreSQL logical database |
+| Sandbox Provider | **FastAPI + Python BoxLite SDK**, independently deployed |
+| Sandbox DB | Own PostgreSQL logical database |
+| VM | **One persistent BoxLite microVM per document request** |
+| Agent | Pi with saved session and versioned skills |
+| Document engine | OfficeCLI |
+| Inference | Existing LiteLLM proxy |
+| Request revisions | Restart same BoxLite VM and reopen the saved Pi session |
+| Idle stop | After five minutes without active execution; retain disk |
+| Clarification / requester windows | 15 minutes each, with previously agreed conservative/finalization policy |
 
-**This is not a rejection of Version 3.** Version 3 remains the larger future architecture if genuine usage, scale, or compliance requirements justify it.
+**Next concrete technical test:** Build one BoxLite image with Pi + OfficeCLI + the SRT skill. Use the three-service boundary to create a request, generate Version 1, stop the box after five idle minutes, simulate service and host restarts, reopen the same Pi session, apply feedback, and generate Version 2. Verify both file integrity and database ownership.
 
----
-
-## 6. Pilot Success Criteria
-
-The simplest useful demonstration is:
-
-> An authorized HPE employee who has never used GitHub Copilot CLI selects the existing SRT skill, uploads a real permitted sample, and produces a document comparable to the operator's known-good result, without opening a terminal.
-
-Assess:
-- Is the generated document factually and structurally comparable to the current working process?
-- Does it preserve the original template and required evidence placement?
-- Can the employee complete the request without technical assistance?
-- Can a feedback request generate another valid version?
-- Are job failures understandable and recoverable?
-- Is the data-handling and execution boundary permitted for the pilot?
-
-**Do not claim measured 100% success or production readiness** before repeatable tests across representative inputs and users.
-
----
-
-## 7. Validation Gates Before Broader HPE Use
-
-These are important even for a deliberately small product.
-
-1. **Pi execution:** Confirm the selected Pi runtime can load the original skill bundle, connect to LiteLLM, call approved OfficeCLI tools, produce artifacts, and report errors in headless mode.
-2. **Model access and identity:** Confirm HPE-approved LiteLLM providers and data-handling rules; use narrow per-job credentials or an approved internal gateway. Do not store upstream model credentials in the sandbox image.
-3. **Execution security:** Determine when a fresh container or stronger sandbox is mandatory; uploaded documents and instructions are untrusted. Per-job directories alone are not a security boundary.
-4. **Document quality:** Compare with known-good SRT/UC outputs and existing regression fixtures; validate targeted edits, source evidence and rendering.
-5. **File and access policy:** Decide which permitted HPE files may be processed; verify encryption, retention, authorization, deletion, and backup requirements.
-6. **Operational fit:** Test how failures, timeouts, process restarts, and small bursts of requests are handled.
-7. **Data preservation:** Never overwrite user originals or controlled project documents as a shortcut.
-
-Failure of these checks means the pilot design must be strengthened; it does **not** justify quietly launching an unsafe shared execution service.
-
----
-
-## 8. Where This Sits Relative to the Full Architecture
-
-**Lightweight approach = Product A: Document Skills as a Service**
-
-- Primary business problem: **Share the existing successful document skills with employees through a simple UI.**
-- First implementation: approved skill catalog, one lightweight job runner, **Pi + existing LiteLLM + OfficeCLI**; the established Copilot CLI outputs serve as parity test fixtures.
-- Deliberately avoids building an automation marketplace/platform before the business needs it.
-
-**Full Version 3 = Product B: Enterprise Document Automation Platform**
-
-- Additional ambition: visual creation of arbitrary automations, declarative workflow DSL, durable distributed orchestration, isolated microVMs and advanced review/governance.
-- The design is documented separately in [PROJECT-DOCUMENTATION-ASSISTANT.md](./PROJECT-DOCUMENTATION-ASSISTANT.md).
-- It is an expansion path, **not the prerequisite for giving employees access to the existing skills**.
-
----
-
-## 9. Suggested Next Step
-
-1. Package one existing **SRT creation skill**, its templates and supporting tools as a reproducible tested bundle.
-2. Validate **headless Pi execution** with OfficeCLI and a backend-selected LiteLLM model alias; compare output against known-good Copilot CLI runs.
-3. Build the smallest **select → upload → run → download** browser flow.
-4. Run real permitted sample inputs through both the old local workflow and the UI workflow and compare the artifacts.
-5. Add feedback/version history and stronger multi-user safeguards based on what the pilot actually requires.
-
-**One-sentence definition:** A lightweight internal web interface exposing existing document skills to HPE employees through **Pi + LiteLLM + OfficeCLI**, without prematurely rebuilding them into a general automation platform.
+**One-sentence definition:** A lightweight HPE document application using **React/Fastify**, an independent **Graphile Worker TypeScript Runner**, and an independent **Python BoxLite Sandbox Provider**, with Pi + LiteLLM + OfficeCLI and request-persistent agent sessions.
