@@ -101,6 +101,31 @@ async def test_failure_is_redacted_and_disposable_box_is_cleaned(tmp_path):
     assert 'sensitive runtime failure' not in encoded and 'qualification-' + SESSION not in encoded
     assert all(policy['token'] not in encoded for policy in settings.auth)
     assert runtime.creates == runtime.removes == 1 and runtime.boxes == {}
+    assert not list((tmp_path / '.runtime-qualification').glob('*/diagnostic-*.json'))
+
+
+@pytest.mark.asyncio
+async def test_opt_in_diagnostic_keeps_useful_cause_but_redacts_credentials_and_payload(tmp_path):
+    settings, runtime = configured(tmp_path), FakeRuntime()
+    settings.profiles['workloads']['fixture-write-file:v1']['environment'] = {'API_SECRET': 'private-config-value'}
+    async def failing_create(name, profile):
+        try:
+            raise PermissionError(1, 'Operation not permitted')
+        except PermissionError as cause:
+            raise RuntimeError('create failed ' + settings.auth[0]['token'] + ' qualification-' + SESSION
+                               + ' private-config-value') from cause
+    runtime.ensure = failing_create
+    probe = Qualification(settings, SESSION, lambda _: runtime, diagnostics_enabled=True)
+    result = await probe.run('lifecycle')
+    summary = json.dumps(result)
+    diagnostic = probe.directory / result['operator_diagnostic']['file']
+    private = diagnostic.read_text()
+    assert result['outcome'] == 'failed' and result['failed_stage'] == 'create_a'
+    assert 'Operation not permitted' in summary and 'builtins.PermissionError' in summary
+    assert 'traceback' in private and diagnostic.stat().st_mode & 0o777 == 0o600
+    for sensitive in (settings.auth[0]['token'], 'qualification-' + SESSION, 'private-config-value'):
+        assert sensitive not in summary and sensitive not in private
+    assert runtime.removes == 0
 
 
 def test_changed_profile_manifest_cannot_be_reused(tmp_path):

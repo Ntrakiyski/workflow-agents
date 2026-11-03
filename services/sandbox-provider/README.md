@@ -178,6 +178,14 @@ not establish real execution. The lead must capture actual JSON results under
 the deployed non-root/device/group/security limits. A fresh script process is
 not by itself a Provider API-process replacement or physical host restart.
 
+For a failed real-runtime qualification, use a fresh explicit session and add
+`--diagnostics`. This operator-only flag emits a bounded, credential/payload-
+redacted exception chain and writes the fuller redacted traceback to a mode600
+`diagnostic-<mode>.json` in that session directory. It does not change service
+error responses, permissions or runtime settings. The default CLI retains only
+safe error classifications and creates no traceback file. Never publish the
+private diagnostic file without reviewing its contents.
+
 `GET /metrics` is an authenticated Prometheus endpoint requiring `sandbox:read`. It scopes sandbox/run state gauges to the effective credential owner (and honors explicit delegation), without owner IDs, paths, workload text or credentials in labels. `/health/live` and `/health/ready` remain public safe health endpoints. Scrape `/metrics` on the private network using a read-only credential.
 
 Coolify may override image health checks with its own `curl` probe; the production image includes `curl` and CA certificates for this integration. With missing host KVM, an explicitly API-only staging deployment may use `/health/live` for container liveness, while `/health/ready` must continue to return503 and block workload acceptance. This does not qualify BoxLite or Phase2 readiness.

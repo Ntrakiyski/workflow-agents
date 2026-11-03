@@ -15,6 +15,8 @@ from pathlib import Path
 import re
 import tempfile
 import time
+import traceback
+from urllib.parse import quote, unquote, urlsplit
 
 from provider.config import Settings, canonical
 from provider.runtime import BoxLiteRuntime
@@ -71,9 +73,16 @@ def diagnostics():
 
 
 class Qualification:
-    def __init__(self, settings, session, runtime_factory=BoxLiteRuntime):
+    def __init__(self, settings, session, runtime_factory=BoxLiteRuntime, diagnostics_enabled=False):
         require(bool(re.fullmatch('[a-f0-9]{32}', session)), 'invalid_session')
         self.settings, self.session, self.runtime_factory = settings, session, runtime_factory
+        self.diagnostics_enabled = diagnostics_enabled
+        self.sensitive_values = [p['token'] for p in settings.auth] + [settings.database_url]
+        password = urlsplit(settings.database_url).password
+        if password:
+            self.sensitive_values.extend((password, unquote(password)))
+        for profile in settings.profiles['workloads'].values():
+            self.sensitive_values.extend(str(value) for value in profile.get('environment', {}).values() if value)
         self.anchor = settings.box_root.resolve().parent / '.runtime-qualification'
         require(not self.anchor.is_symlink(), 'unsafe_session_directory')
         self.anchor.mkdir(mode=0o700, exist_ok=True)
@@ -106,6 +115,7 @@ class Qualification:
             self.state = {'format': FORMAT, 'session': session, 'profiles_sha256': self.fingerprint,
                           'names': {'a': self.name('a'), 'b': self.name('b')}, 'owned': {},
                           'marker': 'qualification-' + session, 'phase': 'new', 'reports': {}}
+        self.sensitive_values.extend((self.state['marker'], 'qualification.txt'))
 
     def name(self, label):
         return 'phase1-qualification-' + self.session + '-' + label
@@ -117,6 +127,45 @@ class Qualification:
             os.fsync(handle.fileno())
             temporary = handle.name
         os.replace(temporary, self.path)
+
+    def redact_diagnostic(self, value):
+        variants = set()
+        for secret in self.sensitive_values:
+            if secret:
+                variants.update((secret, json.dumps(secret)[1:-1], quote(secret, safe='')))
+        for secret in sorted(variants, key=len, reverse=True):
+            value = value.replace(secret, '[REDACTED]')
+        value = re.sub(r'(?i)(https?://)[^/\s@]+@', r'\1[REDACTED]@', value)
+        value = re.sub(r'(?i)(bearer\s+)[A-Za-z0-9._~+/=-]+', r'\1[REDACTED]', value)
+        value = re.sub(r'(?i)((?:token|password|secret|signature|api_key)=)[^\s&]+', r'\1[REDACTED]', value)
+        return re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '?', value)
+
+    def capture_diagnostic(self, exc, phase):
+        """Explicit operator mode only; full redacted cause stays private."""
+        chain, seen, current = [], set(), exc
+        while current is not None and id(current) not in seen and len(chain) < 5:
+            seen.add(id(current))
+            typename = type(current).__module__ + '.' + type(current).__name__
+            if not re.fullmatch(r'[A-Za-z0-9_.]{1,128}', typename):
+                typename = 'unknown_exception'
+            item = {'type': typename, 'message': self.redact_diagnostic(str(current))[:4096]}
+            if isinstance(getattr(current, 'errno', None), int):
+                item['errno'] = current.errno
+            chain.append(item)
+            current = current.__cause__ or current.__context__
+        private = {'probe': FORMAT, 'session': self.session, 'stage': self.stage, 'phase': phase,
+                   'exception_chain': chain,
+                   'traceback': self.redact_diagnostic(''.join(traceback.format_exception(exc)))[:65536]}
+        name = 'diagnostic-' + phase + '.json'
+        target = self.directory / name
+        require(not target.is_symlink(), 'unsafe_diagnostic_file')
+        with tempfile.NamedTemporaryFile(mode='w', dir=self.directory, delete=False) as handle:
+            json.dump(private, handle, separators=(',', ':'))
+            handle.flush()
+            os.fsync(handle.fileno())
+            temporary = handle.name
+        os.replace(temporary, target)
+        return {'file': name, 'exception_chain': [item | {'message': item['message'][:1024]} for item in chain]}
 
     async def open(self):
         if self.runtime is None:
@@ -144,6 +193,7 @@ class Qualification:
 
     async def execute(self, label, profile, arguments):
         self.stage = 'execute_' + label
+        self.sensitive_values.extend(str(value) for value in arguments.values() if value is not None)
         configured, argv = self.settings.workload(self.identity, profile, PROFILES[0], arguments, 30)
         result = await self.runtime.collect(await self.runtime.execute(self.name(label), argv, configured, 30),
                                             min(self.settings.max_output, configured['max_output_bytes']))
@@ -235,6 +285,11 @@ class Qualification:
         except Exception as exc:
             report.update(outcome='blocked' if safe_error(exc) == 'runtime_not_ready' else 'failed',
                           error_classification=safe_error(exc), failed_stage=self.stage)
+            if self.diagnostics_enabled:
+                try:
+                    report['operator_diagnostic'] = self.capture_diagnostic(exc, mode)
+                except Exception:
+                    report['diagnostic_capture_error'] = 'private_capture_failed'
             if mode == 'lifecycle' and self.state['owned']:
                 try:
                     async with asyncio.timeout(45):
@@ -260,12 +315,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mode', choices=('lifecycle', 'prepare', 'verify', 'cleanup'), default='lifecycle')
     parser.add_argument('--session', required=True, help='Explicit lowercase UUID hex; reuse on cron replay.')
+    parser.add_argument('--diagnostics', action='store_true',
+                        help='Operator-only redacted exception chain plus private mode600 traceback.')
     args = parser.parse_args()
     report = {'probe': FORMAT, 'mode': args.mode, 'outcome': 'failed', 'scope': SCOPE}
     try:
         report['host'] = diagnostics()
         settings = Settings.from_env()
-        qualification = Qualification(settings, args.session)
+        qualification = Qualification(settings, args.session, diagnostics_enabled=args.diagnostics)
         lock_path = qualification.anchor / '.lock'
         with os.fdopen(os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600), 'r+') as lock:
             # A global volume-local lock also serializes distinct qualification sessions.
@@ -278,7 +335,7 @@ def main():
                     require(time.monotonic() < until, 'qualification_busy')
                     time.sleep(.25)
             # Another cron process may have completed while this invocation waited.
-            qualification = Qualification(settings, args.session)
+            qualification = Qualification(settings, args.session, diagnostics_enabled=args.diagnostics)
             report.update(asyncio.run(qualification.run(args.mode)))
     except Exception as exc:
         report['error_classification'] = safe_error(exc)

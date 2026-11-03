@@ -69,3 +69,12 @@ The default build also succeeded and printed only group10001. A build with
 `KVM_GID=0` was rejected. These are actual image permission probes, not KVM or
 VM execution tests. Final focused config/operator safeguard command returned
 **12 passed in0.29s**; Python compilation and CLI help also passed.
+
+Real GCC create failed after KVM device/group access succeeded. Added explicit
+operator `--diagnostics` to capture a bounded redacted exception chain and a
+private mode600 redacted traceback without weakening service errors or runtime
+security. A new focused test proves configured credential, marker payload and
+profile-environment secret redaction while retaining an errno/exception cause;
+the existing default-mode test verifies no diagnostic file is written. Focused
+operator/config tests: **13 passed in0.34s**; Python compilation passed. Actual
+GCC exception diagnosis remains with the lead's fresh-session invocation.
