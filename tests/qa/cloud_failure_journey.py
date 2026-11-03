@@ -58,10 +58,11 @@ class Journey:
         self.boxes, self.containers, self.children, self.logs = [], [], {}, []
         self.checks = []
         self.fault = None
+        self.uncertain_creation = False
         self.fault_lock = threading.Lock()
         self.proxy = None
 
-    def request(self, service, method, path, body=None, key=None, expected=(200, 202)):
+    def request(self, service, method, path, body=None, key=None, expected=(200, 201, 202)):
         headers = {'Authorization': 'Bearer ' + self.tokens[service],
                    'X-Correlation-ID': 'qa_' + self.session}
         if service == 'provider':
@@ -79,6 +80,9 @@ class Journey:
             response = error
         with response:
             value = json.loads(response.read(2 * 1024 * 1024))
+            if service == 'provider' and method == 'POST' and path == '/v1/sandboxes' and value.get('sandbox_id'):
+                if value['sandbox_id'] not in self.boxes:
+                    self.boxes.append(value['sandbox_id'])
             if response.status not in expected:
                 raise RuntimeError('unexpected_http_' + str(response.status) + '_' + str(value.get('code')))
             return value
@@ -154,6 +158,11 @@ class Journey:
                            POLL_INTERVAL_MS='200', RETRY_BACKOFF_SECONDS='1',
                            QUEUE_CONCURRENCY='2', MAX_GLOBAL_CONCURRENCY='2', MAX_OWNER_CONCURRENCY='2')
             self.environments[service] = env
+        (self.private / 'recovery.json').write_text(json.dumps({
+            'session': self.session, 'owner': self.owner, 'tokens': self.tokens,
+            'ports': self.ports, 'containers': self.containers,
+            'database_urls': {name: env['DATABASE_URL'] for name, env in self.environments.items()}}))
+        (self.private / 'recovery.json').chmod(0o600)
         self.start_service('sandbox-provider')
         journey = self
 
@@ -173,7 +182,9 @@ class Journey:
                     with journey.fault_lock:
                         fault, journey.fault = journey.fault, None
                 body = self.rfile.read(int(self.headers.get('Content-Length', 0)))
-                if fault == 'before':
+                if fault in ('before', 'before_timeout'):
+                    if fault == 'before_timeout':
+                        time.sleep(5)
                     result = json.dumps({'code': 'injected_transient', 'message': 'Controlled transport failure',
                                          'retryable': True, 'correlation_id': 'qa_' + journey.session}).encode()
                     status = 503
@@ -186,8 +197,15 @@ class Journey:
                         response = urllib.request.urlopen(request, timeout=35)
                     except urllib.error.HTTPError as error:
                         response = error
-                    with response:
-                        status, result = response.status, response.read(2 * 1024 * 1024)
+                    except urllib.error.URLError:
+                        response = None
+                    if response is None:
+                        status, result = 503, json.dumps({'code': 'dependency_unavailable',
+                            'message': 'Controlled service outage', 'retryable': True,
+                            'correlation_id': 'qa_' + journey.session}).encode()
+                    else:
+                        with response:
+                            status, result = response.status, response.read(2 * 1024 * 1024)
                     if fault == 'after':
                         time.sleep(5)
                 try:
@@ -204,10 +222,11 @@ class Journey:
         self.start_service('job-runner')
 
     def box(self, scenario):
+        self.uncertain_creation = True
         box = self.request('provider', 'POST', '/v1/sandboxes', {
             'owner_ref': self.owner + ':' + scenario, 'profile': 'cloud-minimal-linux:v1', 'persistent': True},
             key=self.session + ':' + scenario)
-        self.boxes.append(box['sandbox_id'])
+        self.uncertain_creation = False
         return wait_for(lambda: self.request('provider', 'GET', '/v1/sandboxes/' + box['sandbox_id']),
                         lambda value: value['status'] == 'running', 150)['sandbox_id']
 
@@ -236,12 +255,14 @@ class Journey:
         raise RuntimeError('audit_pagination_bound')
 
     def run(self):
-        for scenario in ('duplicate', 'transient_before_effect', 'timeout_after_effect', 'worker_crash',
+        for scenario in ('duplicate', 'transient_before_effect', 'timeout_before_effect', 'timeout_after_effect', 'worker_crash',
                          'provider_crash', 'cancellation_race'):
             sid = self.box(scenario)
             try:
                 self.fault = 'before' if scenario == 'transient_before_effect' else (
+                    'before_timeout' if scenario == 'timeout_before_effect' else (
                     'after' if scenario in ('timeout_after_effect', 'cancellation_race') else None)
+                )
                 key = scenario + ':' + self.session
                 if scenario == 'duplicate':
                     with concurrent.futures.ThreadPoolExecutor(4) as executor:
@@ -313,6 +334,8 @@ class Journey:
         for log in self.logs:
             log.close()
         # Preserve registry evidence if a guest could not be cleaned up.
+        if self.uncertain_creation:
+            cleanup_errors.append('uncertain_creation_requires_registry_reconciliation')
         if not cleanup_errors:
             for name in self.containers:
                 subprocess.run(['docker', 'rm', '-f', name], stdout=subprocess.DEVNULL, check=True)

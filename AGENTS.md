@@ -2,9 +2,9 @@
 
 ## Purpose and current state
 
-Workflow Agents provides two independent infrastructure services for future applications. Phase 1 implements a durable Job Runner and a persistent Sandbox Provider. Phase 2, the Document Assistant, is not implemented or authorized by this guide.
+Workflow Agents provides independent Job Runner and Sandbox Provider services plus a minimal Document Assistant consumer. The owner's 3 November continuation authorizes completing reusable infrastructure and building the initial application concurrently. Read [the narrowed release scope](docs/release/MINIMAL-SCOPE.md); it supersedes the broader Phase 2 feature list for this release.
 
-The current candidate is `1.0.0-rc.1` with authenticated `/v1` REST APIs. **Phase 1 acceptance is incomplete and `ready_for_phase2` is false.** Read [the current validation report](docs/phase1/CLOUD-VALIDATION.md), [machine-readable gates](docs/phase1/readiness.json), and [independent QA](docs/qa/CLOUD-REVIEW.md) before making readiness claims.
+The current infrastructure contract candidate is `1.0.0-rc.2` with authenticated `/v1` REST APIs. **Phase 1 acceptance is incomplete and `ready_for_phase2` is false.** Read [the current validation report](docs/phase1/CLOUD-VALIDATION.md), [machine-readable gates](docs/phase1/readiness.json), and [independent QA](docs/qa/CLOUD-REVIEW.md) before making readiness claims.
 
 The recorded staging deployment runs source commit `04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9`. Later documentation commits do not change that deployment. Inspect live state before an operational change. Do not equate branch HEAD, a healthy container, or passing mocked tests with the deployed release.
 
@@ -26,7 +26,8 @@ User instructions define the authorized task. This file applies throughout the r
 | `services/sandbox-provider/` | Python 3.12, FastAPI, Uvicorn, Psycopg 3, JSON Schema, BoxLite SDK 0.11.0 | Sandbox registry, runtime identity, execution records, lifecycle and sandbox audits; its own PostgreSQL database |
 | `contracts/` | Versioned OpenAPI 3.1 and JSON Schema, Python generators and tests | Reviewed wire contracts, shared profile format, compatibility policy |
 | `deploy/` | Per-service Dockerfiles plus Coolify JSON configuration and operator scripts | Explicit Git commit deployment, private networking, resource settings and recovery procedures |
-| `apps/application/` | Instructions only | Future Phase 2 scope; no running application or UI |
+| `apps/application/` | React/TypeScript, Fastify, own PostgreSQL and private object storage | Instructions/attachments, authorized persistent request list, validated text/file results |
+| `workloads/pi-document-agent/` | Versioned Pi/OfficeCLI runtime archive and controller validation | Document execution, saved sessions, checksummed result manifests |
 
 Dependency locks and service manifests contain exact package versions. PostgreSQL 16 is the tested database baseline. Each service has its own dependencies, migrations, tests, Docker build context, configuration and release metadata. There is no root application package or monolithic build.
 
@@ -35,7 +36,7 @@ The request path is client -> Job Runner HTTP API -> Graphile queue -> Sandbox P
 ## Deployment and runtime boundaries
 
 - The active project is `workflow-agents-phase1`, environment `staging`, on GCC Coolify. [Deployment instructions](deploy/README.md), [configuration](deploy/coolify.phase1.json) and [resource IDs](deploy/staging-resources.json) are authoritative operational references.
-- The four resources are `job-runner`, `sandbox-provider`, `job-runner-db` and `sandbox-provider-db`. Applications deploy independently; databases have distinct credentials and persistent storage. Both APIs and both databases are private. There is no dashboard or public API documentation UI.
+- Original infrastructure resources are `job-runner`, `sandbox-provider`, `job-runner-db` and `sandbox-provider-db`. Initial application resources are recorded separately in `deploy/application-resources.json`. Applications deploy independently with separate DB credentials. Infrastructure APIs, all databases and object storage stay private; only the authenticated application may be public. There is no infrastructure dashboard or public API documentation UI.
 - **The Provider API and registry are self-hosted on GCC; active guest execution and writable guest disks are hosted by BoxLite Cloud.** `SANDBOX_RUNTIME_MODE=cloud` selects `BoxLiteCloudRuntime` behind `SandboxRuntime`. Local mode remains explicit and is the code default. Neither mode silently falls back to another runtime or a mock.
 - Cloud mode uses runtime-only `BOXLITE_API_KEY`, an HTTPS `BOXLITE_REST_URL` and a stable `BOXLITE_ACCOUNT_SCOPE`. It needs no local `/dev/kvm`. Preserve backend/account bindings; changing configuration must not reinterpret existing sandbox identities.
 - Local GCC execution remains blocked by the container's bubblewrap namespace boundary despite host KVM availability. Worfklow lacked host KVM; our Worfklow resources were removed after migration. Do not redeploy there during routine maintenance.
@@ -52,7 +53,7 @@ The request path is client -> Job Runner HTTP API -> Graphile queue -> Sandbox P
 - Enforce one active execution per sandbox. Stop preserves the disk. Destroy is a separate explicit authorized operation. Missing retained environments must fail visibly rather than become new empty boxes.
 - Emit structured JSON logs with correlation, target and execution IDs, action, duration, outcome and safe error class. Persist actor, timestamp, target and outcome in append-only audits. Never log tokens, database URLs, workload payloads or document contents.
 - Keep secrets in ignored `private/` files or the deployment secret manager. Do not copy attachment credentials into code, documentation, examples, command arguments or Git.
-- Never add Pi, OfficeCLI, SRT, approval, requester-timeout or Document Assistant logic to infrastructure. No React UI, new LiteLLM service, Hatchet or general YAML workflow engine belongs in Phase 1.
+- Never add Pi, OfficeCLI, SRT, approval, requester-timeout or Document Assistant logic to infrastructure. The React UI belongs only in `apps/application`. Reuse existing LiteLLM; no new LiteLLM service, Hatchet or general YAML workflow engine belongs here.
 
 ## Development and verification
 
@@ -95,13 +96,13 @@ The recorded real Cloud journey passed workload execution, same-box marker reten
 
 Keep these gates open until new evidence closes them:
 
-- Generic scoped artifact transfer. Nonempty `artifact_output_ref` currently returns 422.
+- Generic scoped artifact transfer is implemented through separate file APIs in rc.2; hosted and deployed evidence is recorded separately. The legacy `artifact_output_ref` field remains unsupported and returns 422.
 - Active-command and complete-output recovery. Cloud attach fails closed with nonretryable `ambiguous_execution`; preserve the same box and do not replay uncertain work.
-- Hosted transient retry, Provider timeout and active-worker crash failure injection.
-- Off-host database backups and coordinated registry plus Cloud guest data restore. Observed vendor capabilities disable snapshot, export, import and cloning.
+- Final hosted transient retry, Provider timeout and active-worker crash failure evidence for the deployed source; earlier isolated-process results are in `docs/release/`.
+- Coordinated registry plus required Cloud data recovery. Encrypted off-host logical backups and isolated restore are implemented; application row/object/session checkpoints are separately versioned. Observed vendor capabilities disable full snapshot, export, import and cloning.
 - Host restart persistence and broader resource, network and escape qualification.
 
-Do not use a Cloud snapshot or VM clone as a proven capability. The user's separate Pi prototype uploads a cached runtime archive; it is reference material, not repository implementation or independent Phase 1 evidence. See [the dated closeout](docs/phase1/CLOSEOUT-2026-11-03.md).
+Do not use a Cloud snapshot or VM clone as a proven capability. The repository workload uploads a checksum-pinned runtime archive; it is not a VM clone or independent proof of infrastructure acceptance. See [the dated closeout](docs/phase1/CLOSEOUT-2026-11-03.md).
 
 ## Git and handoff
 
