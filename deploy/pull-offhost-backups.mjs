@@ -33,6 +33,7 @@ const resources = [
     command: 'node /app/scripts/application-backup.mjs --quiescent',
     publicOrigin: 'https://workflow-agents.68.210.88.115.sslip.io' },
 ];
+if (process.argv.includes('--infrastructure-only')) resources.pop();
 const source = 'https://raw.githubusercontent.com/Ntrakiyski/workflow-agents/' + commit;
 const directory = resolve(process.env.BACKUP_DIRECTORY);
 await mkdir(directory, { recursive: true, mode: 0o700 });
@@ -45,6 +46,7 @@ const destination = join(directory, session);
 await mkdir(destination, { mode: 0o700 });
 const manifest = { version: 1, session, source_origin: origin, destination_host: hostname(),
   source_commit: commit, scope: 'service logical rows, sequences and audits; application referenced immutable input/result/session objects; excludes schema DDL and Cloud guest disks',
+  included_services: resources.map(resource => resource.service ?? resource.name),
   outcome: 'incomplete', archives: [] };
 
 async function api(method, path, body) {
@@ -57,6 +59,15 @@ async function api(method, path, body) {
   return await response.json();
 }
 
+async function runningDeployment(app, uuid) {
+  const history = await api('GET', '/deployments/applications/' + uuid + '?per_page=3');
+  const latest = history.deployments?.[0];
+  if (app.status !== 'running:healthy' || latest?.status !== 'finished' ||
+      !/^[a-f0-9]{40}$/.test(latest.commit ?? '') || latest.commit !== app.git_commit_sha)
+    throw Error('backup_running_source_not_confirmed');
+  return latest;
+}
+
 try {
   for (const resource of resources) {
     const app = await api('GET', '/applications/' + resource.uuid);
@@ -64,6 +75,7 @@ try {
         app.environment?.project?.uuid !== project ||
         (resource.publicOrigin ? app.fqdn !== resource.publicOrigin : app.fqdn) || app.ports_mappings)
       throw Error('backup_source_scope_mismatch');
+    const deployed = await runningDeployment(app, resource.uuid);
     const command = resource.command ?? ('curl -fsS --max-time 30 ' + source + '/deploy/migration-archive.' + resource.extension +
       ' | ' + resource.executable);
     if (command.length > 255) throw Error('backup_command_exceeds_bound');
@@ -89,10 +101,18 @@ try {
       // Check authentication and service identity before declaring this a backup.
       const snapshot = resource.service === 'application' ? unsealApplication(envelope, resource.password)
         : unseal(envelope, resource.password, resource.name);
+      // Configuration pins can change before a replacement completes. Require
+      // an unchanged healthy finished deployment across the entire capture.
+      const afterApp = await api('GET', '/applications/' + resource.uuid);
+      const afterDeployment = await runningDeployment(afterApp, resource.uuid);
+      if (afterDeployment.deployment_uuid !== deployed.deployment_uuid)
+        throw Error('backup_source_changed_during_capture');
       const raw = JSON.stringify(envelope) + '\n';
       await writeFile(join(destination, (resource.service ?? resource.name) + '.encrypted.json'), raw, { mode: 0o600, flag: 'wx' });
       manifest.archives.push({ service: resource.service ?? resource.name, application_uuid: resource.uuid,
-        deployed_commit: app.git_commit_sha, task_uuid: taskId, execution_uuid: execution.uuid,
+        deployed_commit: deployed.commit, source_deployment_uuid: deployed.deployment_uuid,
+        source_attribution: 'unchanged healthy finished Coolify deployment before and after capture',
+        task_uuid: taskId, execution_uuid: execution.uuid,
         sha256: createHash('sha256').update(raw).digest('hex'), authentication_verified: true,
         tables: snapshot.tables.map(table => ({ schema: table.schema, name: table.name,
           row_count: table.row_count, rows_sha256: table.rows_sha256 })),

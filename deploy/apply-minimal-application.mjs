@@ -2,13 +2,18 @@
 /** Apply only this project's recorded service/app configuration; does not deploy. */
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { setTimeout as sleep } from 'node:timers/promises';
 const root = new URL('../', import.meta.url);
 const commit = process.argv[process.argv.indexOf('--commit') + 1];
 if (!/^[a-f0-9]{40}$/.test(commit ?? '')) throw Error('Require --commit <immutable SHA>');
-for (const key of ['COOLIFY_TOKEN_FILE', 'APPLICATION_CREDENTIAL_FILE', 'LITELLM_KEY_FILE'])
+if (execFileSync('git', ['cat-file', '-t', commit], { cwd: root, encoding: 'utf8' }).trim() !== 'commit')
+  throw Error('Source commit must exist in the reviewed checkout');
+for (const key of ['COOLIFY_TOKEN_FILE', 'APPLICATION_CREDENTIAL_FILE', 'LITELLM_KEY_FILE', 'INFRA_CREDENTIAL_FILE'])
   if (!process.env[key]?.startsWith('/')) throw Error('Require absolute ' + key);
 const token = (await readFile(process.env.COOLIFY_TOKEN_FILE, 'utf8')).trim();
 const secrets = JSON.parse(await readFile(process.env.APPLICATION_CREDENTIAL_FILE, 'utf8'));
+const infraSecrets = JSON.parse(await readFile(process.env.INFRA_CREDENTIAL_FILE, 'utf8'));
 const liteKey = (await readFile(process.env.LITELLM_KEY_FILE, 'utf8')).trim();
 const infra = JSON.parse(await readFile(new URL('deploy/staging-resources.json', root)));
 const ids = JSON.parse(await readFile(new URL('deploy/application-resources.json', root)));
@@ -43,8 +48,41 @@ async function apply(uuid, expectedName, variables, settings) {
 async function auth(uuid, key) {
   const env = await api('GET', '/applications/' + uuid + '/envs');
   const value = env.find(item => item.key === key && !item.is_preview)?.value;
-  if (!value) throw Error('Existing auth configuration missing');
-  return JSON.parse(value);
+  if (value) return JSON.parse(value);
+  // Tokens without read:sensitive cannot retrieve env values. Read only the
+  // live nonsecret policies and token digests inside each owning container,
+  // then resolve those digests against the operator's existing private keys.
+  const command = key === 'RUNNER_AUTH_JSON'
+    ? `node -e 'console.log(JSON.stringify(JSON.parse(process.env.RUNNER_AUTH_JSON).map(({token,...p})=>({...p,token_sha256:require("crypto").createHash("sha256").update(token).digest("hex")}))))'`
+    : `python -c 'import json,os,hashlib;p=json.loads(os.environ["PROVIDER_AUTH_JSON"]);[x.update(token_sha256=hashlib.sha256(x.pop("token").encode()).hexdigest()) for x in p];print(json.dumps(p))'`;
+  if (command.length > 255) throw Error('Policy probe command exceeds control bound');
+  const app = await api('GET', '/applications/' + uuid);
+  if (app.environment?.uuid !== infra.environment_uuid || app.environment?.project?.uuid !== infra.project_uuid)
+    throw Error('Policy probe scope mismatch');
+  const task = await api('POST', '/applications/' + uuid + '/scheduled-tasks', {
+    name: 'workflow-policy-' + Date.now(), command, frequency: '* * * * *',
+    container: app.settings?.custom_internal_name, enabled: true, timeout: 30 });
+  const taskId = task.uuid ?? task.data?.uuid;
+  if (!/^[a-z0-9]+$/.test(taskId ?? '')) throw Error('Policy probe task identity missing');
+  try {
+    const deadline = Date.now() + 180000;
+    while (Date.now() < deadline) {
+      const result = await api('GET', '/applications/' + uuid + '/scheduled-tasks/' + taskId + '/executions');
+      const execution = (Array.isArray(result) ? result : result.data)?.find(row => ['success', 'failed'].includes(row.status));
+      if (execution) {
+        if (execution.status !== 'success') throw Error('Policy probe failed');
+        const policies = JSON.parse(execution.message.trim());
+        return policies.map(({ token_sha256, ...policy }) => {
+          const matches = [...Object.values(infraSecrets), ...Object.values(secrets)].filter(candidate =>
+            typeof candidate === 'string' && createHash('sha256').update(candidate).digest('hex') === token_sha256);
+          if (matches.length !== 1) throw Error('Existing policy credential has no unique private recovery key');
+          return { ...policy, token: matches[0] };
+        });
+      }
+      await sleep(2000);
+    }
+    throw Error('Policy probe timed out');
+  } finally { await api('DELETE', '/applications/' + uuid + '/scheduled-tasks/' + taskId); }
 }
 const owner = secrets.application_service_owner_id;
 const workloadProfiles = Object.keys(profiles.workloads), sandboxProfiles = Object.keys(profiles.sandboxes);
@@ -55,8 +93,10 @@ runnerAuth.push({ actor_id: 'workflow-application', owner_id: owner, token: secr
   workload_profiles: ['pi-document-agent:v1'], sandbox_profiles: ['pi-document-cloud:v1'],
   max_concurrency: 1, max_pending_jobs: 20, allow_resume: false });
 const providerAuth = (await auth(providerId, 'PROVIDER_AUTH_JSON')).filter(value => value.actor_id !== 'workflow-application');
+const delegates = providerAuth.filter(policy => policy.token === infraSecrets.provider_delegate_token && policy.delegate_owners);
+if (delegates.length !== 1) throw Error('Require exactly the recorded Runner delegate');
 for (const policy of providerAuth) {
-  if (policy.delegate_owners) {
+  if (policy === delegates[0]) {
     policy.delegate_owners = [...new Set([...policy.delegate_owners, owner])];
     policy.workload_profiles = [...new Set([...policy.workload_profiles, ...workloadProfiles])];
     policy.sandbox_profiles = [...new Set([...policy.sandbox_profiles, ...sandboxProfiles])];
