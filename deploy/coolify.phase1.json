@@ -22,7 +22,7 @@
       "health_check_port": 8080,
       "limits_cpus": "0.5",
       "limits_memory": "384m",
-      "redact_all_env_values_in_logs": true
+      "redact_all_env_values_in_logs": false
     },
     "sandbox-provider": {
       "base_directory": "/services/sandbox-provider",
@@ -48,7 +48,7 @@
       "custom_internal_name": "workflow-phase1-sandbox-provider",
       "stop_grace_period": 30,
       "max_restart_count": 3,
-      "redact_all_env_values_in_logs": true
+      "redact_all_env_values_in_logs": false
     }
   },
   "databases": {

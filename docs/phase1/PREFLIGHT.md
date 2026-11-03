@@ -24,3 +24,15 @@ Observed 2026-11-03. No existing Coolify resource was changed.
 ## Required follow-up
 
 Run `deploy/host-preflight.sh` on the actual Coolify execution host, then use the exact deployed Provider container configuration for the real BoxLite persistence/isolation test. If host access remains unavailable, staging API/database deployment may proceed with failed runtime readiness, and real microVM acceptance must remain blocked. Never interpret absence of KVM inside a container without a device mapping as proof that the host lacks KVM.
+
+## Actual Coolify host runtime probe
+
+The first Provider deployment `gpldydq3pasenqyhkbdlhwfu`, immutable source `99203a5005450be1ef6b84653ee3fca13407d41c`, successfully built on ARM64. It then attempted only the narrow `/dev/kvm` device mapping under non-privileged restrictions. Docker refused startup with:
+
+```text
+error gathering device information while adding custom device "/dev/kvm": no such file or directory
+```
+
+This confirms the actual execution host lacks the required device. The device mapping is removed for API-only staging deployment, which retains the real BoxLite adapter and returns unavailable runtime readiness. No host configuration, existing resource, virtualization setting or runtime technology was changed. Actual VM execution, VM disk retention, isolation, process reattachment and host-restart recovery remain blocked.
+
+The first Runner deployment `db1h7hqhw2gaszg8y3mt6yjz` built and started its API/queue but Coolify's generated health check failed because its command requires curl or wget. The image's native Node health check alone did not satisfy Coolify. Both service Dockerfiles are being corrected to include curl; the failure is recorded and affected container deployment checks must be rerun.
