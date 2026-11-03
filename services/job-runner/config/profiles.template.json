@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "sandboxes": {
+    "minimal-linux:v1": {
+      "image": "${FIXTURE_IMAGE_DIGEST}",
+      "cpus": 1,
+      "memory_mib": 256,
+      "disk_mib": 1024,
+      "network": "denied",
+      "allowed_hosts": []
+    }
+  },
+  "workloads": {
+    "fixture-write-file:v1": {
+      "sandbox_profiles": [
+        "minimal-linux:v1"
+      ],
+      "working_directory": "/",
+      "max_duration_seconds": 120,
+      "max_output_bytes": 32768,
+      "environment": {},
+      "argv": [
+        "/usr/local/bin/python3",
+        "-c",
+        "import pathlib,sys; p=pathlib.Path(\"/opt/workflow-fixture\")/sys.argv[1]; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(sys.argv[2]); print(\"written\")",
+        "${arg:file}",
+        "${arg:text}"
+      ],
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "file",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "fixture-read-file:v1": {
+      "sandbox_profiles": [
+        "minimal-linux:v1"
+      ],
+      "working_directory": "/",
+      "max_duration_seconds": 120,
+      "max_output_bytes": 32768,
+      "environment": {},
+      "argv": [
+        "/usr/local/bin/python3",
+        "-c",
+        "import pathlib,sys; print((pathlib.Path(\"/opt/workflow-fixture\")/sys.argv[1]).read_text(),end=\"\")",
+        "${arg:file}"
+      ],
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

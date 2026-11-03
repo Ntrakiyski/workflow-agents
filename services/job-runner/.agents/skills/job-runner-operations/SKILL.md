@@ -13,3 +13,12 @@ description: Deploy, monitor, troubleshoot, audit, recover, and upgrade the stan
 6. Before upgrades, verify migrations, backup/rollback plan, API compatibility and pinned dependencies. Test against a mock Provider and real queue DB.
 7. After deployment, verify submit→dispatch→result, delayed scheduling, retry, cancellation, event replay and logging/audit on the actual environment.
 8. Produce a concise operations report: version, environment, evidence, outcome, outstanding risks, rollback path. Never report unexecuted tests as passed.
+
+## Verified implementation procedures (1.0.0-rc.1)
+
+- Inject configuration from the secret manager using `.env.example` key names; there is no automatic dotenv loader. Render/validate the approved profile JSON before startup.
+- `npm run migrate` applies service and Graphile migrations. `npm run build` then `npm start` starts API+worker and repeats migrations idempotently.
+- Probe `/health/live` and `/health/ready`; the latter returns 503 when DB/worker is unavailable. `node scripts/smoke.mjs` probes local Runner and private configured Provider without printing credentials. Failed Provider readiness remains a runtime blocker.
+- GET the owned job and its paginated `/events`; use actor/owner/correlation fields and attempts for reconciliation. An unreachable Provider can leave `cancelling` until a durable execution-reference fence or actual terminal state is confirmed.
+- Before upgrades, `pg_dump -Fc` the Runner database and restore to a new isolated DB using `pg_restore --no-owner --no-acl`; verify state/idempotency/queue/audit counts. The repository backup drill records actual restore evidence. Do not run destructive integration tests against the operational restore.
+- Audit events retain all history; `AUDIT_RETENTION_DAYS` is a minimum policy and no automatic purge exists. Do not disable append-only protection as routine maintenance. Incompatible rollback requires an explicitly verified backup/restore plan; RC migration 001 has no prior production downgrade claim.
