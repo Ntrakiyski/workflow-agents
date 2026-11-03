@@ -42,3 +42,20 @@ Use the existing independent HTTP-only `gcc_probe.mjs` as published-API acceptan
 4. Explicit cleanup must validate record owner/reference/job anchors and remove only the two exact fixture sandboxes through destroy authorization. Preserve tombstones/jobs/audits. No account-wide cleanup or deletion by guessed names.
 
 Generic marker retention proves a specific rootfs journey; it does not prove every kernel/network escape boundary, enforced CPU/RAM/disk limits, arbitrary transient retries, active-run restart recovery, artifact export or a recoverable off-host VM backup. Those gates remain incomplete until their own actual evidence is captured.
+
+## Fixed capacity and missing-route inspection
+
+`tests/qa/cloud-runtime-policy-workload.json` defines the operator-trusted `fixture-runtime-policy:v1` profile for `cloud-minimal-linux:v1`, with no accepted arguments. Root incorporates this descriptor into both services' approved configuration/auth, rather than exposing arbitrary client Python. Its fixed Python program reads CPU count, guest MemTotal, rootfs statvfs capacity and interface names, then attempts TCP443 to two fixed public IPs without sending HTTP/TLS data. It writes no files and exposes no environment, credentials, workload payload or arbitrary path.
+
+The independent HTTP-only `cloud_policy_probe.mjs` consumes the existing version1 retained record. It validates owner, both exact sandbox references/profiles, stopped state, original jobs and audit IDs before starting only fixture A and resuming its original Runner job with this approved inspection profile. It requires CPU1, MemTotal between900MiB and1024MiB, rootfs capacity at most1GiB, only lo/dummy0 interfaces, and both TCP attempts failing specifically with Linux ENETUNREACH101 or EHOSTUNREACH113. Timeout/DNS/TLS failure is insufficient. It then stops A even when an ambiguous start or later assertion fails. It never creates or deletes a box. A private per-record/profile/operator-invocation claim serializes duplicate cron runs and replays the same sanitized result.
+
+Invoke inside Runner after prepare and before explicit cleanup, using the same immutable record source:
+
+```sh
+g=https://raw.githubusercontent.com/Ntrakiyski/workflow-agents/IMMUTABLE_SHA
+curl -fsSL "$g/tests/qa/cloud_policy_probe.mjs" | node --input-type=module - "$g" cloud-policy-before-replacement
+```
+
+Default profile is `cloud-minimal-linux:v1`; `QA_SANDBOX_PROFILE`, `QA_RECORD_JSON`/`QA_RECORD_URL` and `QA_INVOCATION_ID` are supported. A new invocation ID intentionally reruns after replacement; ordinary duplicate launches reuse the result. Run again after the independent Provider/Runner replacements to observe the retained Cloud environment. These observations measure provisioned guest capacity and absence of an outbound route at that moment; they are not stress enforcement, all escape paths, hostname allowlist, artifact/export or backup proof.
+
+Node syntax, fixed descriptor JSON and Python syntax passed. Ad-hoc `/tmp/cloud-policy-qa-smoke.py` used actual local HTTP/isolated PostgreSQL with an **explicit healthy-labelled runtime test double and synthetic policy observations**. Two concurrent policy runs returned one job/result and exactly one replay. A synthetic TCP timeout was correctly rejected as missing-route proof, with A confirmed stopped after failure. Preparation, absent-replacement rejection, exact-fixture cleanup, wrong-profile and wrong-owner-reference negatives also passed. All owned local processes/databases were removed. The first generated local harness had a quoting syntax error and did not execute; correcting only that temporary harness enabled the checks. No Cloud/VM claim follows from these local synthetic results. Actual deployed evidence remains pending.

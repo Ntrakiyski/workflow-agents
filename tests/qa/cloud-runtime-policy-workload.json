@@ -1,0 +1,22 @@
+{
+  "profile_id": "fixture-runtime-policy:v1",
+  "workload": {
+    "sandbox_profiles": [
+      "cloud-minimal-linux:v1"
+    ],
+    "working_directory": "/",
+    "max_duration_seconds": 15,
+    "max_output_bytes": 4096,
+    "environment": {},
+    "argv": [
+      "/usr/local/bin/python3",
+      "-c",
+      "import errno,json,os,pathlib,socket\nmemory_kib=int(next(line.split()[1] for line in pathlib.Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemTotal:')))\nfs=os.statvfs('/')\nattempts=[]\nfor host in ('1.1.1.1','8.8.8.8'):\n    try:\n        connection=socket.create_connection((host,443),timeout=2)\n        connection.close()\n        attempts.append({'errno':0,'connected':True})\n    except OSError as exc:\n        attempts.append({'errno':exc.errno,'connected':False})\nprint(json.dumps({'cpu_count':os.cpu_count(),'memory_total_bytes':memory_kib*1024,'rootfs_capacity_bytes':fs.f_blocks*fs.f_frsize,'interfaces':sorted(p.name for p in pathlib.Path('/sys/class/net').iterdir()),'external_tcp_attempts':attempts},separators=(',',':')))\n"
+    ],
+    "arguments_schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  }
+}
