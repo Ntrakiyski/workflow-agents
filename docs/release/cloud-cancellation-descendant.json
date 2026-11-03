@@ -1,0 +1,62 @@
+{
+  "outcome": "passed",
+  "session": "c333b4d1ab62416e9c0c4b6cb3f17eec",
+  "checks": [
+    {
+      "scenario": "cancellation_stops_delayed_descendant",
+      "outcome": "passed",
+      "sandbox_id": "sbx_2c3dd5d275b94481838571031a4a64e9",
+      "run_id": "run_42f2534abb9049c2a8a0163694694ebb",
+      "status": "cancelled",
+      "ready_marker_present": true,
+      "delayed_marker_present": false,
+      "post_restart_wait_seconds": 10
+    },
+    {
+      "scenario": "isolated_forensic_registry_restore",
+      "outcome": "passed",
+      "tables": {
+        "sandboxes": {
+          "rows": 1,
+          "sha256": "27a1486d53008353417667450c6a8c225320ea465ea0a3ef9163f31beea42977"
+        },
+        "runs": {
+          "rows": 2,
+          "sha256": "f937850b2e71d52f0e6f60b1f90cccf77881025edbcaf7bf1f3fdd16d6675476"
+        },
+        "file_uploads": {
+          "rows": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "idempotency": {
+          "rows": 3,
+          "sha256": "fd5e1f83eaedd3f93fd701563f55f527ccd90c2a655fec695edb4b43923f5519"
+        },
+        "audit_events": {
+          "rows": 13,
+          "sha256": "b0966825d60812173d08277f6ed128e7ec802724f4e63ab3f47ef18dead8ea84"
+        },
+        "cancellation_fences": {
+          "rows": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "schema_migrations": {
+          "rows": 4,
+          "sha256": "14214254c08c7fe588b32a41ddac01f18a0c01d71f239546e6c98f7568802f95"
+        }
+      },
+      "dump_sha256": "39ab5911123aa9ceebbd8ff3799fea2c93a7196321c80fc42a09cbbd176df88d",
+      "audit_event_identities_retained": true,
+      "restored_provider_started": false,
+      "scope": "forensic registry restore only; does not establish guest recovery"
+    }
+  ],
+  "cleanup_pending": [],
+  "runtime": "actual BoxLite Cloud",
+  "provider": "local isolated real source process; not GCC deployment",
+  "source": {
+    "base_git_commit": "a1ba191",
+    "working_tree": "uncommitted bounded-transfer and eventual-deletion fixes preceded909980b; exact source digest was not captured",
+    "provenance_limit": "superseded by exact-source full journey in cloud-transfer-journey.json"
+  }
+}

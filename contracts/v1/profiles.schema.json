@@ -175,6 +175,20 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 65536
+          },
+          "secret_environment": {
+            "type": "object",
+            "maxProperties": 16,
+            "propertyNames": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]{0,127}$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^WORKLOAD_SECRET_[A-Z0-9_]{1,112}$",
+              "maxLength": 128
+            },
+            "description": "Operator env-name references only. Resolve runtime-only WORKLOAD_SECRET_* values immediately before dispatch; persist references, never secret values. Cannot overlap nonsecret environment names."
           }
         },
         "required": [

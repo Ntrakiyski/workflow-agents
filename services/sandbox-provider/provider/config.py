@@ -70,6 +70,8 @@ class Settings:
         if not (1 <= max_sandboxes <= 10000 and 1024 <= max_body <= 65536 and 1 <= max_output <= 32768 and .05 <= poll_seconds <= 30):
             raise ValueError('Invalid configured limits.')
         for name, profile in profiles['workloads'].items():
+            if set(profile.get('environment', {})) & set(profile.get('secret_environment', {})):
+                raise ValueError('Secret and nonsecret environment names must not overlap.')
             Draft202012Validator.check_schema(profile['arguments_schema'])
             if '$ref' in canonical(profile['arguments_schema']):
                 raise ValueError('External and recursive argument schema references are not supported.')

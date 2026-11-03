@@ -1,5 +1,61 @@
 # Provider candidate verification
 
+## Cloud allowlist preflight (2026-11-03)
+
+Full suite with the dedicated disposable PostgreSQL16 database:
+**77 passed,1 local-KVM deselected in20.68s**. New coverage proves that the
+actual pinned SDK rejects `hostname:443` before any HTTP request, and that
+Provider rejects it before sandbox/idempotency/audit insertion or runtime calls.
+Exact hostname passes profile preflight; no automatic policy rewriting occurs.
+
+One owned actual Cloud diagnostic reproduced the SDK rejection, then the
+supported hostname reached a distinct blocker while starting the pinned full
+Python image: Docker Hub registry-token transport to `index.docker.io` failed.
+The failed box was reconciled by its exact journaled name and deleted by its
+returned ID; exact-ID absence was confirmed. No guest network success is
+claimed by that attempt; see `docs/release/cloud-policy-rejection.json`.
+
+A separate actual Cloud probe on the previously qualified pinned slim image
+`e697c818…`,2CPU/2048MiB/requested2GiB, confirmed exact returned allowlist,
+disabled inbound and retention metadata. LiteLLM HTTPS `/v1/models` returned401;
+`https://example.com/` and `https://1.1.1.1/` both ended TLS with `SSLEOFError`
+before HTTP. Raw TCP connect to1.1.1.1:443 was accepted, so this is bounded
+hostname/HTTPS evidence, not all-TCP denial. Both owned network fixtures were
+deleted with exact-ID absence confirmed. DNS/UDP, per-port filtering, airgap,
+complete isolation and resource stress remain unqualified. See
+`docs/release/cloud-hostname-network.json`; no model secret or runtime bundle
+was used in these probes.
+
+## Hosted transfer transport, descendants and deletion reconciliation (2026-11-03)
+
+Latest full command with dedicated disposable local PostgreSQL16:
+`python -m pytest -q -m 'not real_runtime'` → **75 passed,1 deselected in19.57s**.
+The deselected case requires local KVM. The suite includes actual pinned SDK
+loopback1 MiB fragmented writes/reads, exact-ID eventual deletion polling,
+same-box cancellation, and mutation detection when same-size writes retain
+the same timestamp. Runtime calls in this suite remain mocked.
+
+Actual hosted evidence is separately retained in
+`docs/release/cloud-transfer-journey.json` and
+`docs/release/cloud-cancellation-descendant.json`. It uses new disposable local
+databases and a private local Provider against BoxLite Cloud, without GCC
+deployment or host reboot claims. File checkpoint/reupload is distinct from
+forensic registry restore and from a coordinated whole-environment backup.
+Exact test sandbox cleanup is required; any pending cleanup remains a failure.
+
+## rc.2 scoped transfer and explicit Cloud completion (2026-11-03)
+
+From the merged main baseline `3f550ba95ca684aeea29a630675d33040724a961`:
+
+- Provider suite with a dedicated actual PostgreSQL16 database: `python -m pytest -q -m 'not real_runtime'` returned **69 passed,1 deselected in16.50s**. Only the local hardware/guest test was deselected. Runtime behavior remains fake/local-process/SDK-loopback, not hosted Cloud.
+- Contract suite: **6 passed**. It validates existing strict wire shapes, additive file endpoint bounds/path negatives and runtime-only secret references. Contract/profile generators were rerun deterministically; all packaged copies match.
+- Actual filesystem helper checks cover chunk replay, interrupted partial writes, checksum validation, immutable publication after lost acknowledgements, relative-path restrictions, symlink/hardlink/FIFO rejection and reads. Real-PostgreSQL API tests cover owner/permission isolation, idempotency, busy sandboxes, durable interrupted-transfer fencing and same-box recovery without workload replay.
+- The actual pinned SDK0.11.0 against a loopback HTTP/WebSocket stub successfully carried **1 MiB stdin upload and1 MiB download response**. This verifies transport framing and bounded JSON, not BoxLite Cloud guest behavior.
+- Local-process Cloud wrapper tests cover silent children, nonzero child exits, large concurrent stdout/stderr with explicit truncation, retained completion journals, missing envelopes, wrong nonces/checksums and native transport errors. After adding exact-secret redaction before guest journal emission, the focused wrapper suite returned **8 passed in0.40s**.
+- Runtime-only secret regression proves references alone persist in run snapshots, exact secret strings are redacted before result persistence, and missing secrets prevent dispatch. Python compilation and `git diff --check` passed.
+
+No hosted deployment, Cloud transfer, active-command reattachment, VM export, coordinated restore, host reboot or broader resource/security gate was executed by this implementation worker. Provider rc.2 remains a candidate; independent hosted qualification and readiness evidence belong to integration QA. Active attach still truthfully reports nonretryable `ambiguous_execution` and never replays uncertain work.
+
 Executed 2026-11-03 by Sandbox Infrastructure Engineer. Independent QA is a separate gate.
 
 ## Explicit hosted Cloud adapter regression (latest)

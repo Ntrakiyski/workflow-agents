@@ -2,7 +2,7 @@
 
 This service is **Phase 1 reusable infrastructure**, not a Pi- or document-specific app. Read `PHASE-1-REUSABLE-SERVICES.md`.
 
-Read the root [AGENTS.md](../../AGENTS.md) first. This file adds Provider-specific instructions. The current version is `1.0.0-rc.1`; [readiness](../../docs/phase1/readiness.json) remains false for Phase 2.
+Read the root [AGENTS.md](../../AGENTS.md) first. This file adds Provider-specific instructions. The current version is `1.0.0-rc.2`; [readiness](../../docs/phase1/readiness.json) remains false for Phase 2 until separately qualified.
 
 ## Stack and source map
 
@@ -58,8 +58,9 @@ The `real_runtime` test and `scripts.qualify_runtime` are local-mode qualificati
 - Authentication determines actor and owner. Only an explicitly authorized delegate can supply `X-Owner-ID`; reads, events, metrics and nested run operations retain owner isolation.
 - Execute fixed operator-owned argv with JSON Schema arguments. Never allow a request to choose a shell, image, mount, executable, cwd or secret environment. Preserve immutable profile IDs and image digests.
 - Validate Cloud capacity without silent rounding: whole-GiB memory and disk, Cloud CPU bounds and approved network directions. Metadata checks are not complete quota or isolation proof.
+- Cloud `allowed_hosts` rules have no URL schemes or port suffixes. Reject such configuration before registry creation intent. Exact-hostname rules do not enforce destination ports; preserve this limitation and separately qualify DNS/UDP behavior.
 - Enforce one active run per sandbox using durable registry constraints. Preserve idempotency keys, execution references, cancellation fences and destruction tombstones through restart and archival.
-- Cloud active-command attach fails with nonretryable `ambiguous_execution`. Stop the same retained environment and require reconciliation. Never convert uncertain output into an empty successful result or blindly rerun it. SDK stream loss can still leave exit zero without complete output; that remains an open gate.
+- Cloud active-command attach fails with nonretryable `ambiguous_execution`. Stop the same retained environment and require reconciliation. Never convert uncertain output into an empty successful result or blindly rerun it. Fresh execution requires the verified completion envelope even when native exit is zero. Cancellation/timeout confirms same-box stop before terminal status so descendants cannot survive native leader-only kill.
 - Keep structured logs free of credentials, payloads and native sensitive errors. Preserve append-only audits of actor, target, time and outcome. Report cancellation truthfully after actual termination/fencing.
 - Do not add privileged containers, host capabilities, Docker sockets, broad mounts, unconfined profiles or global host security changes as a compatibility fix. Never delete account-wide resources.
 
@@ -69,4 +70,10 @@ Provider runs privately on GCC, alias `workflow-phase1-sandbox-provider`, port 8
 
 Actual hosted execution, same-box marker stop/start, bounded two-box file separation and stopped-box recovery across independent application replacements passed. Test fixtures were explicitly destroyed and their audits retained. Do not reuse their names or destruction authority.
 
-Scoped artifact transfer, active-command/complete-output recovery, hosted failure injection, off-host and coordinated Cloud guest/registry restore, host restart persistence and broader security/resource qualification remain incomplete. Nonempty `artifact_output_ref` returns 422. Observed Cloud capabilities disable snapshot/export/import/clone; do not advertise those as backup procedures. A volume is not a backup. Follow the [current readiness record](../../docs/phase1/readiness.json) rather than inferring stable acceptance from service health.
+Generic scoped chunk transfer is implemented in candidate rc.2 under the fixed guest root `/opt/workflow-transfer`; see [its reviewed contract](../../docs/contracts/scoped-files-v1.md). It requires separate `sandbox:file:read`/`sandbox:file:write` permissions and a Python3 guest. The registry stores transfer metadata only. Commit the pending-operation generation before guest side effects; never clear another generation's fence. Recovery stops the same retained environment before allowing a retry. Preserve immutable destinations, descriptor-relative no-follow path traversal, checksums and bounded chunks.
+
+Cloud execution uses a fixed Python wrapper with a nonce/checksummed completion envelope and bounded same-guest journal. Silent commands still require the completion envelope; empty SDK streams with exit0 are ambiguous. Active-command attachment still fails closed, without replay. Workload `secret_environment` stores only operator `WORKLOAD_SECRET_*` references; resolve values at dispatch, never into profile snapshots. Exact secret values in returned stdout/stderr are redacted; this is not exhaustive secret detection.
+
+Cloud transfer preserves public1 MiB chunks through64 KiB internal writes and32 KiB reads using fixed-helper bounded argv. Rehash at the end of each public read; metadata-only mutation checks can miss same-tick writes. Observed upload cost is roughly11.5 seconds/MiB. Explicit destroy polls same-ID absence after acknowledgement and returns retryable `runtime_transition_pending` if deletion remains pending; replay destroy directly.
+
+The actual Cloud journey in `docs/release/cloud-transfer-journey.json` covers local Provider process replacement, transfer ownership/path negatives, file export/reupload into a distinct sandbox, cancellation descendants and a separate forensic registry restore. It is not GCC deployment, active-command reattachment, whole-VM/coordinated restore, off-host recurring backups, host restart or broad security/resource proof. Nonempty `artifact_output_ref` still returns422; file endpoints are scoped transport. Cloud snapshot/export/import/clone remain unsupported. Follow the [current readiness record](../../docs/phase1/readiness.json).

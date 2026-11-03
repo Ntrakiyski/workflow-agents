@@ -47,7 +47,7 @@ PARAMETERS = {
  'Cursor': {'name':'cursor','in':'query','required':False,'schema':string(256),'description':'Opaque exclusive cursor. Stable durable ordering; repeat retrieval is supported.'},
  'Limit': {'name':'limit','in':'query','required':False,'schema':{'type':'integer','minimum':1,'maximum':100,'default':50}},
 }
-for n in ('job_id','schedule_id','sandbox_id','run_id'):
+for n in ('job_id','schedule_id','sandbox_id','run_id','upload_id'):
  PARAMETERS[n]={'name':n,'in':'path','required':True,'schema':ID}
 
 def param(n): return {'$ref':'#/components/parameters/'+n}
@@ -80,11 +80,28 @@ operation(runner,'/v1/schedules/{schedule_id}','get','getSchedule','Schedule',id
 operation(runner,'/v1/schedules/{schedule_id}','delete','cancelSchedule','Schedule',ids=('schedule_id',),description='Cancel pending schedule; already cancelled is unchanged, already fired/skipped/failed returns 409. No job/sandbox deletion.')
 health(runner)
 provider=base('Workflow Agents Sandbox Provider API')
+provider['info']['version']='1.0.0-rc.2'
+provider['info']['description']='Additive scoped transfer and explicit Cloud result completion candidate. Release readiness still requires real hosted qualification; see docs/contracts/v1.md.'
 provider['components']['schemas'].update({'Resources':RESOURCES,'Sandbox':SANDBOX,'CreateSandbox':CREATE_SANDBOX,'ExecuteRequest':EXECUTE,'Run':RUN,'DestroyRequest':obj({'confirm':{'type':'boolean','const':True},'reason':string(256)},('confirm','reason'))})
 provider['components']['schemas'].update({
  'CancelByReferenceRequest':obj({'execution_ref':string(256),'reason':string(256)},('execution_ref',)),
  'CancellationFence':obj({'execution_ref':string(256),'run_id':nullable(ID),'status':enum('fenced','queued','running','cancelling','completed','failed','cancelled','timed_out')},('execution_ref','run_id','status'))
 })
+FILE_PATH = string(512, pattern=r'^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9][A-Za-z0-9_.-]{0,127}){0,15}$')
+SHA256 = string(64, pattern='^[a-f0-9]{64}$')
+FILE_SIZE = integer(0,268435456)
+BASE64_CHUNK = {'type':'string','maxLength':1398104,'pattern':'^[A-Za-z0-9+/]*={0,2}$'}
+provider['components']['schemas'].update({
+ 'FileUploadRequest':obj({'path':FILE_PATH,'size_bytes':FILE_SIZE,'sha256':SHA256},('path','size_bytes','sha256')),
+ 'FileUpload':obj({'upload_id':ID,'sandbox_id':ID,'path':FILE_PATH,'size_bytes':FILE_SIZE,'sha256':SHA256,'offset':FILE_SIZE,'status':enum('uploading','completed')},('upload_id','sandbox_id','path','size_bytes','sha256','offset','status')),
+ 'FileChunkRequest':obj({'offset':FILE_SIZE,'data_base64':BASE64_CHUNK,'sha256':SHA256},('offset','data_base64','sha256')),
+ 'FileReadRequest':obj({'path':FILE_PATH,'offset':FILE_SIZE,'max_bytes':integer(1,1048576)},('path','offset','max_bytes')),
+ 'FileChunk':obj({'path':FILE_PATH,'offset':FILE_SIZE,'data_base64':BASE64_CHUNK,'size_bytes':FILE_SIZE,'sha256':SHA256,'eof':{'type':'boolean'}},('path','offset','data_base64','size_bytes','sha256','eof')),
+})
+operation(provider,'/v1/sandboxes/{sandbox_id}/files/uploads','post','createFileUpload','FileUpload',201,'FileUploadRequest',ids=('sandbox_id',),idempotency=True,owner=True,description='Requires sandbox:file:write. Reserve an immutable relative path under /opt/workflow-transfer. Maximum256MiB per file. No DB blobs; metadata only. Running idle sandbox and approved Python3 image required.')
+operation(provider,'/v1/sandboxes/{sandbox_id}/files/uploads/{upload_id}','patch','writeFileChunk','FileUpload',200,'FileChunkRequest',ids=('sandbox_id','upload_id'),owner=True,description='Requires sandbox:file:write. Contiguous chunks of at most1MiB decoded bytes with SHA256. Retry identical offset/bytes after unknown outcome; conflicting bytes rejected. JSON body bound1500000 bytes. Busy sandboxes refuse transfer.')
+operation(provider,'/v1/sandboxes/{sandbox_id}/files/uploads/{upload_id}/complete','post','completeFileUpload','FileUpload',200,'Empty',ids=('sandbox_id','upload_id'),owner=True,description='Requires sandbox:file:write. Verify full size/checksum and publish without overwrite. Same upload replay is idempotent after lost acknowledgement. Parent directories and files reject symlinks, special files and hardlinks.')
+operation(provider,'/v1/sandboxes/{sandbox_id}/files/read','post','readFileChunk','FileChunk',200,'FileReadRequest',ids=('sandbox_id',),owner=True,description='Requires sandbox:file:read. Read at most1MiB from one regular file relative to /opt/workflow-transfer. Return whole-file SHA256, size and EOF; consumer verifies all chunks and final checksum before delivery. No arbitrary host paths/URLs. Active runs refuse transfer.')
 operation(provider,'/v1/sandboxes','post','createSandbox','Sandbox',201,'CreateSandbox',idempotency=True,owner=True,description='Ensure one retained sandbox per effective owner + owner_ref. Profile is immutable: mismatched profile gives 409. Stable runtime identity must be persisted before side effects so ambiguous create is recovered, not recreated. Return current resource on replay.')
 operation(provider,'/v1/sandboxes/{sandbox_id}','get','getSandbox','Sandbox',ids=('sandbox_id',),owner=True)
 operation(provider,'/v1/sandboxes/{sandbox_id}/events','get','getSandboxEvents','EventPage',ids=('sandbox_id',),owner=True)
