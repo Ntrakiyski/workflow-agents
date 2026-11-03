@@ -196,6 +196,7 @@ class FakeExecution implements ExecutionServices {
       session_files: [
         {
           path: "session.jsonl",
+          media_type: "application/x-ndjson",
           sha256: digest(session),
           size_bytes: session.length,
         },

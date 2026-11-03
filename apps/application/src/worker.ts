@@ -375,7 +375,9 @@ export class RequestWorker {
     const code =
       error instanceof AppError || error instanceof RemoteError
         ? error.code
-        : "dependency_unavailable";
+        : error instanceof z.ZodError
+          ? "invalid_result_schema"
+          : "dependency_unavailable";
     const message =
       error instanceof AppError
         ? error.message

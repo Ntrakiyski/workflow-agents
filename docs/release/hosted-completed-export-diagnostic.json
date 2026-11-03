@@ -1,0 +1,55 @@
+{
+  "script_commit": "cad192480b98c88f1f6074be582d850af3ae27cd",
+  "deployed_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+  "task_status": "success",
+  "operation": "inspect-failed-completed-export",
+  "outcome": "passed_diagnostic",
+  "request_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+  "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+  "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+  "runner_status": "completed",
+  "runner_exit_code": 0,
+  "manifest_sha256": "adbac251cf3c241a276c3303530f646977bf0c3bff67164d1e855222b728cdbb",
+  "manifest_bytes": 1624,
+  "manifest_outcome": "completed",
+  "manifest_keys": [
+    "schema_version",
+    "request_id",
+    "outcome",
+    "text",
+    "artifacts",
+    "validations",
+    "session_files"
+  ],
+  "artifact_keys": [
+    [
+      "path",
+      "media_type",
+      "size_bytes",
+      "sha256"
+    ]
+  ],
+  "session_keys": [
+    [
+      "path",
+      "media_type",
+      "size_bytes",
+      "sha256"
+    ]
+  ],
+  "controller_schema_valid": false,
+  "schema_issues": [
+    {
+      "path": [
+        "session_files",
+        0
+      ],
+      "code": "unrecognized_keys",
+      "keys": [
+        "media_type"
+      ]
+    }
+  ],
+  "original_failed_row_and_audits": "unchanged",
+  "workload_reexecuted": false
+}

@@ -80,6 +80,7 @@ export const manifest = z
         z
           .object({
             path: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/),
+            media_type: z.literal("application/x-ndjson"),
             sha256: sha,
             size_bytes: z.number().int().min(0).max(MAX_FILE_BYTES),
           })
