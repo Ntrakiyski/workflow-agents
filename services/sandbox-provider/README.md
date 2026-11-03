@@ -35,6 +35,7 @@ The entrypoint always instantiates the real BoxLite adapter. There is no environ
 | `BOX_ROOT` | `/var/lib/sandbox-provider/boxlite`; persistent writable SDK registry/disks |
 | `PORT` | `8000` |
 | `LOG_LEVEL` | `INFO`; request bodies, tokens and workload output are never logged |
+| `MAX_CONCURRENT_RUNS` | `4`; operator may lower to1..4 to fit host capacity; hard ceiling leaves DB pool capacity for API/recovery |
 | `MAX_SANDBOXES_PER_OWNER` | `20`; retained non-destroyed boxes per effective owner |
 | `MAX_BODY_BYTES` | `65536`, may only be lowered |
 | `MAX_OUTPUT_BYTES` | `32768` per stdout/stderr stream; also capped by workload policy |
@@ -64,7 +65,7 @@ Create and execute require `Idempotency-Key`. Deduplication is durable per effec
 
 `POST /sandboxes/{id}/runs/cancel-by-reference` durably fences an execution reference under the same sandbox row lock as execute. A delayed execute cannot start after cancellation won the race. Existing run replays keep their current state; new fenced references fail 409 `execution_cancelled`. This permits Runner to cancel after a timeout with no returned run ID.
 
-PostgreSQL row locks and a partial unique index enforce one active run per sandbox across processes. Workers use session advisory locks for recovery ownership. There are four simultaneous dispatch slots per Provider process; run the production image as one Uvicorn process. Multiple Provider instances must not independently mount/copy the same BoxLite home without a separately qualified runtime configuration.
+PostgreSQL row locks and a partial unique index enforce one active run per sandbox across processes. Workers use session advisory locks for recovery ownership. There are `MAX_CONCURRENT_RUNS` simultaneous dispatch slots per Provider process (default4, range1..4); run the production image as one Uvicorn process. Multiple Provider instances must not independently mount/copy the same BoxLite home without a separately qualified runtime configuration.
 
 STOP preserves disks; only the separately authorized explicit DESTROY endpoint calls SDK remove. It refuses active runs and requires `confirm:true` plus a reason. Cancellation is an intent until the runtime confirms the command stopped. Unknown outcomes never start a fresh run automatically.
 

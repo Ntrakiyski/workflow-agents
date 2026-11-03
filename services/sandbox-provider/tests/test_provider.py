@@ -308,3 +308,14 @@ async def test_malformed_host_cannot_change_authentication_boundary(env):
     assert r.status_code == 401
     conform('Error', r.json())
     assert runtime.executes == 0
+
+
+async def test_operator_can_reduce_execution_concurrency(env):
+    _, client, settings, runtime = env
+    settings.max_concurrent_runs = 1
+    a, b = await create(client, 'concurrency-a'), await create(client, 'concurrency-b')
+    first, second = await asyncio.gather(execute(client, a, 'concurrency-first', 'fixture-delay:v1', {'seconds': .25}, timeout=2),
+                                         execute(client, b, 'concurrency-second', 'fixture-delay:v1', {'seconds': .25}, timeout=2))
+    results = await asyncio.gather(wait_run(client, a, first), wait_run(client, b, second))
+    assert all(r['status'] == 'completed' for r in results)
+    assert runtime.max_global_active == 1

@@ -37,3 +37,10 @@ def test_unicode_credential_and_invalid_delegate_policy_fail_safely():
         auth = policies(); auth[2]['delegate_owners'] = value
         with pytest.raises(ValueError):
             Settings('postgresql://unused', auth, profiles())
+
+
+def test_concurrency_configuration_preserves_pool_safety():
+    assert Settings('postgresql://unused', policies(), profiles(), max_concurrent_runs=1).max_concurrent_runs == 1
+    for value in (0, 5, True, 1.5):
+        with pytest.raises(ValueError):
+            Settings('postgresql://unused', policies(), profiles(), max_concurrent_runs=value)

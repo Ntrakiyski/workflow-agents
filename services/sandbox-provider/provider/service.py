@@ -284,7 +284,7 @@ class ProviderService:
                 async with self.db.tx() as c:
                     rows = await all_rows(c, "SELECT run_id FROM runs WHERE status IN ('queued','running','cancelling') ORDER BY created_at LIMIT 32")
                 for row in rows:
-                    if row['run_id'] not in self.tasks and len(self.tasks) < 4:
+                    if row['run_id'] not in self.tasks and len(self.tasks) < self.settings.max_concurrent_runs:
                         self.tasks[row['run_id']] = asyncio.create_task(self.process_run(row['run_id']))
             except asyncio.CancelledError:
                 raise
