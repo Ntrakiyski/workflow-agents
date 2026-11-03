@@ -51,7 +51,7 @@
       if (row.job_id) {
         const job = await get('runner','/v1/jobs/' + encodeURIComponent(row.job_id),row.id);
         if (job.job_id !== row.job_id || job.sandbox_id !== row.sandbox_id) throw Error('job_identity');
-        record.runner = {job_id:job.job_id,status:job.status,attempts:job.attempts,
+        record.runner = {job_id:job.job_id,status:job.status,attempt_count:job.attempt_count,
           events:await events('runner','/v1/jobs/'+encodeURIComponent(row.job_id)+'/events',row.id)};
       }
       if (row.sandbox_id) {
@@ -65,4 +65,4 @@
     console.log(JSON.stringify({version:1,operation:'read-only-application-checkpoint-inspection',outcome:'passed',
       requests,scope:'Owning application database and immutable objects; published Runner/Provider APIs only. No workload replay or service database access.'}));
   } finally { objects.close(); await pool.end(); }
-})().catch(error => { console.log(JSON.stringify({operation:'read-only-application-checkpoint-inspection',outcome:'failed',error_classification:error.message})); process.exitCode = 1; });
+})().catch(error => { console.log(JSON.stringify({operation:'read-only-application-checkpoint-inspection',outcome:'failed',error_classification:/^[a-z_0-9]+$/.test(error.message) ? error.message : error.name})); process.exitCode = 1; });
