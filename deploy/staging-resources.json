@@ -1,0 +1,19 @@
+{
+  "project_uuid": "6nshux1lmrsmsfeqar9wess9",
+  "environment_uuid": "vulhjgp8rvlruf3rlwchwc6v",
+  "environment": "staging",
+  "server_uuid": "qk48swgog4kok0og8848wwg8",
+  "destination_uuid": "a48owkoog444c84oo844wgow",
+  "applications": {
+    "job-runner": "hpuishi3ewj80863sqj7wucd",
+    "sandbox-provider": "v3kixl4u4st8khfpmx2xne7e"
+  },
+  "databases": {
+    "job-runner-db": "cbru9p9dh6sucbea2adudwco",
+    "sandbox-provider-db": "b2d87fuzrb1cpw6noy0kpo48"
+  },
+  "backups": {
+    "job-runner-db": "wbvt7ycjaxj49xoeowmicmah",
+    "sandbox-provider-db": "krsnu4wl5mlvawjgoxexftqj"
+  }
+}

@@ -20,14 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
         env:
           POSTGRES_USER: runner_test
           POSTGRES_PASSWORD: ci-disposable-only
           POSTGRES_DB: runner_test
         ports: ['5432:5432']
         options: >-
-          --health-cmd 'pg_isready -U runner_test'
+          --health-cmd "pg_isready -U runner_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
     defaults:
       run:
@@ -49,14 +49,14 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
         env:
           POSTGRES_USER: provider_test
           POSTGRES_PASSWORD: ci-disposable-only
           POSTGRES_DB: provider_test
         ports: ['5432:5432']
         options: >-
-          --health-cmd 'pg_isready -U provider_test'
+          --health-cmd "pg_isready -U provider_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
     defaults:
       run:

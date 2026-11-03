@@ -40,7 +40,7 @@ try:
         quoted = '"' + schema.replace('"', '""') + '"."' + name.replace('"', '""') + '"'
         source_count = psql("SELECT count(*) FROM " + quoted)
         restored_count = psql("SELECT count(*) FROM " + quoted, restored)
-        assert source_count == restored_count, "Restored table count differs"
+        assert source_count == restored_count, f"Restored count differs for {table}: source={source_count}, restored={restored_count}"
         counts[table] = int(source_count)
     print(json.dumps({"outcome":"passed", "source":database, "tables":counts,
                       "scope":"local PostgreSQL logical backup/restore only; BoxLite disks excluded"}, indent=2))
