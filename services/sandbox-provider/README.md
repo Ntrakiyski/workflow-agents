@@ -2,7 +2,7 @@
 
 Independent Python 3.12 / FastAPI / PostgreSQL service with BoxLite 0.11.0 behind `SandboxRuntime`. It owns its registry and never queries Runner tables. The API contains no application-specific behavior.
 
-**Release status: incomplete.** Real microVM persistence/isolation and host recovery require qualified KVM hardware. Passing API/database tests with a fake runtime does not pass those gates.
+**Release status: incomplete.** The actual Coolify execution host rejects a narrow `/dev/kvm` device mapping because the device is absent. Real microVM persistence/isolation and host recovery require qualified KVM hardware. Passing API/database tests with a fake runtime does not pass those gates.
 
 ## Build and run
 
@@ -120,3 +120,5 @@ That server emits readiness503 with `runtime:disabled`; the production image exc
 See `VERIFICATION.md` for actual executed commands and current blockers.
 
 `GET /metrics` is an authenticated Prometheus endpoint requiring `sandbox:read`. It scopes sandbox/run state gauges to the effective credential owner (and honors explicit delegation), without owner IDs, paths, workload text or credentials in labels. `/health/live` and `/health/ready` remain public safe health endpoints. Scrape `/metrics` on the private network using a read-only credential.
+
+Coolify may override image health checks with its own `curl` probe; the production image includes `curl` and CA certificates for this integration. With missing host KVM, an explicitly API-only staging deployment may use `/health/live` for container liveness, while `/health/ready` must continue to return503 and block workload acceptance. This does not qualify BoxLite or Phase2 readiness.
