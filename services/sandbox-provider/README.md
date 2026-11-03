@@ -25,6 +25,16 @@ The Dockerfile is independently buildable with this directory as build context. 
 
 The entrypoint always instantiates the real BoxLite adapter. There is no environment variable that silently enables a fake runtime. Only tests inject a double. Provider has no public domain or host port in staging; use a private network alias and credentials. Do not mount the Docker socket, host root or arbitrary directories; do not enable privileged mode. A narrow `/dev/kvm` mapping plus a matching supplemental KVM group can be required. Standard BoxLite jailer/seccomp is retained; if the host/container cannot satisfy it, report the deployment blocked rather than weakening it.
 
+If the platform does not support Docker `--group-add`, build with the optional
+`KVM_GID` argument set to the execution host's numeric KVM device group. This
+adds that supplementary group to the existing non-root `provider` account;
+`USER provider` preserves UID/GID10001 and lets Docker resolve its configured
+supplementary memberships. Empty/default builds add no KVM group. Zero and
+non-numeric group IDs are rejected. Set this non-secret argument as a
+build-time-only platform variable, verify `id` in the resulting image, and
+still map only `/dev/kvm`. Group membership does not grant kernel capabilities
+or bypass Docker/seccomp/AppArmor restrictions.
+
 ## Configuration
 
 | Variable | Meaning/default |
@@ -118,6 +128,55 @@ PORT=58002 .venv/bin/python -m tests.serve_fake
 That server emits readiness503 with `runtime:disabled`; the production image excludes tests. It supports the generic approved fixture programs in the published template and exists solely for HTTP integration with a real Runner/PostgreSQL. It does not execute external workloads or prove isolation/persistence.
 
 See `VERIFICATION.md` for actual executed commands and current blockers.
+
+## Operator runtime qualification
+
+`scripts/qualify_runtime.py` uses only production dependencies and the real
+`BoxLiteRuntime`. It runs in its own SDK home under
+`BOX_ROOT`'s parent, `.runtime-qualification/<session>/boxlite`, so it never
+opens the API process's SDK registry. It does not write the Provider database
+or prove API/audit recovery. Its JSON evidence identifies that narrower scope.
+
+Generate a unique lowercase UUID hex on the operator workstation once and
+place it in `QUALIFICATION_SESSION`. Supply the same explicit value on every
+replay of that session, including Coolify scheduled commands; generating a new
+UUID inside a repeating cron command would create separate sessions.
+
+```sh
+python -m scripts.qualify_runtime --session "$QUALIFICATION_SESSION" --mode lifecycle
+```
+
+This verifies fixture write, non-destructive stop, adapter close/reopen, the same
+runtime identity and retained marker, second-box filesystem isolation, safe
+stops, and explicit removal of only that session's new boxes. It requires a
+configured credential policy allowed to create/start/stop/execute/destroy the
+fixture profiles; credentials and workload output are never rendered. Existing
+runtime names are refused, not adopted. The session state is mode600 and a
+volume-local lock serializes qualification invocations. Completed commands
+replay their recorded result rather than creating duplicate boxes.
+
+To retain a stopped marker across an actual container replacement, run these
+as separate operator invocations with the same session and persistent volume:
+
+```sh
+python -m scripts.qualify_runtime --session "$QUALIFICATION_SESSION" --mode prepare
+# Lead operator independently replaces only this Provider container.
+python -m scripts.qualify_runtime --session "$QUALIFICATION_SESSION" --mode verify
+python -m scripts.qualify_runtime --session "$QUALIFICATION_SESSION" --mode cleanup
+```
+
+`prepare` and `verify` retain their stopped disposable boxes until the explicit
+`cleanup`; `lifecycle` includes cleanup, including best-effort cleanup on
+failure. Failed retained phases preserve state for inspection/cleanup. Each
+retained phase must complete once in order; after a failed phase, inspect and
+clean the session, then use a new session for another qualification. No mode
+recreates a missing retained box. The CLI exits0 for a pass,2 for unavailable
+runtime,1 for failure; there is no mock switch or skipped-as-success outcome.
+
+Host KVM visibility, these source instructions and mocked safeguard tests do
+not establish real execution. The lead must capture actual JSON results under
+the deployed non-root/device/group/security limits. A fresh script process is
+not by itself a Provider API-process replacement or physical host restart.
 
 `GET /metrics` is an authenticated Prometheus endpoint requiring `sandbox:read`. It scopes sandbox/run state gauges to the effective credential owner (and honors explicit delegation), without owner IDs, paths, workload text or credentials in labels. `/health/live` and `/health/ready` remain public safe health endpoints. Scrape `/metrics` on the private network using a read-only credential.
 

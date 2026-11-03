@@ -37,3 +37,35 @@ Operator concurrency qualification: added external `MAX_CONCURRENT_RUNS` (defaul
 ## Coolify health-probe compatibility
 
 Lead observed the actual Coolify daemon reject `/dev/kvm` mapping with `no such file or directory`; real host microVM execution is blocked. Added `curl` plus CA certificates for Coolify's generated health probe while retaining nonroot UID10001, pinned base and restricted container options. Docker rebuild succeeded. An actual production-container `curl -fsS http://127.0.0.1:8000/health/live` returned200, while `/health/ready` returned503 for unavailable KVM, as required. Curl reports Debian7.88.1 (security-maintained package). Latest local candidate image `sha256:96a7d416d66d92df44908be8042b28d3d29cfb2043c971c224d880a9c5e21541`. No DB suite repeat was needed for this Dockerfile-only packaging change; previous30-pass/1-skip suite remains the code evidence.
+
+## GCC runtime qualification tooling
+
+Added `scripts/qualify_runtime.py`, a production-dependency-only operator CLI,
+and eight focused tests. Actual local command:
+`/tmp/workflow-provider-qa-venv/bin/python -m pytest -q tests/test_qualification.py`
+returned **8 passed in0.29s**. These verify cleanup/refusal/replay boundaries with
+the test runtime, separate stopped-marker phases, profile/session identity,
+secret-safe error output, and a real-adapter missing-KVM negative. No microVM
+was created locally and no new real-runtime acceptance is claimed.
+
+The probe uses a separate SDK home inside persistent storage so it cannot
+concurrently open the API writer's home. Explicit session UUIDs make scheduled
+replay safe, and cleanup can touch only this session's previously absent box
+names with matching retained identities. Lifecycle includes cleanup;
+prepare/verify retain stopped boxes for an independently recorded replacement.
+Actual GCC results and service-level recovery remain the integration owner's
+responsibility. No privileges or host security settings were relaxed.
+
+## Non-root KVM group compatibility
+
+Lead observed Coolify reject its `--group-add` custom option. Added optional
+Docker build argument `KVM_GID`, validated as a positive numeric group ID, with
+supplementary membership on the existing provider account and `USER provider`.
+The host-specific group is not hardcoded in source. Actual local production
+build with `--build-arg KVM_GID=993` succeeded; an ephemeral container under
+`--cap-drop=ALL --security-opt=no-new-privileges:true --read-only` printed
+`uid=10001(provider) gid=10001(provider) groups=10001(provider),993(provider-kvm)`.
+The default build also succeeded and printed only group10001. A build with
+`KVM_GID=0` was rejected. These are actual image permission probes, not KVM or
+VM execution tests. Final focused config/operator safeguard command returned
+**12 passed in0.29s**; Python compilation and CLI help also passed.
