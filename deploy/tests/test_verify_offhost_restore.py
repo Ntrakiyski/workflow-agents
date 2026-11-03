@@ -1,9 +1,10 @@
-"""Offline verifier guard tests; subprocesses and Docker are never started."""
+"""Offline guards; only an inert stdin child runs, never Docker/runtime clients."""
 import contextlib
 import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -110,7 +111,7 @@ class VerifierGuards(unittest.TestCase):
             self.assertNotIn('local-test-only', output)
 
     def test_applied_runner_tree_mismatch_fails_before_docker(self):
-        def command(args, _env, cwd):
+        def command(args, _env, cwd, input_bytes=None):
             self.assertEqual(args[0], 'git')
             return ('c' if cwd.name == 'source' else 'd') * 40
 
@@ -124,10 +125,12 @@ class VerifierGuards(unittest.TestCase):
     def test_cleanup_attempts_both_owned_volumes_and_failure_overrides_restore_pass(self):
         cleanups, restores = [], []
 
-        def command(args, _env, _cwd):
+        def command(args, _env, _cwd, input_bytes=None):
             if args[0] == 'git':
                 return 'c' * 40
             if '--restore' in args:
+                self.assertNotIn('PHASE1_ARCHIVE_ENVELOPE', _env)
+                self.assertEqual(input_bytes, b'{}')
                 restores.append(args)
                 return json.dumps({'outcome': 'passed'})
             return ''
@@ -152,6 +155,13 @@ class VerifierGuards(unittest.TestCase):
         self.assertTrue(all('--allow-retained-runtime-records' in args for args in restores[2:]))
         self.assertFalse(evidence['runtime_client_started'])
         self.assertFalse(evidence['operational_provider_cutover_permitted'])
+
+    def test_large_inert_envelope_uses_stdin_beyond_environment_string_limit(self):
+        payload = b'x' * 200000
+        result = VERIFIER.command(
+            [sys.executable, '-c', 'import sys; print(len(sys.stdin.buffer.read()))'],
+            dict(os.environ), Path.cwd(), input_bytes=payload)
+        self.assertEqual(result.strip(), '200000')
 
 
 if __name__ == '__main__':

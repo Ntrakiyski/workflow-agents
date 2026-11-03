@@ -26,8 +26,9 @@ class RestoreError(RuntimeError):
     """Fixed safe classification; never include subprocess or archive content."""
 
 
-def command(args, env, cwd):
-    result = subprocess.run(args, cwd=cwd, env=env, capture_output=True, timeout=90)
+def command(args, env, cwd, input_bytes=None):
+    result = subprocess.run(args, cwd=cwd, env=env, input=input_bytes,
+                            capture_output=True, timeout=90)
     if result.returncode:
         raise RestoreError('restore_subprocess_failed')
     return result.stdout.decode()
@@ -113,7 +114,7 @@ def main():
             digest = hashlib.sha256(raw).hexdigest()
             if digest != archive['sha256']:
                 raise RestoreError('restore_envelope_checksum_mismatch')
-            envelopes[name] = raw.decode('utf-8')
+            envelopes[name] = raw
             evidence['source_envelopes'].append({'service': name, 'sha256': digest,
                                                  'bytes': len(raw), 'manifest_bound': True})
         migration_trees = {}
@@ -165,19 +166,23 @@ def main():
                 executable = [args.python, str(ROOT / 'deploy/migration-archive.py')]
             else:
                 raise RestoreError('unexpected_archive_service')
-            env['PHASE1_ARCHIVE_ENVELOPE'] = envelopes[name]
+            # Keep growing archives outside Linux's per-environment-string limit.
+            # Both archive helpers read stdin when this override is absent.
+            env.pop('PHASE1_ARCHIVE_ENVELOPE', None)
             results = []
             restore_flags = ['--restore', '--allow-bootstrap-metadata']
             if name == 'sandbox-provider' and args.forensic_registry_only:
                 restore_flags.append('--allow-retained-runtime-records')
             for replay in range(2):
-                raw = command(executable + restore_flags, env, service)
+                raw = command(executable + restore_flags, env, service,
+                              input_bytes=envelopes[name])
                 result = json.loads(raw)
                 if result.get('outcome') != 'passed':
                     raise RestoreError('restore_result_not_passed')
                 results.append(result)
             evidence['services'].append({'service': name, 'deployed_commit': commit,
                 'migration_tree': migration_trees[name][0], 'applied_migration_tree': migration_trees[name][1],
+                'envelope_transport': 'stdin; exact manifest-checked bytes',
                 'first_restore': results[0], 'idempotent_replay': results[1]})
         evidence['outcome'] = 'passed'
     except Exception as error:
