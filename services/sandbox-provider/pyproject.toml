@@ -1,0 +1,8 @@
+[project]
+name = "workflow-sandbox-provider"
+version = "1.0.0rc1"
+requires-python = ">=3.12,<3.13"
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["real_runtime: requires real KVM and an approved image digest", "integration: requires isolated PostgreSQL"]

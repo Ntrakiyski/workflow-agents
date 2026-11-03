@@ -15,3 +15,18 @@ description: Develop and validate the generic FastAPI BoxLite Sandbox Provider, 
 8. Capture exit results, checksum artifacts, durable audit events, correlation IDs and redacted structured logs. Verify no secret appears in reusable images or logs.
 9. Run project-local format/lint/tests/migrations and describe commands/results in README and verification report.
 10. Treat any new use-case need as a workload configuration unless it is a genuinely generic, versioned API capability with new regression tests.
+
+## Verified candidate commands (2026-11-03)
+
+Run from `services/sandbox-provider/`, Python 3.12:
+
+```sh
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.lock
+TEST_DATABASE_URL=... .venv/bin/python -m pytest -q -m 'not real_runtime'
+TEST_DATABASE_URL=... .venv/bin/python -m pytest -q -rs
+```
+
+`TEST_DATABASE_URL` must be a dedicated disposable Provider database: fixtures TRUNCATE registry tables. Tests inject `tests.fake_runtime.FakeRuntime`, never enable a production mock mode. The `real_runtime` test explicitly skips when `/dev/kvm` is absent; such a skip blocks real-runtime acceptance.
+
+Match packaged `provider/openapi.json` to root contract JSON after reviewed contract updates. Test cancellation fences together with execute, including response-timeout ambiguity. Whole-GiB disk policy is enforced at config load; do not silently round. Template fixture files belong on rootfs `/opt/workflow-fixture`, not an unverified `/tmp` mount.

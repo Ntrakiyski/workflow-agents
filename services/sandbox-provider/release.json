@@ -1,0 +1,1 @@
+{"service":"sandbox-provider","version":"1.0.0-rc.1","api_version":"v1","contract":"provider/openapi.json","runtime_sdk":{"boxlite":"0.11.0"},"status":"candidate","compatibility":"No breaking v1 changes; version profile behavior changes and major API changes separately."}
