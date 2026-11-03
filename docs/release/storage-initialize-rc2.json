@@ -1,0 +1,15 @@
+{
+  "outcome": "passed",
+  "real_services": [
+    "local RustFS",
+    "published GitHub rc2 runtime asset"
+  ],
+  "checks": [
+    "new bucket installation",
+    "downloaded bytes checksum validation",
+    "idempotent replay"
+  ],
+  "bytes": 95977914,
+  "sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
+  "elapsed_ms": 4552
+}

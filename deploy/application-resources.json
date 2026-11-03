@@ -18,6 +18,7 @@
   "application": {
     "uuid": "7vdsilhnu96tifz7yosm61j1",
     "name": "workflow-application",
-    "url": "https://workflow-agents.68.210.88.115.sslip.io"
+    "url": "https://workflow-agents.68.210.88.115.sslip.io",
+    "source_commit": "2f7820f619fe023b4278c2f97e43f7709d59d8cd"
   }
 }

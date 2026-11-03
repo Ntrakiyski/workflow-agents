@@ -11,8 +11,16 @@ import { join } from "node:path";
 import type { Config } from "./config.js";
 import type { S3Objects } from "./storage.js";
 
-const approvedSource =
-  "https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.1/runtime-bundle.tar.gz";
+const approvedSources = new Map([
+  [
+    "9ffbbd3ed2856013192049986f1062396e46461aa81998f607eaeda9acb3d033",
+    "https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.1/runtime-bundle.tar.gz",
+  ],
+  [
+    "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
+    "https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.2/runtime-bundle.tar.gz",
+  ],
+]);
 const maxBundleBytes = 256 * 1024 * 1024;
 
 /** Optional operator bootstrap; never invoked by a browser request. */
@@ -21,7 +29,7 @@ export async function initializeStorage(
   objects: S3Objects,
   source: string,
 ) {
-  if (source !== approvedSource)
+  if (source !== approvedSources.get(config.runtimeBundleSha256))
     throw new Error("Unapproved runtime distribution source");
   try {
     await objects.client.send(

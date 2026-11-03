@@ -2,7 +2,7 @@
 
 Reusable infrastructure for queuing jobs and running approved workloads in persistent isolated environments.
 
-**Current status: Phase 1 release candidate `1.0.0-rc.1`. Full acceptance is incomplete; Phase 2 is not ready to consume a stable release.** Real BoxLite Cloud execution and stopped-box persistence passed. [Current validation](docs/phase1/CLOUD-VALIDATION.md), [readiness gates](docs/phase1/readiness.json) and [independent QA](docs/qa/CLOUD-REVIEW.md) record the evidence and remaining limits.
+**Current status: infrastructure contract candidate `1.0.0-rc.2` and minimal application candidate `0.1.0-rc.1`. Stable acceptance remains incomplete.** Scoped files, verified Cloud completion, failure recovery tests and encrypted application checkpoints extend the merged Phase 1 services. The [initial application scope](docs/release/MINIMAL-SCOPE.md) contains only submission, a persistent authorized list and results. [Current validation](docs/phase1/CLOUD-VALIDATION.md), [readiness gates](docs/phase1/readiness.json) and [independent QA](docs/qa/CLOUD-REVIEW.md) record the evidence and remaining limits.
 
 ![Phase 1 services and validation overview](docs/phase1/visuals/preview.png)
 
@@ -11,7 +11,9 @@ Reusable infrastructure for queuing jobs and running approved workloads in persi
 | Service | Stack | Responsibility |
 | --- | --- | --- |
 | [Job Runner](services/job-runner/README.md) | Node.js 22+, TypeScript, Fastify, Graphile Worker, PostgreSQL | Authenticated submissions, queueing, scheduling, retry policy, cancellation, execution status and audits |
-| [Sandbox Provider](services/sandbox-provider/README.md) | Python 3.12, FastAPI, Psycopg, BoxLite SDK 0.11.0, PostgreSQL | Approved workload execution, persistent sandbox identity, start, stop, explicit destruction and audits |
+| [Sandbox Provider](services/sandbox-provider/README.md) | Python 3.12, FastAPI, Psycopg, BoxLite SDK 0.11.0, PostgreSQL | Approved workload execution, scoped files, persistent sandbox identity, start, stop, explicit destruction and audits |
+| [Request application](apps/application/README.md) | React, Fastify, own PostgreSQL and private RustFS | Instructions/attachments, persistent paginated requests, independently checked text/file results |
+| [Pi document workload](workloads/pi-document-agent/README.md) | Pinned Node, Pi, OfficeCLI archive; existing LiteLLM | Constrained working-copy editing, structured manifests, validation findings and session checkpoints |
 
 A client submits a generic job to Runner. Runner commits the job and queue work to its own database, then calls Provider through its versioned REST API. Provider executes an approved profile through a runtime adapter and stores lifecycle and run records in its own database. Clients poll job status and durable events.
 
@@ -23,7 +25,7 @@ Both APIs and their separate PostgreSQL databases are private resources in GCC C
 
 The recorded deployed source is `04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9`. Documentation pushes do not redeploy it. [Deployment configuration and recovery instructions](deploy/README.md) describe commit pinning, private networking, secret injection and storage.
 
-There is no application dashboard. The services expose authenticated `/v1` APIs, health endpoints, owner-scoped metrics and JSON OpenAPI documents. Swagger and ReDoc are disabled. The Document Assistant UI and backend remain future Phase 2 work.
+Only the authenticated request application may be public over HTTPS. The private services expose authenticated `/v1` APIs, health endpoints, owner-scoped metrics and JSON OpenAPI documents. Swagger and ReDoc are disabled. The broader Phase 2 dashboard, chat, approval and revision flows are deferred.
 
 ## Contracts and documentation
 
@@ -37,7 +39,7 @@ There is no application dashboard. The services expose authenticated `/v1` APIs,
 | [Runner OpenAPI](contracts/v1/runner-v1.openapi.json) | Frozen Runner `/v1` candidate contract |
 | [Provider OpenAPI](contracts/v1/provider-v1.openapi.json) | Frozen Provider `/v1` candidate contract |
 | [Validation diagrams](docs/phase1/visuals/README.md) | Architecture, request flow, filesystem retention proof and open gates |
-| [Future Phase 2 requirements](PHASE-2-DOCUMENT-ASSISTANT.md) | Context only; no application implementation is included |
+| [Phase 2 requirements](PHASE-2-DOCUMENT-ASSISTANT.md) | Broader context; initial release is explicitly narrowed by [minimal scope](docs/release/MINIMAL-SCOPE.md) |
 
 Historical local-runtime and migration reports remain under `docs/phase1/`. The current delivery record is `CLOUD-VALIDATION.md`; older test counts and host blockers describe their recorded environment and time.
 
@@ -56,6 +58,6 @@ Agent instructions and verified procedures are maintained with each service:
 
 ## Remaining release work
 
-Scoped artifact transfer, active-command and complete-output recovery, hosted failure injection, off-host and coordinated Cloud backup/restore, host restart persistence and broader resource/security qualification remain incomplete. See the [machine-readable gates](docs/phase1/readiness.json) for exact scope.
+The [machine-readable gates](docs/phase1/readiness.json) separate implementation and bounded Cloud evidence from remaining stable acceptance. Active attach stays ambiguous without replay; host restart, comprehensive escape/network/load qualification and full guest-disk recovery remain unverified or vendor blocked. Same-box stop/start, required-file checkpoints and a runtime archive do not prove a VM clone or full host recovery.
 
-No Pi, OfficeCLI, document workflow, React application, new LiteLLM service or general YAML workflow engine is implemented here. Future consumers use versioned APIs and operator-approved profiles without adding application logic to infrastructure.
+The application and workload consume versioned APIs and approved profiles. Pi, OfficeCLI and document semantics remain outside Runner and Provider. RustFS is self-hosted application storage; encrypted exports are separately copied off-host, without a Coolify S3 backup destination.
