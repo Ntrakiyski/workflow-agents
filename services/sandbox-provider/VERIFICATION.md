@@ -15,6 +15,17 @@ The failed box was reconciled by its exact journaled name and deleted by its
 returned ID; exact-ID absence was confirmed. No guest network success is
 claimed by that attempt; see `docs/release/cloud-policy-rejection.json`.
 
+A separate actual Cloud probe on the previously qualified pinned slim image
+`e697c818…`,2CPU/2048MiB/requested2GiB, confirmed exact returned allowlist,
+disabled inbound and retention metadata. LiteLLM HTTPS `/v1/models` returned401;
+`https://example.com/` and `https://1.1.1.1/` both ended TLS with `SSLEOFError`
+before HTTP. Raw TCP connect to1.1.1.1:443 was accepted, so this is bounded
+hostname/HTTPS evidence, not all-TCP denial. Both owned network fixtures were
+deleted with exact-ID absence confirmed. DNS/UDP, per-port filtering, airgap,
+complete isolation and resource stress remain unqualified. See
+`docs/release/cloud-hostname-network.json`; no model secret or runtime bundle
+was used in these probes.
+
 ## Hosted transfer transport, descendants and deletion reconciliation (2026-11-03)
 
 Latest full command with dedicated disposable local PostgreSQL16:
