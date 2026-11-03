@@ -2,6 +2,47 @@
 
 Executed 2026-11-03 by Sandbox Infrastructure Engineer. Independent QA is a separate gate.
 
+## Explicit hosted Cloud adapter regression (latest)
+
+Executed from the isolated `phase1/cloud-provider` worktree on2026-11-03:
+
+```sh
+TEST_DATABASE_URL=... /tmp/workflow-provider-qa-venv/bin/python -m pytest -q -m 'not real_runtime'
+```
+
+Result: **53 passed,1 deselected in13.26s**. The deselected case is the separate
+local KVM test, not a Cloud pass. PostgreSQL16 ran in the existing dedicated
+local test container, against a newly created disposable database
+`workflow_cloud_provider_tests`; credentials were read into the child process
+environment and never printed. This is not a staging/production database.
+
+Ten Cloud adapter cases use actual pinned BoxLite0.11.0 against a loopback HTTP
+stub. They cover modern retention fields, explicit denied inbound/outbound,
+CPU/RAM/disk request serialization, fixed entrypoint, no public port/tunnel,
+stop transition polling, SDK close without deletion, identity reuse by a fresh
+adapter, explicit deletion, failed-create no replay, durable creation fence in
+real PostgreSQL, mismatched backend refusal without Cloud calls, metadata drift,
+authorization refusal, missing retained identity, key rotation/account binding,
+historical small-profile refusal, active-execution attach refusal and rejection
+of error-bearing exit0 results. The remaining suite validates API/DB behavior
+with its deterministic fake runtime. No VM or hosted disk exists in these tests.
+
+Cloud dependencies remain pinned at0.11.0; neither lockfile changed. Python
+compilation and `git diff --check` passed. The integration owner separately ran
+real authenticated Cloud fixture operations and owns deployment evidence; this
+developer report does not count those as commands executed by this agent.
+Active-command output recovery, fresh-stream disconnect replay, full Cloud disk
+backup/restore and Cloud physical-host restart remain unverified/blocked. The
+local GCC bubblewrap failure is preserved below as historical evidence.
+
+An additional forced-interleaving real-PostgreSQL regression ran separately:
+`tests/test_cloud_runtime.py::test_concurrent_fenced_observer_cannot_poison_first_create_authority`
+→ **1 passed in0.69s**. It pauses the first request after its durable creation
+fence, lets another request observe absence and return `ambiguous_creation`,
+then resumes the original dispatch authority. The registry remains `creating`
+until exactly one external create succeeds, after which it becomes `running`;
+the observer cannot poison the original request or trigger another create.
+
 | Check | Actual result |
 |---|---|
 | Python compilation | `python -m compileall -q provider scripts` passed |

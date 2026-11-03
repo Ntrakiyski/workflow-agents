@@ -2,7 +2,7 @@
 
 Independent Python 3.12 / FastAPI / PostgreSQL service with BoxLite 0.11.0 behind `SandboxRuntime`. It owns its registry and never queries Runner tables. The API contains no application-specific behavior.
 
-**Release status: incomplete.** Worfklow lacks `/dev/kvm`. The replacement GCC host exposes usable KVM to the restricted non-root container, but actual BoxLite creation fails at the bubblewrap user-namespace preflight (`clone(CLONE_NEWUSER)` returns `EPERM`). Real microVM execution, persistence/isolation and runtime recovery remain unverified. Passing API/database tests or the current minimal readiness probe does not pass those gates.
+**Release status: incomplete.** Local BoxLite on GCC remains blocked at the bubblewrap user-namespace boundary. An explicitly configured hosted BoxLite Cloud adapter is now available without local KVM or host security changes. Its pinned SDK wire/registry tests pass; deployed service integration, isolation, recovery and backup gates require separate real evidence. Neither local prerequisite readiness nor authenticated Cloud readiness alone qualifies workload execution.
 
 ## Build and run
 
@@ -23,7 +23,7 @@ docker build -t workflow-sandbox-provider:1.0.0-rc.1 .
 
 The Dockerfile is independently buildable with this directory as build context. It pins the Python base by OCI index digest and runs UID/GID 10001. A named volume must retain `/var/lib/sandbox-provider`; image directory ownership initializes a new volume correctly. `BOX_ROOT` holds BoxLite's own registry and disks; the separate PostgreSQL database holds public identities and run/audit records. Neither store alone is a recoverable environment.
 
-The entrypoint always instantiates the real BoxLite adapter. There is no environment variable that silently enables a fake runtime. Only tests inject a double. Provider has no public domain or host port in staging; use a private network alias and credentials. Do not mount the Docker socket, host root or arbitrary directories; do not enable privileged mode. A narrow `/dev/kvm` mapping plus a matching supplemental KVM group can be required. Standard BoxLite jailer/seccomp is retained; if the host/container cannot satisfy it, report the deployment blocked rather than weakening it.
+The entrypoint instantiates a real BoxLite adapter selected explicitly by `SANDBOX_RUNTIME_MODE=local|cloud`; local remains the default. Neither mode falls back to another runtime or a fake. Only tests inject doubles. Provider has no public domain or host port in staging; use a private network alias and credentials. Do not mount the Docker socket, host root or arbitrary directories; do not enable privileged mode. Local mode can require narrow `/dev/kvm` access and the matching KVM group. Cloud mode uses authenticated outbound HTTPS/WebSocket connections and needs no KVM device/group or host policy changes. It never publishes guest ports or creates a tunnel.
 
 If the platform does not support Docker `--group-add`, build with the optional
 `KVM_GID` argument set to the execution host's numeric KVM device group. This
@@ -43,6 +43,12 @@ or bypass Docker/seccomp/AppArmor restrictions.
 | `PROVIDER_AUTH_JSON` | Required array of credential policies; see below; secret |
 | `PROVIDER_PROFILES_JSON` | Required approved configuration matching `provider/profiles.schema.json` |
 | `BOX_ROOT` | `/var/lib/sandbox-provider/boxlite`; persistent writable SDK registry/disks |
+| `SANDBOX_RUNTIME_MODE` | `local` by default; `cloud` explicitly selects the hosted SDK REST backend |
+| `BOXLITE_REST_URL` | Cloud-only required HTTPS origin, without credentials/query/path; external configuration |
+| `BOXLITE_API_KEY` | Cloud-only required account key; secret, runtime only, never included in profiles/images/logs |
+| `BOXLITE_ACCOUNT_SCOPE` | Cloud-only required stable operator label for this account; also prefixes new box names |
+| `BOXLITE_REST_PATH_PREFIX` | Optional server-provided routing prefix; distinct from the operator account label |
+| `RUNTIME_REQUEST_TIMEOUT_SECONDS` | `30`, range1..120; bounded Cloud control requests/state polling; no automatic create/exec replay |
 | `PORT` | `8000` |
 | `LOG_LEVEL` | `INFO`; request bodies, tokens and workload output are never logged |
 | `MAX_CONCURRENT_RUNS` | `4`; operator may lower to1..4 to fit host capacity; hard ceiling leaves DB pool capacity for API/recovery |
@@ -66,6 +72,100 @@ Only an explicitly configured delegate can send `X-Owner-ID`, and it must select
 `config/profiles.template.json` is a template, not deployable until its digest placeholder is rendered. The repository contract fixture uses a Python image and trusted direct argv programs that write/read a bounded filename under `/opt/workflow-fixture`, a rootfs location rather than potentially volatile `/tmp`. Pin a verified immutable image digest. Future approved workloads can be added through operator configuration: JSON Schema arguments, fixed executable/argv tokens, environment, cwd, resource policy and profile authorization. Only whole `${arg:NAME}` argument tokens can interpolate validated scalar values. Executable/cwd/environment are never selected by clients; no shell string is constructed. `$ref` in argument schemas is rejected to avoid external schema resolution. Keep profile IDs immutable when changing behavior or image versions.
 
 BoxLite disk capacity accepts **whole GiB only** (`disk_mib` divisible by 1024); other values are rejected, never rounded silently. SDK disk size is at least the base-image capacity: qualify the image fits the requested disk before accepting a real profile. CPU/RAM and disk virtual capacity use SDK options; denied/allowlist networking uses SDK `OutboundNetworkSpec`. No host mounts or published guest ports are configured. Runtime resource/security enforcement still needs real-host tests; a configuration assertion is not evidence that the kernel applied it.
+
+## Explicit hosted Cloud mode
+
+Cloud mode retains BoxLite0.11.0, matching the canonical hosted guide revision
+2026-11-02.1. It uses `Boxlite.rest(BoxliteRestOptions(...))` with an
+`ApiKeyCredential`, never a convenience/context-manager box that might create
+or remove persistent state. No dependency or public `/v1` change is required.
+Configure the mode, HTTPS origin, API key and stable account scope in Coolify;
+remove local KVM device options from this application's deployment. Keep the
+Provider registry database persistent. `BOX_ROOT` remains available for retained
+local history; it does not contain Cloud guest disks.
+
+Cloud rounds fractional-GiB RAM upward. A **new Cloud creation** therefore
+requires memory to be at least1024MiB and a multiple of1024MiB, CPU1..16 and
+whole-GiB disk. Invalid profiles fail422 before Cloud requests; limits are
+never silently rounded. Keep old immutable profiles configured/authorized for
+historical reads, and introduce a new profile ID for Cloud capacities. An
+approved image must be an immutable OCI digest accepted by the account; there
+is no automatic substitution with a mutable Cloud image alias.
+
+Approved sandbox profiles can supply optional operator-owned `entrypoint` and
+`cmd` arrays. These are fixed direct argv values, never request interpolation.
+Use a suitable persistent PID1 for the chosen image. For example, an approved
+Python fixture can configure `entrypoint` as
+`["/usr/local/bin/python3","-c","import time; time.sleep(31536000)"]` with
+`cmd:[]`; workload files remain under `/opt/workflow-fixture`, a rootfs path.
+Consumers cannot select the executable or introduce a shell through the API.
+
+Cloud creation sends `auto_delete=0`, `auto_stop=0`, `auto_resume=False`,
+`auto_remove=False` and `detach=True`. Modern lifecycle fields are essential:
+the SDK's deprecated `auto_remove` flag alone is not a Cloud retention policy.
+Inbound is disabled and no port/tunnel operation is called. Denied outbound
+means no guest NIC; allowlisted outbound uses the exact approved host rules.
+SDK0.11 encodes disabled inbound using its compatible outbound-only wire
+shape; returned metadata must still confirm disabled inbound. Enabled outbound
+with an empty allowlist would be unrestricted and is rejected by profile policy.
+
+Before approved execution/start, the adapter verifies returned identity,
+requested image string, CPU/RAM, zero automatic deletion/stop, disabled
+automatic resume, and inbound/outbound policy. A mismatch fails closed. Python
+`BoxInfo` does not expose disk capacity or a resolved image digest, so this
+metadata check is **not** disk-limit or pulled-image attestation. Validate
+actual guest capacity, denied traffic and account image behavior in the real
+qualification. Never advertise metadata alone as isolation proof.
+
+The Provider first commits its opaque sandbox name and backend binding, then
+durably records that Cloud creation may have been dispatched, before the
+external POST. A timed-out creation can be reconciled only to that exact name
+with matching metadata. If it cannot be found, a repeated API request returns
+nonretryable `ambiguous_creation` instead of creating another box. The SDK list
+does not paginate; an absent result is not proof of global absence. Operator
+reconciliation is required, not blind fence reset or a new create. A preexisting
+name is refused on the first attempt. Only the returned Cloud ID is used for
+retained start, stop, inspect, execute and explicit destroy.
+
+Migration003 stores `runtime_backend` and `runtime_create_attempted`. Existing
+rows default to `boxlite-local`; switching mode does not move or reinterpret
+their identities. They remain queryable under their original profile policy,
+but mutations against the wrong backend fail409. The Cloud binding hashes the
+configured origin, stable account scope and routing prefix, excluding the key;
+legitimate key rotation within the same account preserves access. Verify the
+replacement key belongs to that same account. Do not reuse the account label
+for another account or change routing/origin to rebind existing records.
+
+Stop polls bounded metadata until the same ID is retained in a settled stopped
+state; start similarly waits for running. Explicit deletion waits for stop and
+confirms absence, allowing bounded reconciliation of a transition refusal.
+SDK `close()` is a no-op in this pinned version and never invokes account-wide
+shutdown. No code enumerates then deletes unrelated account resources.
+
+Cloud readiness performs a bounded authenticated SDK list request. It returns
+503 when authentication/control connectivity fails and never consults local
+KVM. A200 proves that read capability, not creation quota, guest execution,
+policy enforcement or persistent backup. Public health errors omit credentials,
+native response bodies, account metadata and workload output.
+
+Recovery of a **stopped** Cloud box uses its persisted backend plus returned ID
+and verifies the same retained filesystem through the real integration suite.
+Recovery of an **active command's output** is deliberately incomplete: SDK0.11
+can recover a zero exit status after losing output, without exposing every
+loss to Python. The adapter refuses Cloud `attach` with nonretryable
+`ambiguous_execution`; the service stops that exact box and requires operator
+reconciliation, preserving its disk and never rerunning the command. Native
+`error_message` results also fail closed. Fresh stream-disconnection behavior
+still needs failure-injection qualification; a successful normal stream does
+not establish reconnect/replay guarantees.
+
+Cloud owns the guest disk and physical execution host. GCC backups cover the
+Provider registry/audits/configuration, not that remote disk. The reviewed
+Cloud capability response does not enable export/snapshot/import/clone; no
+independent full guest backup/restore has been demonstrated. Define and test
+an approved external data backup/export procedure before accepting durable
+production data. Provider/GCC restart recovery and physical Cloud-host restart
+are separate gates; the latter cannot be proven by restarting this container.
 
 ## API and semantics
 
@@ -116,7 +216,7 @@ TEST_DATABASE_URL=... .venv/bin/python -m pytest -q -rs
 .venv/bin/python -m pytest -q -m real_runtime -rs
 ```
 
-The default test suite uses real PostgreSQL and a deterministic in-memory runtime. It validates strict wire schemas, auth/owner/delegation, allowlists/path rejection, idempotency, quotas/output bounds, concurrency, cancel/execute races, stop/destroy distinction, audit append-only behavior, JSON log redaction, schema migration replay and Provider-instance recovery. These restart tests model a new service instance while preserving the fake runtime; they are not physical host or actual microVM recovery evidence. `test_real_runtime.py` explicitly skips without KVM and never falls back to a fake.
+The default test suite uses real PostgreSQL and a deterministic in-memory runtime for API behavior. The Cloud adapter suite additionally uses the **actual pinned SDK** against a loopback HTTP stub, including separate Provider instances with retained PostgreSQL/backend IDs. It verifies wire lifecycle/network/resource fields, transition polling, authentication failures, creation fencing, metadata drift and backend isolation. The stub creates no real guest, disk or isolation boundary. These tests are not hosted Cloud or physical host recovery evidence. `test_real_runtime.py` covers the separate local mode, skips without KVM and never falls back to a fake. Real Cloud qualification goes through the deployed service HTTP integration probe.
 
 A test-only real HTTP process is available from the source checkout:
 
@@ -131,7 +231,8 @@ See `VERIFICATION.md` for actual executed commands and current blockers.
 
 ## Operator runtime qualification
 
-`scripts/qualify_runtime.py` uses only production dependencies and the real
+`scripts/qualify_runtime.py` is explicitly **local-mode-only** and refuses Cloud
+mode. It uses only production dependencies and the real
 `BoxLiteRuntime`. It runs in its own SDK home under
 `BOX_ROOT`'s parent, `.runtime-qualification/<session>/boxlite`, so it never
 opens the API process's SDK registry. It does not write the Provider database

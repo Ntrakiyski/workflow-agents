@@ -1,9 +1,10 @@
 """Actual pinned SDK against a loopback HTTP stub, never hosted Cloud/KVM."""
 import copy
+import asyncio
 import json
 import os
 import threading
-from contextlib import contextmanager
+from contextlib import contextmanager, asynccontextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from types import SimpleNamespace
 
@@ -15,6 +16,7 @@ from provider.errors import ServiceError
 from provider.runtime import configured_runtime
 from provider.app import create_app
 from httpx import ASGITransport, AsyncClient
+from psycopg.types.json import Jsonb
 from .conftest import policies, profiles
 
 
@@ -319,3 +321,51 @@ async def test_real_postgres_registry_reopens_with_same_cloud_id_and_retained_st
                 assert (await client.post('/v1/sandboxes/' + sid + '/destroy', headers=headers,
                     json={'confirm': True, 'reason': 'owned test cleanup'})).status_code == 200
                 assert not stub.boxes
+
+
+@pytest.mark.integration
+async def test_concurrent_fenced_observer_cannot_poison_first_create_authority(tmp_path):
+    database_url = os.getenv('TEST_DATABASE_URL')
+    if not database_url:
+        pytest.skip('Requires a dedicated disposable PostgreSQL database.')
+    settings = configured(tmp_path)
+    settings.database_url = database_url
+    with cloud_server() as (stub, url):
+        runtime = runtime_for(settings, url)
+        app = create_app(settings, runtime, dispatcher=False)
+        async with app.router.lifespan_context(app):
+            service = app.state.service
+            profile = settings.profiles['sandboxes']['minimal-linux:v1']
+            sid = 'sbx_' + 'b' * 32
+            identity = settings.authenticate('Bearer ' + settings.auth[0]['token'], None)
+            async with service.db.tx() as c:
+                await c.execute('TRUNCATE sandboxes,runs,idempotency,audit_events RESTART IDENTITY CASCADE')
+                await c.execute('''INSERT INTO sandboxes(sandbox_id,owner_id,owner_ref,profile,profile_snapshot,
+                                   runtime_name,status,runtime_backend) VALUES(%s,%s,%s,%s,%s,%s,'creating',%s)''',
+                                (sid, identity.owner, 'concurrent-owner', 'minimal-linux:v1', Jsonb(profile),
+                                 runtime.creation_name(sid), runtime.backend_id))
+            original_tx = service.db.tx
+            fence_committed, release_authority = asyncio.Event(), asyncio.Event()
+            authority = None
+            @asynccontextmanager
+            async def paused_after_authority_fence():
+                async with original_tx() as connection:
+                    yield connection
+                if asyncio.current_task() is authority and not fence_committed.is_set():
+                    fence_committed.set()
+                    await release_authority.wait()
+            service.db.tx = paused_after_authority_fence
+            authority = asyncio.create_task(service.lifecycle(identity, sid, 'ensure', 'authority-correlation'))
+            try:
+                await asyncio.wait_for(fence_committed.wait(), 2)
+                with pytest.raises(ServiceError, match='ambiguous_creation'):
+                    await service.lifecycle(identity, sid, 'ensure', 'observer-correlation')
+                async with original_tx() as c:
+                    row = await (await c.execute('SELECT status FROM sandboxes WHERE sandbox_id=%s', (sid,))).fetchone()
+                    assert row['status'] == 'creating'
+                assert not any(method == 'POST' for method, _, _ in stub.requests)
+            finally:
+                release_authority.set()
+            result = await asyncio.wait_for(authority, 5)
+            assert result['status'] == 'running'
+            assert sum(method == 'POST' and path == '/v1/boxes' for method, path, _ in stub.requests) == 1
