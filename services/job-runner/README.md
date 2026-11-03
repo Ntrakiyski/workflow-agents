@@ -31,7 +31,7 @@ docker build -t workflow-job-runner:rc .
 docker run --rm --env-file /secure/path/runner.env -p 127.0.0.1:8080:8080 workflow-job-runner:rc
 ```
 
-The digest-pinned multi-architecture Node base, lockfile, service-local contract copies and Docker context `.` allow an independent build. The final image runs as `node`; it needs no devices, privileged capabilities, host mounts or Docker socket.
+The digest-pinned multi-architecture Node base, lockfile, service-local contract copies and Docker context `.` allow an independent build. The final image runs as `node`; it needs no devices, privileged capabilities, host mounts or Docker socket. It includes curl and CA certificates because Coolify may replace the image healthcheck with a curl probe.
 
 ## External configuration
 
