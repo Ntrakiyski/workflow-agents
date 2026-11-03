@@ -1,8 +1,8 @@
 import asyncio
 import json
 import pytest
-from jsonschema import Draft202012Validator, RefResolver
-from provider.app import OPENAPI, create_app
+from jsonschema import Draft202012Validator
+from provider.app import OPENAPI, REGISTRY, create_app
 from provider.config import Settings
 from provider.db import one
 from provider.service import ProviderService
@@ -17,7 +17,7 @@ def headers(token=TOKEN_A, key='key-1', **more):
 
 
 def conform(schema, value):
-    Draft202012Validator(OPENAPI['components']['schemas'][schema], resolver=RefResolver.from_schema(OPENAPI), format_checker=Draft202012Validator.FORMAT_CHECKER).validate(value)
+    Draft202012Validator({'$ref': 'urn:workflow:provider:openapi#/components/schemas/' + schema}, registry=REGISTRY, format_checker=Draft202012Validator.FORMAT_CHECKER).validate(value)
 
 
 async def create(client, ref='workspace-a', token=TOKEN_A):
@@ -288,3 +288,15 @@ async def test_read_only_credentials_cannot_mutate_runtime(env):
                           ('/v1/sandboxes', {'owner_ref': 'denied', 'profile': 'minimal-linux:v1', 'persistent': True})]:
         assert (await client.post(path, headers=headers(), json=payload)).status_code == 403
     assert runtime.executes == 0 and runtime.creates == 1
+
+
+async def test_authenticated_metrics_scope_to_effective_owner(env):
+    _, client, _, _ = env
+    sid = await create(client)
+    assert (await client.get('/metrics')).status_code == 401
+    a = await client.get('/metrics', headers=headers())
+    b = await client.get('/metrics', headers=headers(TOKEN_B))
+    assert a.status_code == b.status_code == 200
+    assert 'sandbox_provider_sandboxes{state="running"} 1' in a.text
+    assert 'sandbox_provider_sandboxes{state=' not in b.text
+    assert sid not in a.text and 'owner-a' not in a.text

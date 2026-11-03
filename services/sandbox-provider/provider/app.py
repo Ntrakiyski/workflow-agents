@@ -6,8 +6,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-from jsonschema import Draft202012Validator, RefResolver
+from fastapi.responses import JSONResponse, PlainTextResponse
+from jsonschema import Draft202012Validator
+from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT202012
 from psycopg import Error as DatabaseError
 from . import VERSION
 from .audit import emit_log
@@ -17,7 +19,7 @@ from .runtime import BoxLiteRuntime
 from .service import ProviderService, sandbox_json, run_json
 
 OPENAPI = json.loads(Path(__file__).with_name('openapi.json').read_text())
-RESOLVER = RefResolver.from_schema(OPENAPI)
+REGISTRY = Registry().with_resource('urn:workflow:provider:openapi', Resource.from_contents(OPENAPI, default_specification=DRAFT202012))
 
 
 def response(value, status=200):
@@ -58,7 +60,7 @@ def create_app(settings=None, runtime=None, dispatcher=True):
                 for name, value in request.path_params.items():
                     if not ID.fullmatch(value):
                         raise ServiceError(400, 'invalid_request', 'Resource identifier is invalid.')
-                if request.url.path.startswith('/v1/'):
+                if request.url.path.startswith('/v1/') or request.url.path == '/metrics':
                     request.state.identity = settings.authenticate(request.headers.get('authorization'), request.headers.get('x-owner-id'))
                 if request.headers.get('content-length'):
                     try:
@@ -98,7 +100,7 @@ def create_app(settings=None, runtime=None, dispatcher=True):
             value = json.loads(data, parse_constant=lambda value: (_ for _ in ()).throw(ValueError()))
         except (ValueError, UnicodeDecodeError):
             raise ServiceError(400, 'invalid_request', 'Request body must be valid JSON.')
-        if not Draft202012Validator(OPENAPI['components']['schemas'][schema], resolver=RESOLVER).is_valid(value):
+        if not Draft202012Validator({'$ref': 'urn:workflow:provider:openapi#/components/schemas/' + schema}, registry=REGISTRY).is_valid(value):
             raise ServiceError(422, 'invalid_request', 'Request does not match the published schema.')
         return value
 
@@ -115,6 +117,18 @@ def create_app(settings=None, runtime=None, dispatcher=True):
     def ids(*values):
         if any(not ID.fullmatch(v) for v in values):
             raise ServiceError(400, 'invalid_request', 'Resource identifier is invalid.')
+
+    @app.get('/metrics')
+    async def metrics(request: Request):
+        require(request, 'read')
+        async with service.db.tx() as c:
+            rows = await (await c.execute('SELECT status,count(*) AS count FROM sandboxes WHERE owner_id=%s GROUP BY status', (request.state.identity.owner,))).fetchall()
+            runs = await (await c.execute('SELECT status,count(*) AS count FROM runs WHERE owner_id=%s GROUP BY status', (request.state.identity.owner,))).fetchall()
+        lines = ['# HELP sandbox_provider_sandboxes Current environments for the authenticated owner.', '# TYPE sandbox_provider_sandboxes gauge']
+        lines += ['sandbox_provider_sandboxes{state="' + row['status'] + '"} ' + str(row['count']) for row in rows]
+        lines += ['# HELP sandbox_provider_runs Durable runs for the authenticated owner.', '# TYPE sandbox_provider_runs gauge']
+        lines += ['sandbox_provider_runs{state="' + row['status'] + '"} ' + str(row['count']) for row in runs]
+        return PlainTextResponse('\n'.join(lines) + '\n', media_type='text/plain; version=0.0.4')
 
     @app.get('/health/live')
     async def live():
@@ -219,7 +233,10 @@ def create_app(settings=None, runtime=None, dispatcher=True):
 def main():
     import os
     import uvicorn
-    logging.basicConfig(level=os.getenv('LOG_LEVEL', 'INFO'), format='%(message)s')
+    from .audit import JsonFormatter
+    handler = logging.StreamHandler()
+    handler.setFormatter(JsonFormatter())
+    logging.basicConfig(level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO').upper(), logging.INFO), handlers=[handler], force=True)
     # Access logging is disabled: service middleware emits bounded JSON metadata.
     uvicorn.run(create_app(), host='0.0.0.0', port=int(os.getenv('PORT', '8000')), access_log=False, log_config=None)
 

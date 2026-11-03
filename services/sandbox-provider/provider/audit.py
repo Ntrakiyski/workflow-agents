@@ -21,3 +21,18 @@ async def event(conn, sandbox, identity, correlation, kind, status, run_id=None,
                        (event_id, sandbox['sandbox_id'], run_id, kind, status, correlation, identity.actor, identity.owner, Jsonb(detail or {})))
     emit_log(kind, correlation, identity.actor, identity.owner, sandbox_id=sandbox['sandbox_id'], run_id=run_id,
              outcome=status, **(detail or {}))
+
+
+class JsonFormatter(logging.Formatter):
+    """Keep infrastructure library logs structured without dumping exception data."""
+    def format(self, record):
+        message = record.getMessage()
+        try:
+            value = json.loads(message)
+            if isinstance(value, dict) and value.get('service') == 'sandbox-provider':
+                return message
+        except (ValueError, TypeError):
+            pass
+        return json.dumps({'timestamp': datetime.now(timezone.utc).isoformat(), 'service': 'sandbox-provider',
+                           'correlation_id': None, 'action': 'process.log', 'outcome': record.levelname.lower(),
+                           'logger': record.name, 'duration_ms': 0})
