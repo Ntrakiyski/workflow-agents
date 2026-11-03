@@ -1,0 +1,23 @@
+{
+  "script_commit": "dc35ceee8cbc63e0150a9e223039d1bf3a7d7e80",
+  "deployed_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+  "task_status": "success",
+  "operation": "authorize-completed-export-recovery",
+  "outcome": "authorized_export_only",
+  "request_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+  "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+  "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+  "manifest_sha256": "adbac251cf3c241a276c3303530f646977bf0c3bff67164d1e855222b728cdbb",
+  "artifacts_checked": 1,
+  "sessions_checked": [
+    {
+      "sha256": "ae1a30ce95ec63d78349fe2449af2fcfd7431764c740583582c0fff0e37c4178",
+      "bytes": 11194
+    }
+  ],
+  "originals_verified": 1,
+  "failed_audit_preserved": true,
+  "identities_unchanged": true,
+  "workload_reexecuted": false,
+  "next_step": "existing worker revalidates and exports the same completed job, then stops the same sandbox"
+}

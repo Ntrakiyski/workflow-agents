@@ -44,7 +44,7 @@
     if (rows.rows.length > 100) throw Error('request_bound');
     const requests = [];
     for (const row of rows.rows) {
-      const audit = await pool.query(`SELECT event_id::text,action,correlation_id,actor_id FROM application.audit WHERE request_id=$1 ORDER BY event_id`, [row.id]);
+      const audit = await pool.query(`SELECT event_id::text,action,correlation_id,actor_id FROM application.audit WHERE request_id=$1 ORDER BY application.audit.event_id`, [row.id]);
       const files = await pool.query(`SELECT id,kind,size_bytes,sha256,object_key, CASE WHEN kind='checkpoint' AND name='request.json' THEN 'request_manifest' WHEN kind='checkpoint' AND name='result.json' THEN 'result_manifest' WHEN kind='checkpoint' AND media_type='application/x-ndjson' THEN 'session' ELSE kind END AS role FROM application.files WHERE request_id=$1 ORDER BY id`, [row.id]);
       const checked = [];
       for (const file of files.rows) {
