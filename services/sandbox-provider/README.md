@@ -117,3 +117,5 @@ PORT=58002 .venv/bin/python -m tests.serve_fake
 That server emits readiness503 with `runtime:disabled`; the production image excludes tests. It supports the generic approved fixture programs in the published template and exists solely for HTTP integration with a real Runner/PostgreSQL. It does not execute external workloads or prove isolation/persistence.
 
 See `VERIFICATION.md` for actual executed commands and current blockers.
+
+`GET /metrics` is an authenticated Prometheus endpoint requiring `sandbox:read`. It scopes sandbox/run state gauges to the effective credential owner (and honors explicit delegation), without owner IDs, paths, workload text or credentials in labels. `/health/live` and `/health/ready` remain public safe health endpoints. Scrape `/metrics` on the private network using a read-only credential.
