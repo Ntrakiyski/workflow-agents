@@ -2,7 +2,7 @@ FROM python:3.12-slim-bookworm@sha256:e697c81897302a4c4333bade000d98038fbb21eb06
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PORT=8000 BOX_ROOT=/var/lib/sandbox-provider/boxlite
 WORKDIR /app
 COPY requirements.lock ./
-RUN pip install --no-cache-dir --requirement requirements.lock && groupadd --gid 10001 provider && useradd --uid 10001 --gid provider --create-home provider && mkdir -p /var/lib/sandbox-provider/boxlite && chown -R provider:provider /var/lib/sandbox-provider
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/* && pip install --no-cache-dir --requirement requirements.lock && groupadd --gid 10001 provider && useradd --uid 10001 --gid provider --create-home provider && mkdir -p /var/lib/sandbox-provider/boxlite && chown -R provider:provider /var/lib/sandbox-provider
 COPY provider ./provider
 COPY migrations ./migrations
 COPY scripts ./scripts
