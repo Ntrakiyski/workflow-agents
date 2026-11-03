@@ -23,7 +23,7 @@ The two services deploy independently. They share neither database credentials n
 
 Both APIs and their separate PostgreSQL databases are private resources in GCC Coolify's `workflow-agents-phase1` project, environment `staging`. The Sandbox Provider API is self-hosted on GCC. **The guest VMs and their writable disks run in BoxLite Cloud.** Active Cloud mode does not require GCC KVM access.
 
-The recorded deployed source is `04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9`. Documentation pushes do not redeploy it. [Deployment configuration and recovery instructions](deploy/README.md) describe commit pinning, private networking, secret injection and storage.
+All three applications currently run source `8387b5da2084e062e7409b1af5ce81ae57b45dfd`. The [delivery record](docs/release/DELIVERY.md) separates exact deployments, executed checks and remaining gates. Documentation pushes do not redeploy services. [Deployment configuration and recovery instructions](deploy/README.md) describe commit pinning, private networking, secret injection and storage.
 
 Only the authenticated request application may be public over HTTPS. The private services expose authenticated `/v1` APIs, health endpoints, owner-scoped metrics and JSON OpenAPI documents. Swagger and ReDoc are disabled. The broader Phase 2 dashboard, chat, approval and revision flows are deferred.
 

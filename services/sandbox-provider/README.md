@@ -12,7 +12,7 @@ The scoped hosted journey uses a local Provider and disposable PostgreSQL agains
 
 Independent Python 3.12 / FastAPI / PostgreSQL service with BoxLite 0.11.0 behind `SandboxRuntime`. It owns its registry and never queries Runner tables. The API contains no application-specific behavior.
 
-**Release status: incomplete.** Explicit hosted BoxLite Cloud on GCC passed real Runner→Provider HTTP execution, same-box stop/start file retention, two-box file separation and stopped-box recovery across independent service replacements. See [Cloud validation](../../docs/phase1/CLOUD-VALIDATION.md) for exact evidence and deployed commit. Scoped artifact transfer, active-output recovery, full backup/restore and broader resource/security gates remain incomplete. Local BoxLite still fails the GCC bubblewrap user-namespace boundary. Authenticated Cloud readiness alone does not qualify workloads.
+**Release status: incomplete.** Explicit hosted BoxLite Cloud on GCC passed real Runner→Provider HTTP execution, same-box stop/start file retention, two-box file separation and stopped-box recovery across independent service replacements. See [Cloud validation](../../docs/phase1/CLOUD-VALIDATION.md) for exact evidence and deployed commit. Generic scoped transfer and controlled failures passed separate actual Cloud fixtures. Active-output reattachment, full guest-disk recovery and broader resource/security gates remain incomplete; application delivery and exported result/session recovery have separate release evidence. Local BoxLite still fails the GCC bubblewrap user-namespace boundary. Authenticated Cloud readiness alone does not qualify workloads.
 
 ## Build and run
 
@@ -28,7 +28,7 @@ python3 -m venv .venv
 Production installs use `requirements.lock`; development installs use the complete pinned `requirements-dev.lock`. `requirements.txt` and `requirements-dev.txt` document direct dependencies. Do not mix service dependency environments. Python 3.12 is the tested interpreter.
 
 ```sh
-docker build -t workflow-sandbox-provider:1.0.0-rc.1 .
+docker build -t workflow-sandbox-provider:1.0.0-rc.2 .
 ```
 
 The Dockerfile is independently buildable with this directory as build context. It pins the Python base by OCI index digest and runs UID/GID 10001. A named volume must retain `/var/lib/sandbox-provider`; image directory ownership initializes a new volume correctly. `BOX_ROOT` holds BoxLite's own registry and disks; the separate PostgreSQL database holds public identities and run/audit records. Neither store alone is a recoverable environment.
@@ -196,7 +196,7 @@ are separate gates; the latter cannot be proven by restarting this container.
 
 `provider/openapi.json` is the packaged frozen `/v1` contract. Root `contracts/v1/provider-v1.openapi.json` is authoritative; keep copies identical. `/openapi.json` serves it. Health endpoints are unauthenticated; every `/v1` route requires credentials. Errors are safe root `{code,message,retryable,correlation_id}` objects; correlation IDs are echoed.
 
-Create and execute require `Idempotency-Key`. Deduplication is durable per effective owner, operation and target. Canonical request fingerprints reject changed reuse. Create also ensures one retained `(owner_id, owner_ref)`; destroyed references remain tombstones. Start/stop bodies are `{}`. Execute returns 202 and a durable run; poll for real completion. Nonzero exit codes fail. Unsupported `artifact_output_ref` fails 422 before execution: this version has no external scoped transfer adapter and never fetches caller URLs. Results provide bounded stdout/stderr; artifact arrays remain empty. No transfer or external backup is implied.
+Create and execute require `Idempotency-Key`. Deduplication is durable per effective owner, operation and target. Canonical request fingerprints reject changed reuse. Create also ensures one retained `(owner_id, owner_ref)`; destroyed references remain tombstones. Start/stop bodies are `{}`. Execute returns 202 and a durable run; poll for real completion. Nonzero exit codes fail. Unsupported `artifact_output_ref` fails 422 before execution: this field has no external adapter and never fetches caller URLs; use the separate scoped file endpoints. Results provide bounded stdout/stderr; artifact arrays remain empty. No transfer or external backup is implied.
 
 `POST /sandboxes/{id}/runs/cancel-by-reference` durably fences an execution reference under the same sandbox row lock as execute. A delayed execute cannot start after cancellation won the race. Existing run replays keep their current state; new fenced references fail 409 `execution_cancelled`. This permits Runner to cancel after a timeout with no returned run ID.
 
