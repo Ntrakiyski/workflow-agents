@@ -16,4 +16,5 @@ COPY --chown=node:node scripts/application-backup.mjs ./scripts/application-back
 COPY package.json ./
 USER node
 EXPOSE 8082
+HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=3 CMD ["node", "dist/healthcheck.js"]
 CMD ["node","dist/main.js"]

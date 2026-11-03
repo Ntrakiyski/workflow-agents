@@ -38,7 +38,7 @@ async function apply(uuid, expectedName, variables, settings) {
   if (current.name !== expectedName || current.environment?.uuid !== infra.environment_uuid ||
       current.environment?.project?.uuid !== infra.project_uuid) throw Error('Project/environment/name mismatch');
   await api('PATCH', '/applications/' + uuid + '/envs/bulk', { data: Object.entries(variables).map(([key, value]) => ({
-    key, value: String(value), is_buildtime: false, is_runtime: true, is_literal: true })) });
+    key, value: String(value), is_buildtime: false, is_runtime: true, is_preview: false, is_literal: true })) });
   await api('PATCH', '/applications/' + uuid, { ...common, ...settings });
   const actual = await api('GET', '/applications/' + uuid);
   if (actual.git_commit_sha !== commit || actual.ports_mappings ||
@@ -131,6 +131,7 @@ await apply(ids.application.uuid, 'workflow-application', variables, { domains: 
   custom_network_aliases: 'workflow-application', custom_internal_name: 'workflow-application',
   is_consistent_container_name_enabled: true, limits_cpus: '1', limits_memory: '768m',
   custom_docker_run_options: '--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=128',
+  health_check_type: 'cmd', health_check_command: 'node /app/dist/healthcheck.js',
   health_check_path: '/health/ready', health_check_port: '8082', health_check_start_period: 60 });
 ids.application.source_commit = commit;
 ids.application.url = appOrigin;
