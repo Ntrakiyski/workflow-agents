@@ -25,11 +25,14 @@ class Identity:
 class Settings:
     def __init__(self, database_url, auth, profiles, box_root='/var/lib/sandbox-provider/boxlite',
                  max_sandboxes=20, max_body=65536, max_output=32768, poll_seconds=.25,
-                 audit_retention_days=90):
+                 audit_retention_days=90, max_concurrent_runs=4):
         self.database_url, self.auth, self.profiles = database_url, auth, profiles
         self.box_root = Path(box_root)
         self.max_sandboxes, self.max_body, self.max_output = max_sandboxes, max_body, max_output
         self.poll_seconds, self.audit_retention_days = poll_seconds, audit_retention_days
+        self.max_concurrent_runs = max_concurrent_runs
+        if not isinstance(max_concurrent_runs, int) or isinstance(max_concurrent_runs, bool) or not 1 <= max_concurrent_runs <= 4:
+            raise ValueError('MAX_CONCURRENT_RUNS must be between 1 and 4 for the bounded connection pool.')
         Draft202012Validator(json.loads(Path(__file__).with_name('profiles.schema.json').read_text())).validate(profiles)
         if not auth or any(len(p.get('token', '')) < 24 for p in auth):
             raise ValueError('Credentials must be configured and at least 24 characters.')
@@ -64,7 +67,7 @@ class Settings:
                    json.loads(os.environ['PROVIDER_PROFILES_JSON']), os.getenv('BOX_ROOT', '/var/lib/sandbox-provider/boxlite'),
                    int(os.getenv('MAX_SANDBOXES_PER_OWNER', '20')), int(os.getenv('MAX_BODY_BYTES', '65536')),
                    int(os.getenv('MAX_OUTPUT_BYTES', '32768')), float(os.getenv('RUN_POLL_SECONDS', '.25')),
-                   int(os.getenv('AUDIT_RETENTION_DAYS', '90')))
+                   int(os.getenv('AUDIT_RETENTION_DAYS', '90')), int(os.getenv('MAX_CONCURRENT_RUNS', '4')))
 
     def authenticate(self, authorization, delegated):
         token = authorization[7:] if authorization and authorization.startswith('Bearer ') else ''

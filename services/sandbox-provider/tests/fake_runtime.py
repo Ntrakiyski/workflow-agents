@@ -16,6 +16,7 @@ class Execution:
         runtime, name, argv = self.runtime, self.name, self.argv
         runtime.active[name] = runtime.active.get(name, 0) + 1
         runtime.max_active[name] = max(runtime.active[name], runtime.max_active.get(name, 0))
+        runtime.max_global_active = max(sum(runtime.active.values()), runtime.max_global_active)
         try:
             if argv[0] == '/usr/local/bin/python3' and len(argv) >= 4 and 'write_text' in argv[2]:
                 runtime.boxes[name]['files'][argv[3]] = argv[4]
@@ -48,6 +49,7 @@ class FakeRuntime:
         self.boxes, self.executions, self.active, self.max_active = {}, {}, {}, {}
         self.creates, self.executes, self.removes = 0, 0, 0
         self.available = True
+        self.max_global_active = 0
         self.execute_error = False
     async def ready(self):
         return self.available
