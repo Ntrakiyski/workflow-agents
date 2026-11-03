@@ -25,6 +25,38 @@ def download(spec, destination):
             raise ValueError('Dependency checksum mismatch')
 
 
+def copy_icu(lock, bundle):
+    """Extract exact ICU ELF bytes only from the locked immutable image, not the host."""
+    spec = lock['icu']
+    container = subprocess.check_output(['docker', 'create', '--network', 'none',
+        '--label', 'workflow-agents.workload-build=pi-document-agent', spec['source_image'], '/bin/true'], text=True).strip()
+    try:
+        with tempfile.TemporaryDirectory() as metadata_temp:
+            status = Path(metadata_temp) / 'status'
+            subprocess.run(['docker', 'cp', container + ':/var/lib/dpkg/status', str(status)], check=True)
+            packages = [entry for entry in status.read_text().split('\n\n')
+                        if entry.startswith('Package: ' + spec['package'] + '\n')]
+            if (len(packages) != 1 or '\nVersion: ' + spec['version'] + '\n' not in packages[0]
+                    or '\nArchitecture: ' + spec['architecture'] + '\n' not in packages[0]):
+                raise ValueError('ICU source package identity mismatch')
+        directory = bundle / 'lib'
+        directory.mkdir()
+        for item in spec['files']:
+            target = directory / item['filename']
+            subprocess.run(['docker', 'cp', '-L', container + ':' + item['source_path'], str(target)], check=True)
+            with target.open('rb') as source:
+                digest = hashlib.file_digest(source, 'sha256').hexdigest()
+            if target.is_symlink() or target.stat().st_size != item['size_bytes'] or digest != item['sha256']:
+                raise ValueError('ICU library checksum mismatch')
+        copyright_path = directory / 'ICU-COPYRIGHT'
+        subprocess.run(['docker', 'cp', '-L', container + ':' + spec['copyright_source'], str(copyright_path)], check=True)
+        if hashlib.sha256(copyright_path.read_bytes()).hexdigest() != spec['copyright_sha256']:
+            raise ValueError('ICU copyright checksum mismatch')
+        (directory / 'icu-provenance.json').write_text(json.dumps(spec, indent=2) + '\n')
+    finally:
+        subprocess.run(['docker', 'rm', container], check=True, stdout=subprocess.DEVNULL)
+
+
 def build(output):
     lock = json.loads((ROOT / 'runtime-lock.json').read_text())
     output.mkdir(parents=True, exist_ok=True)
@@ -35,6 +67,7 @@ def build(output):
         download(lock['officecli'], office)
         bundle = stage / 'runtime'
         bundle.mkdir()
+        copy_icu(lock, bundle)
         with tarfile.open(node_archive) as source:
             member = source.getmember('node-v' + lock['node']['version'] + '-linux-x64/bin/node')
             stream = source.extractfile(member)
@@ -77,6 +110,7 @@ def build(output):
                     'expanded_bytes': sum(p.stat().st_size for p in bundle.rglob('*') if p.is_file()),
                     'node_version': lock['node']['version'], 'pi_version': lock['pi']['version'],
                     'officecli_version': lock['officecli']['version'],
+                    'icu': lock['icu'],
                     'source_sha256': {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
                                       for name in ('guest.py', 'validation.py', 'officecli-tool.ts', 'officecli-arguments.mjs', 'runtime-lock.json')},
                     'package_lock_sha256': hashlib.sha256((ROOT / 'package-lock.json').read_bytes()).hexdigest()}

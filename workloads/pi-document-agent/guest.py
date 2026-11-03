@@ -114,7 +114,8 @@ def answer_from_events(output):
 def office(argv):
     result = subprocess.run([str(RUNTIME / 'officecli'), *argv], timeout=90, capture_output=True,
                             env={'HOME': os.environ['HOME'], 'PATH': '/usr/bin:/bin',
-                                 'LANG': 'C.UTF-8', 'OFFICECLI_NO_AUTO_RESIDENT': '1'})
+                                 'LANG': 'C.UTF-8', 'OFFICECLI_NO_AUTO_RESIDENT': '1',
+                                 'LD_LIBRARY_PATH': str(RUNTIME / 'lib')})
     if result.returncode or len(result.stdout) + len(result.stderr) > 1024 * 1024:
         raise ValueError('OfficeCLI validation failed')
     return result.stdout.decode('utf-8')

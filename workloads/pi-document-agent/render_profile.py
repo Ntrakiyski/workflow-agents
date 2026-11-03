@@ -14,13 +14,13 @@ def profile(metadata, image, base_url, model):
     if not re.fullmatch('[a-f0-9]{64}', metadata['sha256']):
         raise ValueError('Built bundle checksum required')
     url = urlsplit(base_url)
-    if url.scheme != 'https' or not url.hostname or url.username or url.password or url.query or url.fragment:
+    if url.scheme != 'https' or not url.hostname or url.port not in (None, 443) or url.username or url.password or url.query or url.fragment:
         raise ValueError('HTTPS LiteLLM endpoint required')
     bootstrap = (ROOT / 'bootstrap.py').read_text()
-    sandbox_id, workload_id = 'pi-document-cloud:v1', 'pi-document-agent:v1'
+    sandbox_id, workload_id = 'pi-document-cloud:v2', 'pi-document-agent:v2'
     return {'version': 1, 'sandboxes': {sandbox_id: {
         'image': image, 'cpus': 2, 'memory_mib': 2048, 'disk_mib': 2048,
-        'network': 'allowlist', 'allowed_hosts': [url.hostname + ':' + str(url.port or 443)],
+        'network': 'allowlist', 'allowed_hosts': [url.hostname],
         'entrypoint': ['/usr/local/bin/python3', '-c', 'import time; time.sleep(31536000)'], 'cmd': []}},
         'workloads': {workload_id: {
             'sandbox_profiles': [sandbox_id], 'working_directory': '/',
