@@ -8,7 +8,7 @@ Version `0.1.0-rc.1`; branch `app/minimal-requests`, based on merged main `3f550
 | `npm run format:check` | Passed source/frontend/tests |
 | `npm run build` | Passed TypeScript/Vite production build |
 | `npm audit --omit=dev` | Zero known dependency vulnerabilities |
-| `npm test` | 9 passes, zero skips; actual independent PostgreSQL16 and RustFS S3 |
+| `npm test` | 10 passes, zero skips; actual independent PostgreSQL16 and RustFS S3 |
 | S3 conditional write | Exact replay accepted; changed content refused; original bytes unchanged |
 | Authentication/ownership | Missing Basic and cross-origin mutations denied; foreign request/attachment/output hidden; protected downloads verified |
 | Durable admissions | Same submission returns same UUID; changed payload conflicts; cursor pagination preserves older requests |
@@ -23,3 +23,5 @@ Version `0.1.0-rc.1`; branch `app/minimal-requests`, based on merged main `3f550
 Browser plugin was absent. Playwright followed the frontend testing skill. Scratch screenshots outside Git: `/tmp/workflow-application-desktop.png`, `/tmp/workflow-application-mobile.png`; each shows the built result view. Inspection covered heading/status placement, typography, whitespace, readable validation copy, input/output links and mobile wrapping. Form/list interactions were exercised before screenshot capture. No concept/reference design was requested; the deliberate plain surface adds no dashboards or extra screens.
 
 Runner, Provider and workload execution were mocked, including browser tests. PostgreSQL, S3 conditional writes/object bytes/checksums, HTTP transport and the browser build were real. Tests do **not** establish BoxLite Cloud transfer, hosted failure injection, Pi/LiteLLM/OfficeCLI success, actual rendered layout, application process/container replacement, off-host application restore, host reboot persistence or resource/load enforcement. Integration records those separately against exact deployed commits.
+
+Independent QA additionally generated a synthetic DOCX with actual OfficeCLI 1.0.160 and `officecli validate` reported success with zero findings. The application controller accepted those same bytes after compatibility checks for internal OPC package-root relationships and effective Default/Override content-type declarations. This proves structural tool interoperability, not rendered layout or content accuracy.

@@ -101,21 +101,44 @@ export async function inspectDocx(data: Buffer): Promise<void> {
               namespace(root.name, root.value) !== ns
             )
               throw new Error("invalid_content_types");
-            let declared = false;
-            for (const [key, value] of Object.entries(root.value))
-              if (localName(key) === "Override" && !key.startsWith("@_"))
-                for (const item of Array.isArray(value) ? value : [value]) {
-                  const itemRecord = element(item);
-                  if (namespace(key, itemRecord, root.value) !== ns)
-                    throw new Error("invalid_content_type_namespace");
-                  if (
-                    itemRecord["@_PartName"] === "/word/document.xml" &&
-                    itemRecord["@_ContentType"] ===
-                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
-                  )
-                    declared = true;
-                }
-            if (!declared) throw new Error("missing_document_content_type");
+            const overrides = new Map<string, string>(),
+              defaults = new Map<string, string>();
+            for (const [key, value] of Object.entries(root.value)) {
+              if (key.startsWith("@_") || key === "#text") continue;
+              const kind = localName(key);
+              if (kind !== "Override" && kind !== "Default")
+                throw new Error("invalid_content_type_entry");
+              for (const item of Array.isArray(value) ? value : [value]) {
+                const itemRecord = element(item);
+                if (namespace(key, itemRecord, root.value) !== ns)
+                  throw new Error("invalid_content_type_namespace");
+                const contentType = z
+                  .string()
+                  .min(1)
+                  .parse(itemRecord["@_ContentType"]);
+                const name = z
+                  .string()
+                  .min(1)
+                  .parse(
+                    itemRecord[
+                      kind === "Override" ? "@_PartName" : "@_Extension"
+                    ],
+                  );
+                const declarations = kind === "Override" ? overrides : defaults;
+                const normalized =
+                  kind === "Override" ? name : name.toLowerCase();
+                if (declarations.has(normalized))
+                  throw new Error("duplicate_content_type");
+                declarations.set(normalized, contentType);
+              }
+            }
+            const effectiveType =
+              overrides.get("/word/document.xml") ?? defaults.get("xml");
+            if (
+              effectiveType !==
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            )
+              throw new Error("missing_document_content_type");
           }
           if (filename.endsWith(".rels")) {
             if (
@@ -157,7 +180,8 @@ export async function inspectDocx(data: Buffer): Promise<void> {
                     throw new Error("invalid_relationship_target");
                   }
                   if (
-                    decoded.startsWith("/") ||
+                    decoded.startsWith("//") ||
+                    (decoded.startsWith("/") && !target.startsWith("/")) ||
                     decoded.includes("\\") ||
                     /^[A-Za-z][A-Za-z0-9+.-]*:/.test(decoded) ||
                     /[\x00-\x1f]/.test(decoded)
@@ -165,7 +189,10 @@ export async function inspectDocx(data: Buffer): Promise<void> {
                     throw new Error("unsafe_relationship_target");
                   if (decoded) {
                     const normalized = path.posix.normalize(
-                      path.posix.join(base, decoded),
+                      path.posix.join(
+                        decoded.startsWith("/") ? "" : base,
+                        decoded.startsWith("/") ? decoded.slice(1) : decoded,
+                      ),
                     );
                     if (normalized === ".." || normalized.startsWith("../"))
                       throw new Error("unsafe_relationship_target");

@@ -10,16 +10,20 @@ const types =
 const rels =
   '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
 async function archive({
+  contentTypes = types,
   body = document,
   relationships = rels,
   additional = [],
 }: {
+  contentTypes?: string;
   body?: string;
   relationships?: string;
   additional?: Array<{ name: string; data: string; mode?: number }>;
 } = {}) {
   const zip = new ZipFile();
-  zip.addBuffer(Buffer.from(types), "[Content_Types].xml", { compress: false });
+  zip.addBuffer(Buffer.from(contentTypes), "[Content_Types].xml", {
+    compress: false,
+  });
   zip.addBuffer(Buffer.from(relationships), "_rels/.rels", { compress: false });
   zip.addBuffer(Buffer.from(body), "word/document.xml", { compress: false });
   for (const entry of additional)
@@ -95,4 +99,46 @@ test("independent DOCX controller requires Word namespace/body and refuses exter
   await assert.rejects(() =>
     archive({ relationships: missingTarget }).then(inspectDocx),
   );
+});
+test("OPC package-root relationships and effective default content types accept actual OfficeCLI conventions", async () => {
+  const defaultTypes = types.replace(
+    '<Override PartName="/word/document.xml"',
+    '<Default Extension="xml"',
+  );
+  const packageRootRels = rels.replace(
+    'Target="word/document.xml"',
+    'Target="/word/document.xml"',
+  );
+  await inspectDocx(
+    await archive({
+      contentTypes: defaultTypes,
+      relationships: packageRootRels,
+    }),
+  );
+  const conflictingOverride = defaultTypes.replace(
+    "</Types>",
+    '<Override PartName="/word/document.xml" ContentType="application/xml"/></Types>',
+  );
+  await assert.rejects(() =>
+    archive({
+      contentTypes: conflictingOverride,
+      relationships: packageRootRels,
+    }).then(inspectDocx),
+  );
+  for (const target of [
+    "//unapproved.example/data",
+    "file:///private.txt",
+    "/../private.txt",
+    "/%2e%2e/private.txt",
+    "%2F%2Fprivate.txt",
+  ]) {
+    await assert.rejects(() =>
+      archive({
+        relationships: rels.replace(
+          'Target="word/document.xml"',
+          `Target="${target}"`,
+        ),
+      }).then(inspectDocx),
+    );
+  }
 });
