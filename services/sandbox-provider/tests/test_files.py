@@ -79,7 +79,10 @@ def test_internal_fragmented_read_rejects_file_mutation_even_with_expected_hash(
     second={'operation':'read','path':'file.bin','offset':2,'max_bytes':2,
             '_expected_stat':first['_stat'],'_expected_sha256':first['sha256'],'_verify_sha256':True}
     assert base64.b64decode(run(second)['data_base64'])==b'ig'
+    unchanged_metadata=file.stat()
     file.write_bytes(b'modified')
+    # Some filesystems report identical metadata for rapid same-size writes.
+    monkeypatch.setattr(guest_files.os,'fstat',lambda fd:unchanged_metadata)
     with pytest.raises(ValueError,match='file_changed'):
         run(second)
 
