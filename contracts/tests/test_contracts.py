@@ -64,6 +64,12 @@ class Contracts(unittest.TestCase):
   # Synthetic schema fixture only: never a deployable image digest/pin.
   template['sandboxes']['minimal-linux:v1']['image']='example.invalid/test-fixture@sha256:'+'0'*64
   valid(v,template)
+  configured=copy.deepcopy(template)
+  configured['sandboxes']['minimal-linux:v1']['entrypoint']=['/usr/local/bin/python3','-c','import time; time.sleep(3600)']
+  configured['sandboxes']['minimal-linux:v1']['cmd']=[]
+  valid(v,configured)
+  configured['sandboxes']['minimal-linux:v1']['entrypoint']=[]
+  invalid(v,configured)
   workloads=template['workloads']
   for value in workloads.values():Draft202012Validator.check_schema(value['arguments_schema'])
   write=Draft202012Validator(workloads['fixture-write-file:v1']['arguments_schema'])
