@@ -28,6 +28,25 @@ Build **two independent, reusable services** and prove they work separately and 
 
 ---
 
+## 1A. Phase 1 release contract and agent-operation requirements
+
+**Phase 1 is a reusable product, not a library that Phase 2 is allowed to edit.** Release Runner v1 and Provider v1 with pinned artifacts, versioned API contracts, health/readiness, migration and rollback procedures, automated test evidence, security limits, logging, and durable audit records. Freeze supported behavior at the release gate.
+
+**Consumers do not modify these services to implement a new use case.** They configure generic job policies (priority, duration, retry/deadline, ownership), approved sandbox image and workload profiles, and communicate through documented API versions. If a later application discovers an actually missing generic feature, treat it as a separate infrastructure product change: propose a versioned contract, prove backward compatibility, run the entire Phase 1 regression suite, release the new service version, and then upgrade the client. Never patch infrastructure with SRT-specific, Pi-specific, or UI-specific conditional code.
+
+**Agent-maintained service documentation is mandatory:**
+
+| Service | Always-read agent instructions | Task-specific development skill | Task-specific operations skill |
+|---|---|---|---|
+| Job Runner | [AGENTS.md](./services/job-runner/AGENTS.md) | [job-runner-development](./services/job-runner/.agents/skills/job-runner-development/SKILL.md) | [job-runner-operations](./services/job-runner/.agents/skills/job-runner-operations/SKILL.md) |
+| Sandbox Provider | [AGENTS.md](./services/sandbox-provider/AGENTS.md) | [sandbox-provider-development](./services/sandbox-provider/.agents/skills/sandbox-provider-development/SKILL.md) | [sandbox-provider-operations](./services/sandbox-provider/.agents/skills/sandbox-provider-operations/SKILL.md) |
+
+`AGENTS.md` contains mandatory repo/service boundaries and quality requirements; `SKILL.md` contains specific repeatable procedures with YAML frontmatter. Each service also needs a human-readable `README.md` and **executable** CI/tests; documentation is not proof of compliance. Start coding agents from the service directory or explicitly direct them to read its nested skills—automatic discovery varies by tool and working directory.
+
+**Release gate addition:** The QA agent must verify (a) an unfamiliar generic fixture client can operate both services **without source changes**, (b) API compatibility, and (c) development and operations skill workflows are accurate against actual tested commands. Maintain a machine-readable service release version and compatibility policy.
+
+---
+
 ## 2. Ownership diagram
 
 ```text
