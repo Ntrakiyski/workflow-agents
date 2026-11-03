@@ -21,7 +21,9 @@ assert.equal(a.status,'cancelled');assert.equal(b.status,'timed_out');assert.equ
 const je=await get('runner','/v1/jobs/'+b.job_id+'/events');
 assert(je.events.some(e=>e.type==='job.timed_out'));
 const sandbox=await get('provider','/v1/sandboxes/'+prior.sandbox_id);
-assert.equal(sandbox.status,'failed');
+// Unavailable create preserves the durable intent so retries use the same identity.
+assert.equal(sandbox.status,'creating');
+assert.equal(sandbox.error.code,'runtime_unavailable');
 const events=await get('provider','/v1/sandboxes/'+prior.sandbox_id+'/events');
 assert(events.events.some(e=>e.type==='sandbox.failed'));
 assert(events.events.every(e=>e.actor_id==='job-runner'&&e.owner_id===owner.owner_id&&e.correlation_id===prior.correlation_id));
@@ -33,6 +35,7 @@ try{await client.connect();}catch(e){denied=['28P01','28000'].includes(e.code);}
 assert(denied,'Runner credentials unexpectedly accepted by Provider PostgreSQL');
 console.log(JSON.stringify({probe:'staging-retention-and-database-isolation',outcome:'passed',
   runner_jobs_retained:[a.job_id,b.job_id],runner_audit_events:je.events.length,
-  provider_sandbox_retained:sandbox.sandbox_id,provider_audit_events:events.events.length,
+  provider_sandbox_retained:sandbox.sandbox_id,provider_status:sandbox.status,
+  provider_error:sandbox.error.code,provider_audit_events:events.events.length,
   first_provider_audit_id:events.events[0].event_id,provider_wrong_owner_http:404,
   cross_database_credentials:'rejected',vm_disk_retention:'blocked-unverified'}));

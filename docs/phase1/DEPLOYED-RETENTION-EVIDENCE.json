@@ -1,0 +1,71 @@
+{
+  "recorded_date": "2026-11-03",
+  "service_commit": "df7cc68e6a1d58fc35586b67a3e9cb75cdefe5a8",
+  "probe_source_commit": "243eaae5ad45ad8a7fba31dd257127da592b6f7b",
+  "provider_container_replacement": {
+    "deployment_uuid": "vvvwvav3pd3bs6amd7quwsl0",
+    "status": "finished",
+    "removed_old_container": true,
+    "started_new_container": true
+  },
+  "before": {
+    "task_uuid": "pn7scjbpt3ooqgt0ytlsxfyp",
+    "status": "success",
+    "result": {
+      "probe": "provider-registry-and-volume",
+      "arch": "aarch64",
+      "logical_cpus": 8,
+      "uid": 10001,
+      "sdk_version": "0.11.0",
+      "kvm_access": false,
+      "persistent_volume_marker": "retained",
+      "volume_free_bytes": 73424658432,
+      "host_memory_bytes": {
+        "MemTotal": 16333647872,
+        "MemAvailable": 9873055744
+      },
+      "registry_sandboxes": 1,
+      "durable_audit_rows": 4,
+      "first_audit_id": "evt_8323624f06f74af98912574c4f8029e1",
+      "vm_disk_retention": "blocked-unverified"
+    }
+  },
+  "after": {
+    "task_uuid": "wvcpgchgl5aq0pxp5ubol7i7",
+    "status": "success",
+    "result": {
+      "probe": "provider-registry-and-volume",
+      "arch": "aarch64",
+      "logical_cpus": 8,
+      "uid": 10001,
+      "sdk_version": "0.11.0",
+      "kvm_access": false,
+      "persistent_volume_marker": "retained",
+      "volume_free_bytes": 73424441344,
+      "host_memory_bytes": {
+        "MemTotal": 16333647872,
+        "MemAvailable": 9784791040
+      },
+      "registry_sandboxes": 1,
+      "durable_audit_rows": 4,
+      "first_audit_id": "evt_8323624f06f74af98912574c4f8029e1",
+      "vm_disk_retention": "blocked-unverified"
+    }
+  },
+  "scope": "Actual private staging Provider application volume and registry retention across container replacement. Not proof of a real VM, retained VM filesystem, execution reattachment or host restart.",
+  "initial_runner_probe": {
+    "task_uuid": "p74q88rtthiyrrdhfmwze6ht",
+    "outcome": "failed-probe-assertion",
+    "expected_status": "failed",
+    "observed_status": "creating",
+    "cause": "Operator probe expected a terminal state, but transient unavailable create intentionally retains creating intent with a safe error for same-identity retry; no service change required.",
+    "completed_checks_before_failure": [
+      "two retained Runner jobs have their original terminal states",
+      "Runner timed_out audit event retained"
+    ],
+    "unexecuted_due_to_assertion": [
+      "Provider audit/owner checks",
+      "cross-database credentials check"
+    ]
+  }
+}
