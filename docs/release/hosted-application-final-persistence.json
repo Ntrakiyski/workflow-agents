@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "operation": "hosted-browser-persistence-recheck",
+  "session": "73c4bad0-e8eb-486c-9e3e-27ad3e861695",
+  "origin": "https://workflow-agents.68.210.88.115.sslip.io",
+  "recorded_at_utc": "2026-11-03T19:56:45.429Z",
+  "outcome": "passed",
+  "deployed_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+  "browser": "Playwright Chromium; Browser plugin not available",
+  "foreign_account_expected": "disabled",
+  "execution": "actual hosted application; no request routing or execution mocks installed by this helper",
+  "checks": [
+    {
+      "scenario": "unauthenticated_entry_denied_and_removed_foreign_account_rejected",
+      "outcome": "passed",
+      "observations": {}
+    },
+    {
+      "scenario": "page_identity_nonblank_no_framework_overlay",
+      "outcome": "passed",
+      "observations": {}
+    },
+    {
+      "scenario": "persistent_paginated_request_list_reload_and_reopen",
+      "outcome": "passed",
+      "observations": {}
+    },
+    {
+      "scenario": "replacement_request_file_identities_and_downloaded_bytes_preserved",
+      "outcome": "passed",
+      "observations": {
+        "file_id": "3624e244-0d58-4bb3-bcbb-c6d7ed645dfb",
+        "sha256": "9011e87907218c2d988827ca019c90cbb93abf2c2171c8b23fb1ecb990663260"
+      }
+    },
+    {
+      "scenario": "actual_docx_download_and_independent_crc_xml_content_validation",
+      "outcome": "passed",
+      "observations": {
+        "bytes": 5281,
+        "sha256": "9011e87907218c2d988827ca019c90cbb93abf2c2171c8b23fb1ecb990663260",
+        "xml_parts_checked": 11,
+        "paragraphs": 2,
+        "exact_appended_marker_count": 1,
+        "original_marker_preserved": true,
+        "zip_crc_xml_relationship_checks": "passed",
+        "semantic_accuracy": "not_performed",
+        "rendered_page_layout": "not_performed"
+      }
+    },
+    {
+      "scenario": "original_uploaded_bytes_preserved",
+      "outcome": "passed",
+      "observations": {}
+    },
+    {
+      "scenario": "unauthenticated_and_removed_foreign_account_request_input_output_denied_and_origin_rejected",
+      "outcome": "passed",
+      "observations": {}
+    },
+    {
+      "scenario": "desktop_mobile_result_view_console_health_and_no_horizontal_overflow",
+      "outcome": "passed",
+      "observations": {}
+    }
+  ],
+  "screenshots": [
+    "/tmp/workflow-hosted-73c4bad0-e8eb-486c-9e3e-27ad3e861695-final-list-row.png",
+    "/tmp/workflow-hosted-73c4bad0-e8eb-486c-9e3e-27ad3e861695-final-desktop.png",
+    "/tmp/workflow-hosted-73c4bad0-e8eb-486c-9e3e-27ad3e861695-final-mobile.png"
+  ],
+  "state_file": "/home/workflow-agents-worktrees/release-qa/private/hosted-browser-73c4bad0-e8eb-486c-9e3e-27ad3e861695/state.json",
+  "limits": [
+    "No database/deployment mutation or infrastructure credential access",
+    "DOCX ZIP/XML/checksum and exact synthetic markers checked; semantic accuracy and rendered page layout not established",
+    "Replacement is performed externally; this helper compares saved request/file identities and bytes afterwards",
+    "Sandbox stop, durable server audits and deployed commit need separate operator evidence"
+  ],
+  "request_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+  "request_status": "completed",
+  "console_events": [],
+  "page_error_hashes": [],
+  "completed_capture_at_utc": "2026-11-03T19:56:49.953585+00:00",
+  "helper_source_commit_at_execution": "3f51265",
+  "helper_sha256": "dca0beee066849d1dcb3bda4130b6bd2053f2978c60e813ea3da8859fab7d7c7",
+  "replacement_attribution": {
+    "basis": "Integration lead reported these finished healthy deployments before QA; browser independently compares saved result identities/bytes.",
+    "application": {
+      "commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+      "deployment_id": "uqgpm525dt5gaulngxrjsagb"
+    },
+    "provider": {
+      "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "deployment_id": "iaeiglup1n9zxypdzk2mglcr"
+    },
+    "temporary_qa_account": "removed before recheck"
+  }
+}
