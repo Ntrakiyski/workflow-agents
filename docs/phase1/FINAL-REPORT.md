@@ -1,5 +1,7 @@
 # Phase 1 candidate — implementation and staging acceptance
 
+> **Current deployment update, 2026-11-03:** infrastructure and historical database/audit state moved to GCC; the old Worfklow Phase 1 project was deleted. Read [GCC-MIGRATION-REPORT.md](GCC-MIGRATION-REPORT.md) and [readiness.json](readiness.json) for active resources. GCC has accessible KVM, but BoxLite is blocked by bubblewrap namespace creation under current security policies. The remainder is the preserved **historical Worfklow report**. Phase 2 remains blocked.
+
 **Decision, 2026-11-03: blocked; neither the combined infrastructure nor Provider v1 is approved for Phase 2 consumption.** Both independently deployable service candidates are implemented, reviewed, pushed and running in the one authorized new Coolify project. Real BoxLite execution is blocked by the actual execution host's missing `/dev/kvm`. Scoped artifact transfer/export is also an incomplete implementation, independent of that hardware blocker. No stable release or Phase 2 implementation is claimed.
 
 Integration acceptance owner: lead Codex agent. Independent review: specialized QA agent plus a separate final read-only acceptance reviewer. The reviewers' executed tests and observations are attributed in [the QA report](../qa/REPORT.md); the final reviewer checked the contract, limitations and GitHub CI without rerunning test suites. [readiness.json](readiness.json) is the machine-readable gate decision.

@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-11-03T13:03:37.860Z",
+  "origin": "https://hosting.gccssofia.com",
+  "project": "ptombcqslsfcmfufdui4vk1z",
+  "environment": "tiiebld0vegfeegaapo3cdt3",
+  "resources": [
+    {
+      "kind": "applications",
+      "name": "job-runner",
+      "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+      "status": "running:healthy",
+      "fqdn": null,
+      "ports_mappings": null,
+      "is_public": false,
+      "commit": "60a49dbc52121126e8e214c1a774ae627d8ed5f4"
+    },
+    {
+      "kind": "applications",
+      "name": "sandbox-provider",
+      "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+      "status": "running:healthy",
+      "fqdn": null,
+      "ports_mappings": null,
+      "is_public": false,
+      "commit": "60a49dbc52121126e8e214c1a774ae627d8ed5f4"
+    },
+    {
+      "kind": "databases",
+      "name": "job-runner-db",
+      "uuid": "5alfx46nkf9d1vfzdivdybqh",
+      "status": "running:healthy",
+      "fqdn": null,
+      "ports_mappings": null,
+      "is_public": false,
+      "commit": null
+    },
+    {
+      "kind": "databases",
+      "name": "sandbox-provider-db",
+      "uuid": "vv6xrcopkfiry4naqltlvlfg",
+      "status": "running:healthy",
+      "fqdn": null,
+      "ports_mappings": null,
+      "is_public": false,
+      "commit": null
+    }
+  ],
+  "temporary_tasks": [
+    {
+      "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+      "tasks": []
+    },
+    {
+      "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+      "tasks": []
+    }
+  ],
+  "envelope_env_remaining": [
+    {
+      "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+      "count": 0
+    },
+    {
+      "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+      "count": 0
+    }
+  ],
+  "final_task_cleanup_at": "2026-11-03T13:07:30.865Z"
+}

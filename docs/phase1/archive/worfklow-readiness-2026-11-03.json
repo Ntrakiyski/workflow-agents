@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-11-03",
+  "phase": 1,
+  "decision": "blocked",
+  "ready_for_phase2": false,
+  "release_version": "1.0.0-rc.1",
+  "stable_release": false,
+  "repository": "https://github.com/Ntrakiyski/workflow-agents",
+  "integration_branch": "phase1/integration",
+  "deployed_service_commit": "df7cc68e6a1d58fc35586b67a3e9cb75cdefe5a8",
+  "api_version": "v1",
+  "contracts": [
+    "contracts/v1/runner-v1.openapi.json",
+    "contracts/v1/provider-v1.openapi.json"
+  ],
+  "coolify": {
+    "project_name": "workflow-agents-phase1",
+    "project_uuid": "6nshux1lmrsmsfeqar9wess9",
+    "environment": "staging",
+    "environment_uuid": "vulhjgp8rvlruf3rlwchwc6v",
+    "resource_ids": "deploy/staging-resources.json",
+    "latest_deployments": {
+      "job-runner": "zvzmx90vgdxvcz6nvc9at0hk",
+      "sandbox-provider": "vvvwvav3pd3bs6amd7quwsl0"
+    },
+    "resource_statuses": [
+      {
+        "resource": "runner",
+        "uuid": "hpuishi3ewj80863sqj7wucd",
+        "name": "job-runner",
+        "fqdn": null,
+        "git_commit_sha": "df7cc68e6a1d58fc35586b67a3e9cb75cdefe5a8",
+        "ports_mappings": null,
+        "status": "running:healthy"
+      },
+      {
+        "resource": "provider",
+        "uuid": "v3kixl4u4st8khfpmx2xne7e",
+        "name": "sandbox-provider",
+        "fqdn": null,
+        "git_commit_sha": "df7cc68e6a1d58fc35586b67a3e9cb75cdefe5a8",
+        "ports_mappings": null,
+        "status": "running:healthy"
+      },
+      {
+        "uuid": "cbru9p9dh6sucbea2adudwco",
+        "name": "job-runner-db",
+        "is_public": false,
+        "postgres_db": "job_runner",
+        "postgres_user": "job_runner",
+        "public_port": null,
+        "status": "running:healthy"
+      },
+      {
+        "uuid": "b2d87fuzrb1cpw6noy0kpo48",
+        "name": "sandbox-provider-db",
+        "is_public": false,
+        "postgres_db": "sandbox_provider",
+        "postgres_user": "sandbox_provider",
+        "public_port": null,
+        "status": "running:healthy"
+      }
+    ],
+    "health": {
+      "job-runner": {
+        "liveness_http": 200,
+        "readiness_http": 200,
+        "database": "ok",
+        "queue": "ok"
+      },
+      "sandbox-provider": {
+        "liveness_http": 200,
+        "readiness_http": 503,
+        "database": "ok",
+        "runtime": "unavailable"
+      }
+    }
+  },
+  "gates": [
+    {
+      "id": "contracts",
+      "outcome": "passed",
+      "evidence": "docs/qa/REPORT.md"
+    },
+    {
+      "id": "runner_real_database_mock_provider",
+      "outcome": "passed",
+      "tap_passes": 21,
+      "evidence": "services/job-runner/VERIFICATION.md"
+    },
+    {
+      "id": "provider_real_database_fake_runtime",
+      "outcome": "passed",
+      "pytest_passes": 30,
+      "real_runtime_skips": 1,
+      "evidence": "services/sandbox-provider/VERIFICATION.md"
+    },
+    {
+      "id": "independent_boundary_security",
+      "outcome": "passed",
+      "qa_boundary_tests": 6,
+      "sdk_boundary_tests": 3,
+      "evidence": "docs/qa/REPORT.md"
+    },
+    {
+      "id": "deployed_private_http_unavailable_runtime",
+      "outcome": "passed",
+      "groups_passed": 8,
+      "evidence": "docs/phase1/DEPLOYED-QA-EVIDENCE.json"
+    },
+    {
+      "id": "independent_correlated_log_review",
+      "outcome": "passed",
+      "runner_records": 60,
+      "provider_records": 15,
+      "evidence": "docs/qa/DEPLOYED-LOG-REVIEW.json"
+    },
+    {
+      "id": "container_replacement_registry_job_and_application_volume_retention",
+      "outcome": "passed",
+      "evidence": "docs/phase1/DEPLOYED-RETENTION-EVIDENCE.json"
+    },
+    {
+      "id": "cross_database_credential_denial",
+      "outcome": "passed",
+      "evidence": "docs/phase1/DEPLOYED-RETENTION-EVIDENCE.json"
+    },
+    {
+      "id": "local_logical_database_restore",
+      "outcome": "passed",
+      "tables": {
+        "runner": 11,
+        "provider": 6
+      },
+      "comparison": "row counts and deterministic content digests",
+      "scope": "disposable local databases; no VM disks"
+    },
+    {
+      "id": "real_boxlite_execution_stop_start_disk_retention",
+      "outcome": "blocked",
+      "reason": "actual Coolify host Docker /dev/kvm mapping failed: no such file or directory"
+    },
+    {
+      "id": "real_microvm_isolation_and_resource_enforcement",
+      "outcome": "blocked",
+      "reason": "requires qualified KVM host"
+    },
+    {
+      "id": "real_boxlite_provider_restart_reattachment",
+      "outcome": "blocked",
+      "reason": "requires an actual retained sandbox"
+    },
+    {
+      "id": "host_restart_persistence",
+      "outcome": "unverified",
+      "reason": "shared host reboot not authorized"
+    },
+    {
+      "id": "scoped_artifact_transfer_export",
+      "outcome": "incomplete",
+      "reason": "no scoped transfer adapter implemented; nonempty artifact_output_ref returns 422"
+    },
+    {
+      "id": "off_host_backup",
+      "outcome": "incomplete",
+      "reason": "local daily database backup schedules configured; off-host destination not configured"
+    },
+    {
+      "id": "coordinated_registry_vm_volume_restore",
+      "outcome": "blocked",
+      "reason": "requires actual stopped VM recovery set and authorized isolated KVM restore target"
+    }
+  ],
+  "evidence_report": "docs/phase1/FINAL-REPORT.md",
+  "independent_qa": "docs/qa/REPORT.md"
+}

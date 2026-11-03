@@ -1,5 +1,7 @@
 # GCC Coolify suitability evaluation
 
+> **Historical evaluation:** the user subsequently authorized migration and source deletion. GCC resources now exist; current evidence is in [GCC-MIGRATION-REPORT.md](GCC-MIGRATION-REPORT.md). The evaluation-only statements below describe the earlier assessment, not current authorization or deployment state.
+
 Assessment date: 2026-11-03 (Europe/Sofia). Target: `https://hosting.gccssofia.com/`. Scope: evaluate only. The user's instruction to pause deployment remains in force. No GCC project, application, database, volume or deployment was created for this evaluation; no existing workload was changed. A Coolify diagnostic initiated its connectivity-validation check; no host configuration change was requested.
 
 **Decision: the observed capacity supports a small, bounded Phase 1 staging trial. Full deployment acceptance remains conditional on actual restricted-container BoxLite execution, persistence and recovery tests.** This is not a production capacity guarantee or authorization to deploy.

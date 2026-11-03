@@ -30,3 +30,9 @@ Host-reboot persistence is unverified until explicitly authorized and safely tes
 ## Validation terminology
 
 Reports separate executed real-PostgreSQL and HTTP tests, mocked runtime tests, real BoxLite tests, skipped cases, and blocked gates. Unavailable KVM or unsupported SDK/container security requirements prevent Phase 1 release even if API tests pass.
+
+## Authorized GCC migration, 2026-11-03
+
+The user's instruction to move Phase 1 to GCC and delete it from Worfklow superseded the earlier deployment pause. Scope remained exactly our Phase 1 resources: one GCC project with separate apps/databases; no unrelated resource, host virtualization/security setting or shared network was changed. Historical database/audit state was restored and compared before source removal. New service/database credentials replaced source credentials. No working source VM existed to migrate; the source filesystem volume was not copied and that limitation is recorded.
+
+GCC exposes KVM, but the actual non-root restricted BoxLite create fails during bubblewrap user-namespace preflight. Preserve the agreed SDK/runtime and security model. Do not equate KVM/SDK readiness200 with a working VM, silently disable the jailer, or alter host-wide AppArmor/sysctl policy. A reviewed Provider-specific security policy and namespace-aware readiness remain required follow-up work; migration can be complete while Phase 1 consumption remains blocked.

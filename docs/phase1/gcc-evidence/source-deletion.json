@@ -1,0 +1,107 @@
+{
+  "timestamp": "2026-11-03T13:02:24.343Z",
+  "origin": "https://worfklow.org",
+  "project": "6nshux1lmrsmsfeqar9wess9",
+  "membership_verified": [
+    "hpuishi3ewj80863sqj7wucd",
+    "v3kixl4u4st8khfpmx2xne7e",
+    "b2d87fuzrb1cpw6noy0kpo48",
+    "cbru9p9dh6sucbea2adudwco"
+  ],
+  "source_backups_removed": [
+    {
+      "database_uuid": "cbru9p9dh6sucbea2adudwco",
+      "backup_uuid": "wbvt7ycjaxj49xoeowmicmah",
+      "result": {
+        "message": "Backup configuration and all executions deleted."
+      }
+    },
+    {
+      "database_uuid": "b2d87fuzrb1cpw6noy0kpo48",
+      "backup_uuid": "krsnu4wl5mlvawjgoxexftqj",
+      "result": {
+        "message": "Backup configuration and all executions deleted."
+      }
+    }
+  ],
+  "requests": [
+    {
+      "kind": "applications",
+      "name": "job-runner",
+      "uuid": "hpuishi3ewj80863sqj7wucd",
+      "delete_volumes": true,
+      "docker_cleanup": false,
+      "delete_connected_networks": false,
+      "result": {
+        "message": "Application deletion request queued."
+      }
+    },
+    {
+      "kind": "applications",
+      "name": "sandbox-provider",
+      "uuid": "v3kixl4u4st8khfpmx2xne7e",
+      "delete_volumes": true,
+      "docker_cleanup": false,
+      "delete_connected_networks": false,
+      "result": {
+        "message": "Application deletion request queued."
+      }
+    },
+    {
+      "kind": "databases",
+      "name": "job-runner-db",
+      "uuid": "cbru9p9dh6sucbea2adudwco",
+      "delete_volumes": true,
+      "docker_cleanup": false,
+      "delete_connected_networks": false,
+      "result": {
+        "message": "Database deletion request queued."
+      }
+    },
+    {
+      "kind": "databases",
+      "name": "sandbox-provider-db",
+      "uuid": "b2d87fuzrb1cpw6noy0kpo48",
+      "delete_volumes": true,
+      "docker_cleanup": false,
+      "delete_connected_networks": false,
+      "result": {
+        "message": "Database deletion request queued."
+      }
+    }
+  ],
+  "verification": [
+    {
+      "kind": "applications",
+      "name": "job-runner",
+      "uuid": "hpuishi3ewj80863sqj7wucd",
+      "http": 404
+    },
+    {
+      "kind": "applications",
+      "name": "sandbox-provider",
+      "uuid": "v3kixl4u4st8khfpmx2xne7e",
+      "http": 404
+    },
+    {
+      "kind": "databases",
+      "name": "job-runner-db",
+      "uuid": "cbru9p9dh6sucbea2adudwco",
+      "http": 404
+    },
+    {
+      "kind": "databases",
+      "name": "sandbox-provider-db",
+      "uuid": "b2d87fuzrb1cpw6noy0kpo48",
+      "http": 404
+    }
+  ],
+  "project_deletion": {
+    "uuid": "6nshux1lmrsmsfeqar9wess9",
+    "result": {
+      "message": "Project deleted."
+    },
+    "verified_http": 404
+  },
+  "completed_at": "2026-11-03T13:03:28.823Z"
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "uuid": "hnr7lhdip443tq0sdlea523f",
+    "duration": 3.95,
+    "error_details": null,
+    "finished_at": "2026-11-03T12:58:05.000000Z",
+    "message": "{\"operation\":\"logical-database-restore\",\"service\":\"sandbox-provider\",\"outcome\":\"passed\",\"tables\":[{\"table\":\"public.idempotency\",\"rows\":1,\"rows_sha256\":\"c497ff2eb0fdab21e1a69b976c9fe9e2b16006ea7431b14354fee45551b561b8\"},{\"table\":\"public.sandboxes\",\"rows\":1,\"rows_sha256\":\"178c2f7faf7a0dc7d3e0950a1044f3f54852093d67cae936373b1ede3b9a7e31\"},{\"table\":\"public.schema_migrations\",\"rows\":2,\"rows_sha256\":\"51e69825a7b1da66ee823f113c48da1e75251e91d0de4981de0ffb8c9a3a5156\"},{\"table\":\"public.audit_events\",\"rows\":4,\"rows_sha256\":\"3252cb4681c2b9ae234c2758b2728096d8b93774c7ed2b7afec96612fb06514a\"},{\"table\":\"public.cancellation_fences\",\"rows\":0,\"rows_sha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"},{\"table\":\"public.runs\",\"rows\":0,\"rows_sha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}],\"sequences\":1,\"bootstrap_timestamp_rows_reconciled\":2,\"scope\":\"logical rows only; no VM disk or host recovery proof\"}",
+    "retry_count": 0,
+    "started_at": "2026-11-03T12:58:01.000000Z",
+    "status": "success",
+    "created_at": "2026-11-03T12:58:02.000000Z",
+    "updated_at": "2026-11-03T12:58:05.000000Z"
+  }
+]

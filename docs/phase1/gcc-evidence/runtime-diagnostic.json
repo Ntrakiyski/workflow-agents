@@ -1,0 +1,14 @@
+[
+  {
+    "uuid": "zoqe7ntwohyyifer5nid7i4v",
+    "duration": null,
+    "error_details": null,
+    "finished_at": null,
+    "message": "{\"probe\":\"workflow-agents-runtime-qualification-v1\",\"mode\":\"lifecycle\",\"outcome\":\"failed\",\"scope\":\"Direct runtime adapter in isolated SDK home; excludes service API/DB recovery and host restart.\",\"host\":{\"uid\":10001,\"groups\":[993,10001],\"kvm_access\":true,\"sdk_version\":\"0.11.0\",\"process_id\":257,\"container_identity_sha256\":\"4bb806a68e7d9199e9ad13ecc83f2d9836cbc79da0e53c939a8ce11b6636478b\",\"process_security\":{\"CapEff\":\"0000000000000000\",\"NoNewPrivs\":\"1\",\"Seccomp\":\"2\"}},\"session\":\"9b5b67c04a724235bf558a797f632483\",\"runtime_kind\":\"boxlite\",\"checks\":[\"explicit_destroy_verified\"],\"error_classification\":\"runtime_operation_failed\",\"failed_stage\":\"create_a\",\"operator_diagnostic\":{\"file\":\"diagnostic-lifecycle.json\",\"exception_chain\":[{\"type\":\"boxlite.errors.ConfigError\",\"message\":\"configuration error: The sandbox could not be initialized on this host.\"}]},\"duration_ms\":10094,\"marker_sha256\":\"680f69a7b75e379171589eeef7067e8ea5ad7497bd89da73dfecea287da56336\",\"runtime_identity_sha256\":{},\"retained_boxes\":[]}",
+    "retry_count": 0,
+    "started_at": "2026-11-03T12:58:01.000000Z",
+    "status": "failed",
+    "created_at": "2026-11-03T12:58:01.000000Z",
+    "updated_at": "2026-11-03T12:58:13.000000Z"
+  }
+]

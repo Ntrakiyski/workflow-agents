@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-11-03T13:01:25.187Z",
+  "project": "6nshux1lmrsmsfeqar9wess9",
+  "environments": [
+    {
+      "name": "staging",
+      "uuid": "vulhjgp8rvlruf3rlwchwc6v",
+      "resources": {
+        "applications": [
+          {
+            "uuid": "hpuishi3ewj80863sqj7wucd",
+            "name": "job-runner"
+          },
+          {
+            "uuid": "v3kixl4u4st8khfpmx2xne7e",
+            "name": "sandbox-provider"
+          }
+        ],
+        "mariadbs": [],
+        "mongodbs": [],
+        "mysqls": [],
+        "postgresqls": [
+          {
+            "uuid": "b2d87fuzrb1cpw6noy0kpo48",
+            "name": "sandbox-provider-db"
+          },
+          {
+            "uuid": "cbru9p9dh6sucbea2adudwco",
+            "name": "job-runner-db"
+          }
+        ],
+        "redis": [],
+        "services": []
+      }
+    },
+    {
+      "name": "production",
+      "uuid": "k2dxwgluer6w5i5tx3esazlp",
+      "resources": {
+        "applications": [],
+        "mariadbs": [],
+        "mongodbs": [],
+        "mysqls": [],
+        "postgresqls": [],
+        "redis": [],
+        "services": []
+      }
+    }
+  ]
+}

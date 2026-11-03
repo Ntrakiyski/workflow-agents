@@ -1,5 +1,7 @@
 # Preflight evidence
 
+> **Current target:** GCC migration is complete; the Worfklow deployment described below was deleted. [Current report](GCC-MIGRATION-REPORT.md) records actual GCC KVM access and the failing bubblewrap namespace preflight. The earlier Worfklow/local observations remain historical evidence.
+
 Observed 2026-11-03. No existing Coolify resource was changed.
 
 ## Workspace and source

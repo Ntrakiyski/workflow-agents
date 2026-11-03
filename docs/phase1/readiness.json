@@ -8,72 +8,79 @@
   "stable_release": false,
   "repository": "https://github.com/Ntrakiyski/workflow-agents",
   "integration_branch": "phase1/integration",
-  "deployed_service_commit": "df7cc68e6a1d58fc35586b67a3e9cb75cdefe5a8",
+  "deployed_service_commit": "60a49dbc52121126e8e214c1a774ae627d8ed5f4",
   "api_version": "v1",
   "contracts": [
     "contracts/v1/runner-v1.openapi.json",
     "contracts/v1/provider-v1.openapi.json"
   ],
   "coolify": {
+    "url": "https://hosting.gccssofia.com",
     "project_name": "workflow-agents-phase1",
-    "project_uuid": "6nshux1lmrsmsfeqar9wess9",
+    "project_uuid": "ptombcqslsfcmfufdui4vk1z",
     "environment": "staging",
-    "environment_uuid": "vulhjgp8rvlruf3rlwchwc6v",
+    "environment_uuid": "tiiebld0vegfeegaapo3cdt3",
     "resource_ids": "deploy/staging-resources.json",
     "latest_deployments": {
-      "job-runner": "zvzmx90vgdxvcz6nvc9at0hk",
-      "sandbox-provider": "vvvwvav3pd3bs6amd7quwsl0"
+      "job-runner": "e2gbbywa27gpqvmkjg2uiqcy",
+      "sandbox-provider": "tr3zcg6hkhz7if6xbhaoakm3"
     },
     "resource_statuses": [
       {
-        "resource": "runner",
-        "uuid": "hpuishi3ewj80863sqj7wucd",
+        "kind": "applications",
         "name": "job-runner",
+        "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+        "status": "running:healthy",
         "fqdn": null,
-        "git_commit_sha": "df7cc68e6a1d58fc35586b67a3e9cb75cdefe5a8",
         "ports_mappings": null,
-        "status": "running:healthy"
+        "is_public": false,
+        "commit": "60a49dbc52121126e8e214c1a774ae627d8ed5f4"
       },
       {
-        "resource": "provider",
-        "uuid": "v3kixl4u4st8khfpmx2xne7e",
+        "kind": "applications",
         "name": "sandbox-provider",
+        "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+        "status": "running:healthy",
         "fqdn": null,
-        "git_commit_sha": "df7cc68e6a1d58fc35586b67a3e9cb75cdefe5a8",
         "ports_mappings": null,
-        "status": "running:healthy"
+        "is_public": false,
+        "commit": "60a49dbc52121126e8e214c1a774ae627d8ed5f4"
       },
       {
-        "uuid": "cbru9p9dh6sucbea2adudwco",
+        "kind": "databases",
         "name": "job-runner-db",
+        "uuid": "5alfx46nkf9d1vfzdivdybqh",
+        "status": "running:healthy",
+        "fqdn": null,
+        "ports_mappings": null,
         "is_public": false,
-        "postgres_db": "job_runner",
-        "postgres_user": "job_runner",
-        "public_port": null,
-        "status": "running:healthy"
+        "commit": null
       },
       {
-        "uuid": "b2d87fuzrb1cpw6noy0kpo48",
+        "kind": "databases",
         "name": "sandbox-provider-db",
+        "uuid": "vv6xrcopkfiry4naqltlvlfg",
+        "status": "running:healthy",
+        "fqdn": null,
+        "ports_mappings": null,
         "is_public": false,
-        "postgres_db": "sandbox_provider",
-        "postgres_user": "sandbox_provider",
-        "public_port": null,
-        "status": "running:healthy"
+        "commit": null
       }
     ],
     "health": {
       "job-runner": {
-        "liveness_http": 200,
-        "readiness_http": 200,
         "database": "ok",
-        "queue": "ok"
+        "queue": "ok",
+        "readiness_http": 200
       },
       "sandbox-provider": {
-        "liveness_http": 200,
-        "readiness_http": 503,
+        "liveness": "ok",
         "database": "ok",
-        "runtime": "unavailable"
+        "actual_runtime_qualification": "failed_before_vm_start",
+        "readiness_implementation": "known_false_positive_risk_kvm_sdk_check_only",
+        "readiness_http": 200,
+        "reported_runtime": "ok",
+        "qualification_interpretation": "False positive for actual microVM readiness; native creation failed namespace preflight."
       }
     }
   },
@@ -92,9 +99,10 @@
     {
       "id": "provider_real_database_fake_runtime",
       "outcome": "passed",
-      "pytest_passes": 30,
-      "real_runtime_skips": 1,
-      "evidence": "services/sandbox-provider/VERIFICATION.md"
+      "pytest_passes": 41,
+      "evidence": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41640540909",
+      "hardware_conditional_negative_skips": 2,
+      "real_runtime_deselected": 1
     },
     {
       "id": "independent_boundary_security",
@@ -107,19 +115,22 @@
       "id": "deployed_private_http_unavailable_runtime",
       "outcome": "passed",
       "groups_passed": 8,
-      "evidence": "docs/phase1/DEPLOYED-QA-EVIDENCE.json"
+      "evidence": "docs/phase1/DEPLOYED-QA-EVIDENCE.json",
+      "historical_deployment_origin": "https://worfklow.org"
     },
     {
       "id": "independent_correlated_log_review",
       "outcome": "passed",
       "runner_records": 60,
       "provider_records": 15,
-      "evidence": "docs/qa/DEPLOYED-LOG-REVIEW.json"
+      "evidence": "docs/qa/DEPLOYED-LOG-REVIEW.json",
+      "historical_deployment_origin": "https://worfklow.org"
     },
     {
       "id": "container_replacement_registry_job_and_application_volume_retention",
       "outcome": "passed",
-      "evidence": "docs/phase1/DEPLOYED-RETENTION-EVIDENCE.json"
+      "evidence": "docs/phase1/DEPLOYED-RETENTION-EVIDENCE.json",
+      "historical_deployment_origin": "https://worfklow.org"
     },
     {
       "id": "cross_database_credential_denial",
@@ -139,17 +150,20 @@
     {
       "id": "real_boxlite_execution_stop_start_disk_retention",
       "outcome": "blocked",
-      "reason": "actual Coolify host Docker /dev/kvm mapping failed: no such file or directory"
+      "reason": "GCC KVM is accessible, but BoxLite bubblewrap user-namespace preflight fails EPERM; AppArmor restriction detected, Docker seccomp contribution unisolated.",
+      "evidence": "docs/phase1/gcc-evidence/native-runtime-log.json"
     },
     {
       "id": "real_microvm_isolation_and_resource_enforcement",
       "outcome": "blocked",
-      "reason": "requires qualified KVM host"
+      "reason": "GCC KVM is accessible, but BoxLite bubblewrap user-namespace preflight fails EPERM; AppArmor restriction detected, Docker seccomp contribution unisolated.",
+      "evidence": "docs/phase1/gcc-evidence/native-runtime-log.json"
     },
     {
       "id": "real_boxlite_provider_restart_reattachment",
       "outcome": "blocked",
-      "reason": "requires an actual retained sandbox"
+      "reason": "GCC KVM is accessible, but BoxLite bubblewrap user-namespace preflight fails EPERM; AppArmor restriction detected, Docker seccomp contribution unisolated.",
+      "evidence": "docs/phase1/gcc-evidence/native-runtime-log.json"
     },
     {
       "id": "host_restart_persistence",
@@ -170,8 +184,78 @@
       "id": "coordinated_registry_vm_volume_restore",
       "outcome": "blocked",
       "reason": "requires actual stopped VM recovery set and authorized isolated KVM restore target"
+    },
+    {
+      "id": "gcc_logical_database_migration",
+      "outcome": "passed",
+      "tables": {
+        "runner": 11,
+        "provider": 6
+      },
+      "sequences": {
+        "runner": 4,
+        "provider": 1
+      },
+      "comparison": "exact row counts and SHA256 content digests; sequence setval completed",
+      "evidence": [
+        "docs/phase1/gcc-evidence/job-runner-restore.json",
+        "docs/phase1/gcc-evidence/sandbox-provider-restore.json"
+      ]
+    },
+    {
+      "id": "gcc_historical_private_http_after_both_app_replacements",
+      "outcome": "passed",
+      "evidence": "docs/phase1/gcc-evidence/post-replacement-http.json",
+      "scope": "historical jobs, sandbox creation intent and audits; excludes VM disk retention"
+    },
+    {
+      "id": "gcc_provider_readiness_accuracy",
+      "outcome": "incomplete",
+      "reason": "KVM ioctl and SDK presence do not detect known failing namespace/jailer preflight."
+    },
+    {
+      "id": "worfklow_scoped_source_removal",
+      "outcome": "passed",
+      "evidence": "docs/phase1/gcc-evidence/source-deletion.json",
+      "physical_volume_enumeration": "not_performed; Coolify deletion requested with delete_volumes=true"
+    },
+    {
+      "id": "gcc_independent_readonly_http_security_after_migration",
+      "outcome": "passed",
+      "groups": 9,
+      "cross_db_denied": true,
+      "evidence": "docs/phase1/gcc-evidence/independent-migration-http.json",
+      "scope": "published HTTP schemas, auth/metrics, schema/profile negatives, owner isolation, historical jobs/audits, denied cross-DB login; no VM"
+    },
+    {
+      "id": "gcc_independent_structured_log_sample",
+      "outcome": "passed",
+      "runner_records": 17,
+      "provider_records": 12,
+      "evidence": "docs/qa/GCC-MIGRATION-HTTP-REVIEW.json",
+      "scope": "bounded correlated API log sample; not an exhaustive logging guarantee"
     }
   ],
-  "evidence_report": "docs/phase1/FINAL-REPORT.md",
-  "independent_qa": "docs/qa/REPORT.md"
+  "evidence_report": "docs/phase1/GCC-MIGRATION-REPORT.md",
+  "independent_qa": "docs/qa/GCC-MIGRATION-REVIEW.md",
+  "migration": {
+    "decision": "complete",
+    "source_origin": "https://worfklow.org",
+    "target_origin": "https://hosting.gccssofia.com",
+    "source_project_deleted": true,
+    "source_4_resources_and_project_verified_http": 404,
+    "source_filesystem_volume_copied": false,
+    "evidence": "docs/phase1/gcc-evidence/source-deletion.json",
+    "report": "docs/phase1/GCC-MIGRATION-REPORT.md"
+  },
+  "ci": {
+    "commit": "01e0729bbc6656dd93d9ff034a796123d6187672",
+    "run": 41641429108,
+    "outcome": "passed",
+    "contracts": 5,
+    "runner_tap_passes": 21,
+    "provider_passes": 41,
+    "provider_skips": 2,
+    "real_runtime_deselected": 1
+  }
 }
