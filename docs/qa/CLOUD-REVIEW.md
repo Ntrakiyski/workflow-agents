@@ -1,6 +1,6 @@
 # Independent BoxLite Cloud review
 
-Status: implementation and remote qualification pending. No Cloud resource was provisioned, started, stopped or deleted by this reviewer. Existing local fake-runtime results and loopback wire tests do not qualify a hosted microVM. The frozen Provider and Runner v1 contracts remain the consumer boundary; no Phase2 application work is included.
+Status: implementation reviewed; deployed service qualification pending. No Cloud resource was provisioned, started, stopped or deleted by this reviewer. Existing local fake-runtime results and loopback wire tests do not qualify a hosted microVM. The frozen Provider and Runner v1 contracts remain the consumer boundary; no Phase2 application work is included.
 
 ## Independent source and installed SDK observations
 
@@ -29,6 +29,19 @@ PYTHONDONTWRITEBYTECODE=1 /tmp/workflow-provider-qa-venv/bin/python tests/qa/tes
 **Five tests passed in2.746seconds**, no skips. They verify explicit retention/resource/network wire fields, stop/close without DELETE, the deprecated-retention omission, a503 create issuing exactly one POST, rejection of a changed handle identity, and an actual cancelled create request whose stub-side allocation remains discoverable without another POST. This last result demonstrates timeout ambiguity in the client protocol; the allocation and HTTP server are both test doubles. These tests are neither Cloud credentials validation nor real filesystem/VM results. They make no claim about live server capability, immutable images or resource/network enforcement.
 
 QA externalized `QA_SANDBOX_PROFILE` in the HTTP probe (default remains `minimal-linux:v1`). The new Cloud profile is `cloud-minimal-linux:v1`; all phases must use the same explicit value. Principal selection, new submissions, live retained-record checks and invocation-cache identity use this setting. Retained-record format remains version1, and live owner/reference/profile/job anchors still gate lifecycle operations.
+
+Independently ran the complete Provider suite against implementation commit `27a88dff7c47e250022fc4f9d68e22dd795550a3`, using a newly created disposable local PostgreSQL database:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 TEST_DATABASE_URL=<owned-disposable-local-database> \
+  /tmp/workflow-provider-qa-venv/bin/python -m pytest -q -rs -p no:cacheprovider
+```
+
+**53 passed, one skipped, in 13.21 seconds; exit status 0.** The skipped local real-runtime test explicitly requires `/dev/kvm`, which is absent in this QA workspace. Database integration tests used real PostgreSQL; Cloud adapter tests used SDK-to-loopback HTTP or fake execution data. The database was removed afterward. This result is independent regression evidence, not hosted Cloud qualification.
+
+Source review of that snapshot found explicit REST selection with no local fallback, a backend fingerprint independent of API key rotation, a committed creation-attempt fence before allocation, external runtime ID validation, explicit retention and denied inbound networking, and separate explicit destruction. Historical local-backend records cannot authorize Cloud mutations. Backend errors are classified without returning native response bodies. Readiness authenticates a list request without allocating a VM. Cloud active-execution attachment deliberately returns a nonretryable ambiguous result rather than replaying an execution or claiming recovered output; that acceptance gate remains incomplete. The SDK can still report a zero exit status after losing unstreamed output without an error, so acceptance workloads must assert their required output, and general output recovery is not proven.
+
+Reviewed lead-executed evidence at `docs/phase1/cloud-evidence/direct-sdk-preflight.json` and `live-policy-attestation.json`. The former records a real Cloud SDK create/write/stop/fresh-client same-ID marker read and verified explicit cleanup; it also records that a requested 256 MiB became 1024 MiB. The latter records an approved image digest, CPU 1, RAM 1024 MiB, disabled inbound/outbound metadata, retention policies, and guest CPU/memory/rootfs/interface observations, followed by verified cleanup. These are lead-reported direct SDK observations, independently inspected as files; this reviewer did not execute those Cloud calls. They do not establish Runner/Provider HTTP integration, database durability, service replacement recovery, stress enforcement or an off-host backup.
 
 Executed Node syntax check and an ad-hoc local protocol harness `python3 /tmp/cloud-qa-protocol-smoke.py`, using fresh isolated local PostgreSQL databases, actual HTTP services and an **explicit healthy-labelled runtime test double solely to exercise the client**. Both concurrent prepare invocations passed nine groups and returned the same record with exactly one replay. Verify correctly rejected absent actual Provider recovery. Exact-fixture cleanup passed; cleanup with a different configured sandbox profile and a tampered owner-reference both failed before destruction. Owned processes/databases were cleaned. These are client-regression checks, not Cloud, microVM, real filesystem isolation or restart qualification.
 
