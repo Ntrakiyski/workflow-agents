@@ -1,0 +1,17 @@
+[Unit]
+Description=Pull Workflow Agents encrypted logical backups from GCC
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/workflow-agents-backup.env
+ExecStart=/usr/bin/node /home/workflow-agents-worktrees/release-minimal/deploy/pull-offhost-backups.mjs
+TimeoutStartSec=420
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/workflow-agents-backups
+
