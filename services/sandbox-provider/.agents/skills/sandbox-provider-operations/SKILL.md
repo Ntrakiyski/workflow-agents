@@ -14,3 +14,12 @@ description: Install, monitor, audit, recover, and upgrade the standalone BoxLit
 7. Troubleshoot network, resource, profile and startup failures using structured logs without printing secrets or customer files.
 8. Before upgrading, pin tested SDK/image versions, verify API compatibility and rollback plan; re-run stop/start/isolation fixture tests afterward.
 9. Document tested behavior, failures, unverified assumptions and operational limits; do not claim VM memory or Pi context continuity without tests.
+
+## Implemented candidate operations (2026-11-03)
+
+- Production start: `python -m provider.app`; service directory is the Docker build context. Use pinned `requirements.lock` and the checked-in Dockerfile. Required secret variables are `DATABASE_URL` and `PROVIDER_AUTH_JSON`; approved operator profiles use `PROVIDER_PROFILES_JSON`.
+- `/health/live` proves process only. `/health/ready` returns503 if DB/KVM/SDK is unavailable; an injected fake returns `runtime:disabled` and can never be counted as verified BoxLite.
+- Keep `/var/lib/sandbox-provider` in a named persistent volume owned by UID10001. `BOX_ROOT` plus the independent PostgreSQL registry require a coordinated off-host backup; follow README's stopped-volume/database restore drill. Full disk restore and host-reboot validation are incomplete until actually executed.
+- Retain `auto_delete=0`, `auto_remove=False`, `detach=True`, standard SDK jailer/seccomp and explicit stop vs destroy. No production auto-fallback, privileged container, Docker socket or arbitrary host mount.
+- Query `/v1/sandboxes/{id}/events` with the owning credential for durable safe events. Missing runtime disks become failed, not recreated. `ambiguous_execution` is nonretryable; inspect the stopped environment before manually authorizing a new execution reference.
+- Retention configuration denotes archival policy only: append-only audit triggers prevent ordinary UPDATE/DELETE and deduplication/tombstones remain for resource lifetime.
