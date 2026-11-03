@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { canonical, fingerprint, validate } from "../src/validation.js";
@@ -61,4 +62,22 @@ test("startup fails closed for absent/invalid external configuration", () => {
     () => loadConfig({ ...env, QUEUE_CONCURRENCY: "0" }),
     /Invalid QUEUE_CONCURRENCY/,
   );
+});
+
+test("malformed secret configuration exits with structured safe logs", () => {
+  const marker = "secret-marker-must-never-be-logged";
+  const child = spawnSync(
+    process.execPath,
+    ["--import", "tsx", "src/main.ts"],
+    {
+      env: { ...process.env, RUNNER_AUTH_JSON: `[{"token":"${marker}",BAD` },
+      encoding: "utf8",
+      timeout: 10000,
+    },
+  );
+  assert.equal(child.status, 1);
+  assert.equal((child.stdout + child.stderr).includes(marker), false);
+  const record = JSON.parse(child.stdout.trim());
+  assert.equal(record.action, "service.startup_failed");
+  assert.equal(record.service, "job-runner");
 });
