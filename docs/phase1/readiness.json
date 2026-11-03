@@ -25,7 +25,7 @@
       "job-runner": "xoirtvdhn7kofdlkekgdegry",
       "sandbox-provider": "byna6ecrish0jprg0dbywo37"
     },
-    "deployment_identity_note": "Runner/Provider remain at the recorded 8387b5d deployments. The integration lead confirmed the application healthy at 1d21e27 and replaced it at the same source; independent browser QA verified recovered output retention. Historical capture/deployment identities remain separate. This documentation update performs no live control-plane calls.",
+    "deployment_identity_note": "Final scoped readback at 2026-11-03T19:59:33.850Z confirms Runner, Provider, application and private storage healthy; all latest deployments finished with unchanged code pins, no host port mappings or temporary tasks. Browser result retention and final authenticated capture/restores passed separately. Documentation worker performed no live control-plane calls.",
     "historical_rc1_health": {
       "job-runner": {
         "database": "ok",
@@ -44,8 +44,8 @@
     },
     "latest_deployments": {
       "job-runner": "wuvkf6x1owxobcarqjtd7wbk",
-      "sandbox-provider": "qmdjylvn3d3zou4r6mawp8al",
-      "application": "y0mgz7i3yndf7o1cmvutoopf"
+      "sandbox-provider": "iaeiglup1n9zxypdzk2mglcr",
+      "application": "uqgpm525dt5gaulngxrjsagb"
     },
     "historical_rc1_resource_statuses": [
       {
@@ -103,7 +103,7 @@
         "status": "running:healthy",
         "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
         "is_public": false,
-        "observation_basis": "integration lead confirmation at 2026-11-03T19:03:19Z"
+        "observation_basis": "Integration lead final readback docs/release/final-release-state.json at 2026-11-03T19:59:33.850Z; finished deployment and running:healthy."
       },
       {
         "kind": "applications",
@@ -112,7 +112,7 @@
         "status": "running:healthy",
         "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
         "is_public": false,
-        "observation_basis": "integration lead confirmation at 2026-11-03T19:03:19Z"
+        "observation_basis": "Integration lead final readback docs/release/final-release-state.json at 2026-11-03T19:59:33.850Z; finished deployment and running:healthy."
       },
       {
         "kind": "applications",
@@ -121,7 +121,17 @@
         "status": "running:healthy",
         "commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
         "is_public": true,
-        "observation_basis": "Lead confirmed replacement deployment y0mgz7i3yndf7o1cmvutoopf at 1d21e27; independent browser comparison passed at 2026-11-03T19:31:34.704Z."
+        "observation_basis": "Integration lead final readback docs/release/final-release-state.json at 2026-11-03T19:59:33.850Z; finished deployment and running:healthy."
+      },
+      {
+        "kind": "applications",
+        "name": "workflow-storage",
+        "uuid": "qd41pkivqrnkwwsj1nr52s0k",
+        "status": "running:healthy",
+        "is_public": false,
+        "configured_commit": "HEAD",
+        "deployment_id": "n79eilpg37gjlq7ye4wasl7x",
+        "observation_basis": "Final readback of private image-backed storage resource; configured commit is literal HEAD, not an attributed application source SHA."
       }
     ]
   },
@@ -243,26 +253,30 @@
       "id": "scoped_artifact_transfer_export",
       "outcome": "passed",
       "evidence": "docs/release/cloud-transfer-journey.json",
-      "scope": "Actual Cloud/private local Provider at exact 909980b:2,097,166-byte multichunk checksum/replay, ownership/path/symlink negatives and file checkpoint/reupload into a distinct sandbox. Legacy external artifact_output_ref remains 422. Hosted application same-job export recovery passed separately; uninterrupted automatic delivery remains pending."
+      "scope": "Actual Cloud/private local Provider at exact 909980b:2,097,166-byte multichunk checksum/replay, ownership/path/symlink negatives and file checkpoint/reupload into a distinct sandbox. Legacy external artifact_output_ref remains 422. Hosted application same-job export recovery and one fresh uninterrupted automatic synthetic document journey passed separately, each with validated required exports and same-box stop."
     },
     {
       "id": "off_host_backup",
       "outcome": "passed",
       "evidence": [
         "docs/release/offhost-restore-final-infrastructure.json",
-        "deploy/README.md"
+        "deploy/README.md",
+        "docs/release/offhost-backup-completed.json",
+        "docs/release/offhost-forensic-restore-completed-bound.json"
       ],
-      "scope": "Encrypted off-host Runner/Provider logical archives from 4bab06c restored to isolated resources twice with exact rows, audits and sequences. Daily pull timer is configured; this is not guest-disk or completed application-data recovery."
+      "scope": "Final installed systemd service invocation passed with three authenticated encrypted archives: Runner/Provider 8387b5d and application 1d21e27. All referenced application objects, approved runtime cache and public profile inventory retained on independent host; enabled daily timer is active. Both infrastructure archives restored twice with exact rows/audits/sequences in isolated offline databases. No guest-disk recovery or operational cutover claim. Actual restored infrastructure envelope bytes were bound to the capture manifest SHA256 before database creation."
     },
     {
       "id": "coordinated_registry_vm_volume_restore",
       "outcome": "partial",
-      "reason": "Selected required-file checkpoint export/reupload and isolated forensic/off-host registry restore passed separately. Hosted completed result/session objects are now durable and checksummed, but their final off-host capture/isolated restore and coordinated application/registry/required-file reconstruction/cutover remain pending. Full Cloud VM snapshot/export/import/clone remain unavailable. The new explicit offline forensic mode only compares retained binding records; its availability is not a successful final restore and it authorizes no Provider startup or cutover.",
+      "reason": "Final completed application rows/all 11 required objects and approved runtime reconstructed in isolated DB/bucket; both infrastructure archives passed offline forensic row/audit/sequence restore and replay. Earlier selected-file export/reupload into a distinct recorded Cloud sandbox passed separately. These do not prove Cloud guest-disk restoration, live registry-to-guest rebinding or coordinated operational cutover; no Provider/Runner/Cloud client starts during restore. Full Cloud snapshot/export/import/clone remain unavailable. The final forensic rerun bound both exact infrastructure envelope bytes to the capture manifest before restoring.",
       "evidence": [
         "docs/release/cloud-transfer-journey.json",
         "docs/release/offhost-restore-final-infrastructure.json",
         "docs/release/application-restore-attempt-1.json",
-        "docs/contracts/boxlite-cloud-capabilities.md"
+        "docs/contracts/boxlite-cloud-capabilities.md",
+        "docs/release/application-restore-completed.json",
+        "docs/release/offhost-forensic-restore-completed-bound.json"
       ]
     },
     {
@@ -436,40 +450,66 @@
     },
     {
       "id": "application_hosted_v2_document_delivery",
-      "outcome": "partial",
-      "reason": "Actual hosted request 598c30fa reached Runner completed on attempt 1, then application 8387b5d rejected canonical session_files.media_type. Strict canonical fix at 1d21e27 and explicit same-job export-only recovery preserved identities/failure audits without workload replay. Independent browser download, DOCX/marker/original integrity and owner protection passed. A fresh uninterrupted automatic journey remains pending. Fresh automatic request 6f3085e0 is admitted and uploading; its completion is not yet demonstrated.",
+      "outcome": "passed",
+      "reason": "One uninterrupted synthetic DOCX request 6f3085e0 completed actual browser-to-Runner/Provider/Cloud/Pi/LiteLLM/OfficeCLI on Runner attempt 1, without operator recovery. Independently checked 5,281-byte DOCX/output SHA256, original bytes, exact synthetic marker, protected downloads, immutable session/manifests, correlated completion/stop audits and same-sandbox stop passed. This is bounded hosted qualification, not stable readiness or semantic/rendered-layout qualification.",
       "evidence": [
-        "docs/release/hosted-completed-export-diagnostic.json",
-        "docs/release/hosted-completed-export-recovery.json",
-        "docs/release/hosted-recovered-checkpoints.json",
-        "docs/release/hosted-application-recovered-journey.json"
+        "docs/release/hosted-application-journey.json",
+        "docs/release/hosted-automatic-checkpoints.json",
+        "docs/release/hosted-automatic-logs.json"
       ]
     },
     {
       "id": "application_completed_result_persistence_and_stop",
       "outcome": "passed",
-      "reason": "Recovered hosted request completed with immutable original/output/session/request/result manifest objects verified, export_complete=true and same sandbox confirmed stopped; correlated submit/failure/recovery/completion/stop audits retained. Protected browser download and exact request/output identity, bytes/checksum and original-byte retention through actual same-source application replacement passed. Scope is the explicitly recovered request; uninterrupted automatic delivery remains separate.",
+      "reason": "Both recovered request 598c30fa and uninterrupted automatic request 6f3085e0 passed immutable original/output/session/manifest exports, correlated completion/stop audits and same-sandbox stop. Independent final browser rechecks after cleanup replacements preserved exact request/output IDs, bytes/SHA256, original bytes and DOCX markers/structure. Primary owner retained access; removed QA and anonymous credentials were rejected, invalid Origin denied, desktop/mobile views and browser health passed.",
       "evidence": [
         "docs/release/hosted-recovered-checkpoints.json",
         "docs/release/hosted-application-recovered-journey.json",
         "docs/release/hosted-application-replacement.json",
-        "docs/release/hosted-recovered-logs.json"
+        "docs/release/hosted-recovered-logs.json",
+        "docs/release/hosted-automatic-checkpoints.json",
+        "docs/release/hosted-automatic-logs.json",
+        "docs/release/hosted-application-final-persistence.json",
+        "docs/release/hosted-recovered-final-persistence.json"
       ]
     },
     {
       "id": "application_offhost_rows_objects_restore",
-      "outcome": "partial",
-      "evidence": "docs/release/application-restore-attempt-1.json",
-      "scope": "Historical deployed 2f7820f snapshot restored twice into new local PostgreSQL/RustFS; all five tables, audit/sequence identities and one original object of 5,205 bytes matched. Current hosted completed result/session objects require a new encrypted capture/restore. Public runtime cache is verified separately; installed backup operator 284c650 and reconstruction verifier availability do not establish that final restore."
+      "outcome": "passed",
+      "evidence": [
+        "docs/release/offhost-backup-completed.json",
+        "docs/release/application-restore-completed.json"
+      ],
+      "scope": "Actual deployed 1d21e27 authenticated encrypted checkpoint restored twice into new local PostgreSQL/RustFS: five tables/three requests/15 audit rows and identities/one sequence matched; all 11 original/output/manifest/session objects totaling 53,394 bytes verified. Approved 95,977,914-byte rc2 runtime reconstructed into a new bucket and read back at pinned checksum; public profile inventory matched. Owned fixtures cleaned. No application worker, Cloud guest or host recovery."
     },
     {
       "id": "approved_public_runtime_offhost_cache",
       "outcome": "passed",
       "evidence": [
         "docs/release/public-runtime-cache.json",
-        "deploy/README.md"
+        "deploy/README.md",
+        "docs/release/application-restore-completed.json"
       ],
-      "scope": "Actual approved published 95,977,914-byte rc2 runtime copied to independent host with pinned SHA256, private file/directory permissions and offline checksum-verified replay. Public profile inventory and isolated-bucket reconstruction verifier are implemented; completed private document/session restore remains separate."
+      "scope": "Actual approved published 95,977,914-byte rc2 runtime retained on independent host with pinned SHA256, private file/directory permissions and offline checksum-verified replay; final application restore reconstructed it into a new isolated bucket and verified downloaded bytes. Public profile inventory checksum matched. This is runtime archive reconstruction, not Cloud VM disk recovery."
+    },
+    {
+      "id": "final_qa_account_and_application_destroy_policy",
+      "outcome": "passed",
+      "evidence": [
+        "docs/release/final-provider-policy.json",
+        "docs/release/hosted-application-final-persistence.json",
+        "docs/release/hosted-recovered-final-persistence.json",
+        "docs/release/final-release-state.json"
+      ],
+      "scope": "Owning Provider policy inspection confirms temporary cleanup actor removed and ordinary application has create/read/start/stop/file-read/file-write only, without destroy. Independent browser checks confirm removed QA account cannot authenticate. No token material emitted; not exhaustive security qualification."
+    },
+    {
+      "id": "completed_application_checkpoint_known_secret_scan",
+      "outcome": "passed",
+      "evidence": "docs/release/completed-checkpoint-known-secret-scan.json",
+      "known_values_compared": 18,
+      "matching_blobs": 0,
+      "scope": "Authenticated five-table row JSON and 11 decoded original/output/manifest/session objects checked in memory against 18 known secret values; no matches or sensitive content emitted. Exact known values only; compressed DOCX XML and unknown credentials are not covered."
     }
   ],
   "evidence_report": "docs/phase1/CLOUD-VALIDATION.md",
@@ -497,7 +537,7 @@
     "scope": "Actual GitHub Actions PostgreSQL; Provider fake runtimes/actual SDK loopback; no hosted Cloud claim. Local Provider run passed 77 without those conditional skips. Infrastructure remains deployed at 8387b5d; this is source verification at the independently advanced application commit."
   },
   "runtime_backend": "boxlite-cloud",
-  "recorded_at_utc": "2026-11-03T19:35:18Z",
+  "recorded_at_utc": "2026-11-03T20:03:38Z",
   "service_versions": {
     "job-runner": "1.0.0-rc.1",
     "sandbox-provider": "1.0.0-rc.2",
@@ -505,8 +545,8 @@
     "pi-document-agent": "0.1.0-rc.2"
   },
   "deployments": {
-    "observation_time_utc": "2026-11-03T19:03:19Z",
-    "basis": "Integration lead confirmed the recorded finished healthy deployments; application advanced independently after the 19:03 infrastructure observation. Documentation worker did not repeat control-plane calls.",
+    "observation_time_utc": "2026-11-03T19:59:33.850Z",
+    "basis": "Integration lead final scoped control-plane/readiness readback confirms all four resources healthy and latest deployments finished. Trusted HTTPS primary 200, anonymous 401 and removed QA 401; no private service public origin, host ports or temporary tasks. Independent browser checks separately verify exact completed output retention; documentation worker made no live calls.",
     "last_confirmed": {
       "job-runner": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
       "sandbox-provider": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
@@ -514,22 +554,38 @@
     },
     "deployment_ids": {
       "job-runner": "wuvkf6x1owxobcarqjtd7wbk",
-      "sandbox-provider": "qmdjylvn3d3zou4r6mawp8al",
-      "application": "y0mgz7i3yndf7o1cmvutoopf"
+      "sandbox-provider": "iaeiglup1n9zxypdzk2mglcr",
+      "application": "uqgpm525dt5gaulngxrjsagb"
     },
     "state": "finished and running:healthy",
     "application_https": {
       "trusted_certificate": true,
       "anonymous_http": 401,
-      "primary_authenticated_http": 200
+      "primary_authenticated_http": 200,
+      "removed_qa_http": 401
     },
-    "hosted_document_v2_success": false,
+    "hosted_document_v2_success": true,
     "previous_backup_capture_sources": {
       "infrastructure": "4bab06ca1c1b4560b68c1ff561fc5d33deb37bf8",
       "application": "2f7820f619fe023b4278c2f97e43f7709d59d8cd"
     },
-    "application_deployment_basis": "Lead-reported replacement y0mgz7i3yndf7o1cmvutoopf retained same source 1d21e27; independent recovered-result persistence browser check passed at 19:31 UTC. Earlier canonical-fix deployment was q0u798bcoypkea4fjp9wkwxc; 19:03 observation_time_utc applies only to unchanged infrastructure deployments.",
-    "hosted_document_v2_success_scope": "Uninterrupted automatic journey remains pending; same-job operator-assisted export recovery and recovered-result replacement retention passed separately."
+    "application_deployment_basis": "Current same-source application deployment uqgpm525dt5gaulngxrjsagb and Provider deployment iaeiglup1n9zxypdzk2mglcr completed healthy by 19:56:20 UTC; Runner deployment is unchanged. Earlier application replacement y0mgz7i3yndf7o1cmvutoopf separately passed recovered-result browser retention.",
+    "hosted_document_v2_success_scope": "One uninterrupted synthetic DOCX browser-to-Pi/LiteLLM/OfficeCLI result/session export, validated protected output and same-sandbox stop passed without operator recovery. Both automatic and explicitly recovered request/output identities, bytes and checksums survived final cleanup replacements. Stable infrastructure readiness remains false.",
+    "final_readback_evidence": "docs/release/final-release-state.json",
+    "private_storage": {
+      "uuid": "qd41pkivqrnkwwsj1nr52s0k",
+      "status": "running:healthy",
+      "deployment_id": "n79eilpg37gjlq7ye4wasl7x",
+      "configured_commit": "HEAD",
+      "host_ports": null,
+      "public_origin": null
+    },
+    "temporary_tasks_remaining": 0,
+    "latest_backup_capture_sources": {
+      "job-runner": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "sandbox-provider": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "application": "1d21e27a571388484774e401cc5d5a5a3cec0973"
+    }
   },
   "application_candidate": {
     "origin": "https://workflow-agents.68.210.88.115.sslip.io",
@@ -538,8 +594,8 @@
     "workload_profile": "pi-document-agent:v2",
     "runtime_bundle_sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
     "runtime_bundle_bytes": 95977914,
-    "hosted_qualified": false,
-    "hosted_qualification_scope": "Actual hosted Pi/OfficeCLI completion, same-job export-only recovery with validated browser download and recovered-result replacement retention passed; uninterrupted automatic journey remains pending.",
+    "hosted_qualified": true,
+    "hosted_qualification_scope": "One uninterrupted synthetic DOCX browser submission through hosted services and BoxLite Cloud to verified output/session export, protected download and same-sandbox stop. Single synthetic fixture only; no semantic/rendered-layout, broad isolation, host-reboot or full Cloud disk restore claim.",
     "same_job_export_recovery": {
       "outcome": "passed",
       "request_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
@@ -560,16 +616,50 @@
         "docs/release/hosted-recovered-checkpoints.json",
         "docs/release/hosted-application-recovered-journey.json",
         "docs/release/hosted-application-replacement.json",
-        "docs/release/hosted-recovered-logs.json"
+        "docs/release/hosted-recovered-logs.json",
+        "docs/release/hosted-recovered-final-persistence.json"
       ],
       "replacement_persistence": "passed",
-      "replacement_deployment_id": "y0mgz7i3yndf7o1cmvutoopf"
+      "replacement_deployment_id": "y0mgz7i3yndf7o1cmvutoopf",
+      "final_cleanup_replacement_persistence": "passed"
     },
     "fresh_automatic_journey": {
+      "recorded_at_utc": "2026-11-03T19:50:27.374056Z",
+      "scope": "One uninterrupted synthetic DOCX browser submission through hosted services and BoxLite Cloud to verified output/session export, protected download and same-sandbox stop.",
+      "application_source_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+      "runner_provider_source_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
       "request_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
-      "outcome": "pending",
-      "basis": "Integration lead confirmed one clean third browser request admitted after same-source application replacement; runtime upload in progress. No operator recovery is planned. Do not infer completion from admission."
-    }
+      "job_id": "job_c28141c3-1008-4539-a041-6141b01ee45b",
+      "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+      "run_id": "run_08ef722652fc4acb8b4ceb5d3e7904bb",
+      "runner_attempt_count": 1,
+      "operator_export_recovery_used": false,
+      "export_complete": true,
+      "sandbox_stopped": true,
+      "verified_export_roles": [
+        "input",
+        "output",
+        "request_manifest",
+        "result_manifest",
+        "session"
+      ],
+      "output": {
+        "file_id": "3624e244-0d58-4bb3-bcbb-c6d7ed645dfb",
+        "size_bytes": 5281,
+        "sha256": "9011e87907218c2d988827ca019c90cbb93abf2c2171c8b23fb1ecb990663260"
+      },
+      "outcome": "passed",
+      "evidence": [
+        "docs/release/hosted-application-journey.json",
+        "docs/release/hosted-automatic-checkpoints.json",
+        "docs/release/hosted-automatic-logs.json"
+      ]
+    },
+    "final_post_cleanup_persistence": "passed",
+    "final_post_cleanup_persistence_evidence": [
+      "docs/release/hosted-application-final-persistence.json",
+      "docs/release/hosted-recovered-final-persistence.json"
+    ]
   },
   "historical_rc1_ci": {
     "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
@@ -594,5 +684,55 @@
     "browser_passes": 2,
     "scope": "Actual GitHub Actions on deployed canonical-session fix: PostgreSQL/RustFS real; Runner/Provider/workload execution mocked. Also passed duplicate run 41703348832. Fresh hosted execution, replacement and recovery evidence remain separately scoped."
   },
-  "deployed_service_commit_scope": "Runner and Provider infrastructure only; deployed_application_commit tracks the independently advanced application."
+  "deployed_service_commit_scope": "Runner and Provider infrastructure only; deployed_application_commit tracks the independently advanced application.",
+  "completed_data_recovery": {
+    "outcome": "passed",
+    "capture_session": "20261103T195631749Z-4c8fd4ea-4b04-4f0b-b2e4-e57a22e3a80f",
+    "capture_manifest_sha256": "ddc8c34e85c03677acf8a6b8b48ba81a72e1881c7e03d5ee7cc15bb3d919f580",
+    "capture_source_commits": {
+      "job-runner": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "sandbox-provider": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "application": "1d21e27a571388484774e401cc5d5a5a3cec0973"
+    },
+    "installed_operator_commit": "284c650aa5dbfb84650af6583ecc9c89f2c484a9",
+    "installed_service_invocation": "passed",
+    "daily_timer_enabled": true,
+    "daily_timer_active": true,
+    "authenticated_archives": 3,
+    "application_tables": 5,
+    "application_objects": 11,
+    "application_object_bytes": 53394,
+    "application_audit_rows": 15,
+    "application_requests": 3,
+    "runtime_bytes": 95977914,
+    "runtime_sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
+    "runtime_reconstructed_in_new_bucket": true,
+    "profile_inventory_sha256": "2bb8dbb7dadab4352140546de3643b30870483bff0dfdff1c13f900d9cbf592e",
+    "application_repeated_restore": true,
+    "forensic_registry_repeated_restore": true,
+    "runtime_client_started": false,
+    "cloud_guest_restored": false,
+    "operational_provider_cutover_permitted": false,
+    "scope": "Authenticated encrypted application rows and all 11 referenced immutable original/output/manifest/session objects restored twice into new PostgreSQL/RustFS; public runtime reconstructed and read back with pinned SHA256. Runner/Provider rows, audits and sequences compared twice in new offline forensic databases. Selected-file reconstruction has separate earlier Cloud evidence. No Cloud disk restoration, live registry-to-guest rebinding, Provider/Runner startup, operational cutover or host recovery demonstrated.",
+    "evidence": [
+      "docs/release/offhost-backup-completed.json",
+      "docs/release/application-restore-completed.json",
+      "docs/release/offhost-forensic-restore-completed-bound.json"
+    ],
+    "forensic_source_envelopes": [
+      {
+        "service": "job-runner",
+        "sha256": "36d7dcb41510f3142417e201a5dba726e02c5193678966c9e640a3d9b48150e5",
+        "bytes": 82361,
+        "manifest_bound": true
+      },
+      {
+        "service": "sandbox-provider",
+        "sha256": "82c0e13f188bc8303cd8d426256cbe91677a0ceb8ac51a262fb9258e8eb838d4",
+        "bytes": 128875,
+        "manifest_bound": true
+      }
+    ],
+    "forensic_manifest_binding_verified": true
+  }
 }
