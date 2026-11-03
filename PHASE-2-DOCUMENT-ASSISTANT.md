@@ -24,6 +24,25 @@ Use the **already validated, reusable** Job Runner and Sandbox Provider as exter
 
 ---
 
+## 1A. Strict Phase 1 dependency boundary and agent guidance
+
+**Phase 2 is a consumer, not a contributor to Phase 1 internals.** Implementation may begin with mocks, but real integration depends on the **released, independently validated** Runner/Provider APIs from [Phase 1](./PHASE-1-REUSABLE-SERVICES.md).
+
+- Pin the exact Runner and Provider release versions and consume only their authenticated, documented APIs.
+- Configure job profiles, allowed OCI images, model alias, skill bundle and scheduling/deadline values externally. Do not add application-specific fields, handlers, SQL tables or conditionals inside those infrastructure services.
+- The Application and its document-agent workload are **new Phase 2 code**—so Phase 2 is not literally configuration-only. What remains configuration-only is how Phase 2 **uses Phase 1**, assuming Phase 1 has the promised generic capabilities.
+- A new future use case should follow the same pattern: application/business logic plus approved workload profile, with no infrastructure source changes.
+- If a capability is missing, stop and file a **generic, versioned Phase 1 change request**. Run its own release checks and backward-compatibility suite before using the new API version. Do not modify Runner/Provider as a convenience workaround.
+- Phase 2 acceptance includes a test proving that the application works against a **pinned Phase 1 release** with no modifications to `services/job-runner/**` or `services/sandbox-provider/**`.
+
+**Agent development and operation instructions:**
+- Application: [AGENTS.md](./apps/application/AGENTS.md), [development skill](./apps/application/.agents/skills/application-development/SKILL.md), [operations skill](./apps/application/.agents/skills/application-operations/SKILL.md).
+- Job Runner and Sandbox Provider: their own Phase 1 `AGENTS.md` and scoped skills remain the only authority for their development/operations.
+- `README.md` plus automated test/CI scripts must verify real behavior; agent skill guidance does not substitute for reproducible checks.
+- Run agents from the service directory or explicitly load the scoped skill, as nested skill discovery depends on the agent's working directory.
+
+---
+
 ## 2. Three-service integration
 
 ```text
