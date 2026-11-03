@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "operation": "owning-provider-runtime-policy-inspection",
+  "outcome": "passed",
+  "recorded_at": "2026-11-03T19:57:05.616Z",
+  "deployed_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+  "provider_deployment": "iaeiglup1n9zxypdzk2mglcr",
+  "qa_cleanup_actor_removed": true,
+  "ordinary_application_destroy_permitted": false,
+  "application_permissions": [
+    "sandbox:create",
+    "sandbox:read",
+    "sandbox:start",
+    "sandbox:stop",
+    "sandbox:file:read",
+    "sandbox:file:write"
+  ],
+  "scope": "Only actor/permission policy read inside owning Provider; no tokens or token digests emitted."
+}

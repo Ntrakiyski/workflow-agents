@@ -10,11 +10,11 @@ Provider and Runner run `8387b5da2084e062e7409b1af5ce81ae57b45dfd`; the applicat
 
 | Component | Candidate | Finished deployment |
 | --- | --- | --- |
-| Sandbox Provider | contract `1.0.0-rc.2`, BoxLite SDK `0.11.0` | `qmdjylvn3d3zou4r6mawp8al` |
+| Sandbox Provider | contract `1.0.0-rc.2`, BoxLite SDK `0.11.0` | `iaeiglup1n9zxypdzk2mglcr` |
 | Job Runner | contract `1.0.0-rc.2`, Graphile Worker `0.18` | `wuvkf6x1owxobcarqjtd7wbk` |
-| Request application | `0.1.0-rc.1` | `y0mgz7i3yndf7o1cmvutoopf` |
+| Request application | `0.1.0-rc.1` | `uqgpm525dt5gaulngxrjsagb` |
 
-Application: <https://workflow-agents.68.210.88.115.sslip.io>. Trusted TLS, anonymous401 and primary authenticated200 were checked after replacement. Credentials remain in the private operator file, never this document. Infrastructure APIs, all databases and RustFS remain private without published host ports.
+Application: <https://workflow-agents.68.210.88.115.sslip.io>. Trusted TLS, anonymous401 and primary authenticated200 were checked after replacement. Credentials remain in the private operator file, never this document. The temporary foreign QA account and Provider cleanup actor were removed; [runtime policy inspection](final-provider-policy.json) confirms ordinary application credentials have no destroy permission. Both [fresh](hosted-application-final-persistence.json) and [recovered](hosted-recovered-final-persistence.json) results retained exact IDs, bytes and checksums after final replacement, with removed-account401, primary-owner access and browser checks repeated. Infrastructure APIs, all databases and RustFS remain private without published host ports.
 
 RustFS uses `docker.io/rustfs/rustfs@sha256:1cfa82fb394a7c6a4ffc24f5333b52afee608d258503f94b37fcce5cc965c896` (`1.0.0-alpha.83`) and persistent `/data`. It stores application files on GCC; it is not the independent backup copy. No Coolify S3 backup destination is configured.
 
