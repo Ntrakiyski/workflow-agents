@@ -249,6 +249,22 @@ Graphile Worker provides **at-least-once execution**, not exactly-once guarantee
 
 ---
 
+## 7A. Two independent releases and agent-operated services
+
+Development is split into **[Phase 1 — Reusable Services](./PHASE-1-REUSABLE-SERVICES.md)** followed by **[Phase 2 — Document Assistant](./PHASE-2-DOCUMENT-ASSISTANT.md)**. The Job Runner and Sandbox Provider must first prove generic API behavior, durable state, stop/restart persistence, tests, logs and audit trails **without Document Assistant code**.
+
+After the Phase 1 release gate, Phase 2 is an external client of those two services: its use of infrastructure should require **configuration and public API calls only**, not changes to the released infrastructure source. Phase 2 still develops the application and its Pi+OfficeCLI workload. Any missing truly generic capability must be implemented as a separate, versioned Phase 1 product release with backward-compatibility and regression tests.
+
+Each service has scoped [`AGENTS.md`](./apps/application/AGENTS.md) guidance and task-specific `SKILL.md` files for development and operations:
+
+- [Application agent guidance](./apps/application/AGENTS.md)
+- [Job Runner agent guidance](./services/job-runner/AGENTS.md)
+- [Sandbox Provider agent guidance](./services/sandbox-provider/AGENTS.md)
+
+These are instructions for coding/operating agents, **not** document-generation skills installed inside Pi by default. Human-readable READMEs, tests and CI will verify that their procedures match reality.
+
+---
+
 ## 8. Current Decisions and Next Test
 
 | Component | Proposed/selected |
