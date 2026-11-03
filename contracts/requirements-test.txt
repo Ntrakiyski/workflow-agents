@@ -1,2 +1,2 @@
-jsonschema==4.26.0
+jsonschema==4.24.0
 openapi-spec-validator==0.8.4
