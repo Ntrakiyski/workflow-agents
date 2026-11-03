@@ -2,7 +2,7 @@
 
 This service is **Phase 1 reusable infrastructure**, not a Pi- or document-specific app. Read `PHASE-1-REUSABLE-SERVICES.md`.
 
-Read the root [AGENTS.md](../../AGENTS.md) first. This file adds Provider-specific instructions. The current version is `1.0.0-rc.1`; [readiness](../../docs/phase1/readiness.json) remains false for Phase 2.
+Read the root [AGENTS.md](../../AGENTS.md) first. This file adds Provider-specific instructions. The current version is `1.0.0-rc.2`; [readiness](../../docs/phase1/readiness.json) remains false for Phase 2 until separately qualified.
 
 ## Stack and source map
 
@@ -69,4 +69,8 @@ Provider runs privately on GCC, alias `workflow-phase1-sandbox-provider`, port 8
 
 Actual hosted execution, same-box marker stop/start, bounded two-box file separation and stopped-box recovery across independent application replacements passed. Test fixtures were explicitly destroyed and their audits retained. Do not reuse their names or destruction authority.
 
-Scoped artifact transfer, active-command/complete-output recovery, hosted failure injection, off-host and coordinated Cloud guest/registry restore, host restart persistence and broader security/resource qualification remain incomplete. Nonempty `artifact_output_ref` returns 422. Observed Cloud capabilities disable snapshot/export/import/clone; do not advertise those as backup procedures. A volume is not a backup. Follow the [current readiness record](../../docs/phase1/readiness.json) rather than inferring stable acceptance from service health.
+Generic scoped chunk transfer is implemented in candidate rc.2 under the fixed guest root `/opt/workflow-transfer`; see [its reviewed contract](../../docs/contracts/scoped-files-v1.md). It requires separate `sandbox:file:read`/`sandbox:file:write` permissions and a Python3 guest. The registry stores transfer metadata only. Commit the pending-operation generation before guest side effects; never clear another generation's fence. Recovery stops the same retained environment before allowing a retry. Preserve immutable destinations, descriptor-relative no-follow path traversal, checksums and bounded chunks.
+
+Cloud execution uses a fixed Python wrapper with a nonce/checksummed completion envelope and bounded same-guest journal. Silent commands still require the completion envelope; empty SDK streams with exit0 are ambiguous. Active-command attachment still fails closed, without replay. Workload `secret_environment` stores only operator `WORKLOAD_SECRET_*` references; resolve values at dispatch, never into profile snapshots. Exact secret values in returned stdout/stderr are redacted; this is not exhaustive secret detection.
+
+Hosted transfer/complete-output qualification, active-command recovery, hosted failure injection, off-host and coordinated Cloud guest/registry restore, host restart persistence and broader security/resource qualification remain incomplete until captured independently. Nonempty `artifact_output_ref` still returns422; file endpoints are the scoped transport, not an arbitrary external URL adapter. Observed Cloud capabilities disable snapshot/export/import/clone; do not advertise those as backup procedures. A volume is not a backup. Follow the [current readiness record](../../docs/phase1/readiness.json).

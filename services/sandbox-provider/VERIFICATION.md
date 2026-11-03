@@ -1,5 +1,18 @@
 # Provider candidate verification
 
+## rc.2 scoped transfer and explicit Cloud completion (2026-11-03)
+
+From the merged main baseline `3f550ba95ca684aeea29a630675d33040724a961`:
+
+- Provider suite with a dedicated actual PostgreSQL16 database: `python -m pytest -q -m 'not real_runtime'` returned **69 passed,1 deselected in16.50s**. Only the local hardware/guest test was deselected. Runtime behavior remains fake/local-process/SDK-loopback, not hosted Cloud.
+- Contract suite: **6 passed**. It validates existing strict wire shapes, additive file endpoint bounds/path negatives and runtime-only secret references. Contract/profile generators were rerun deterministically; all packaged copies match.
+- Actual filesystem helper checks cover chunk replay, interrupted partial writes, checksum validation, immutable publication after lost acknowledgements, relative-path restrictions, symlink/hardlink/FIFO rejection and reads. Real-PostgreSQL API tests cover owner/permission isolation, idempotency, busy sandboxes, durable interrupted-transfer fencing and same-box recovery without workload replay.
+- The actual pinned SDK0.11.0 against a loopback HTTP/WebSocket stub successfully carried **1 MiB stdin upload and1 MiB download response**. This verifies transport framing and bounded JSON, not BoxLite Cloud guest behavior.
+- Local-process Cloud wrapper tests cover silent children, nonzero child exits, large concurrent stdout/stderr with explicit truncation, retained completion journals, missing envelopes, wrong nonces/checksums and native transport errors. After adding exact-secret redaction before guest journal emission, the focused wrapper suite returned **8 passed in0.40s**.
+- Runtime-only secret regression proves references alone persist in run snapshots, exact secret strings are redacted before result persistence, and missing secrets prevent dispatch. Python compilation and `git diff --check` passed.
+
+No hosted deployment, Cloud transfer, active-command reattachment, VM export, coordinated restore, host reboot or broader resource/security gate was executed by this implementation worker. Provider rc.2 remains a candidate; independent hosted qualification and readiness evidence belong to integration QA. Active attach still truthfully reports nonretryable `ambiguous_execution` and never replays uncertain work.
+
 Executed 2026-11-03 by Sandbox Infrastructure Engineer. Independent QA is a separate gate.
 
 ## Explicit hosted Cloud adapter regression (latest)

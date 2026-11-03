@@ -1,6 +1,8 @@
 """Actual pinned SDK against a loopback HTTP stub, never hosted Cloud/KVM."""
 import copy
 import asyncio
+import base64
+import hashlib
 import json
 import os
 import threading
@@ -37,6 +39,7 @@ class CloudStub:
     def __init__(self):
         self.boxes, self.requests = {}, []
         self.fail_create, self.unauthorized, self.mutate, self.pending_stops = False, False, None, {}
+        self.transfer_response, self.stdin_bytes = None, None
 
     def box(self, payload):
         network = payload['network']
@@ -60,11 +63,55 @@ def cloud_server():
         def log_message(self, *_):
             pass
         def do_GET(self):
+            if self.path.endswith('/executions/exec-1/attach') and stub.transfer_response:
+                self.transfer_socket()
+                return
             self.respond('GET')
         def do_POST(self):
             self.respond('POST')
         def do_DELETE(self):
             self.respond('DELETE')
+        def transfer_socket(self):
+            # Minimal RFC6455 loopback peer, only for the actual pinned SDK.
+            # This tests transport framing/stdin, never hosted guest execution.
+            self.protocol_version = 'HTTP/1.1'
+            key = self.headers['Sec-WebSocket-Key']
+            accept = base64.b64encode(hashlib.sha1((key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode()
+            self.send_response(101)
+            self.send_header('Upgrade', 'websocket')
+            self.send_header('Connection', 'Upgrade')
+            self.send_header('Sec-WebSocket-Accept', accept)
+            self.end_headers()
+            self.connection.settimeout(10)
+            data = bytearray()
+            while True:
+                head = self.rfile.read(2)
+                if len(head) != 2:
+                    return
+                opcode, length = head[0] & 15, head[1] & 127
+                if length in (126,127):
+                    length = int.from_bytes(self.rfile.read(2 if length == 126 else 8), 'big')
+                assert length <= 1500000
+                mask = self.rfile.read(4) if head[1] & 128 else None
+                payload = self.rfile.read(length)
+                if mask:
+                    payload = bytes(byte ^ mask[index % 4] for index, byte in enumerate(payload))
+                if opcode in (0,2):
+                    data.extend(payload)
+                elif opcode == 1 and json.loads(payload).get('type') == 'stdin_eof':
+                    break
+                elif opcode == 8:
+                    return
+            stub.stdin_bytes = bytes(data)
+            response = json.dumps(stub.transfer_response(json.loads(data)), separators=(',', ':')).encode()
+            def send(opcode, payload):
+                size = len(payload)
+                head = bytes([128 | opcode, size]) if size < 126 else bytes([128 | opcode,126 if size < 65536 else 127]) + size.to_bytes(2 if size < 65536 else 8,'big')
+                self.wfile.write(head + payload)
+                self.wfile.flush()
+            send(2, b'\x01' + response)
+            send(1, b'{"type":"exit","exit_code":0}')
+            self.close_connection = True
         def respond(self, method):
             length = int(self.headers.get('Content-Length', '0'))
             payload = json.loads(self.rfile.read(length) or b'{}')
@@ -145,6 +192,25 @@ async def test_real_sdk_wire_retention_policy_stop_settles_and_reconnect_uses_sa
         assert 'advanced' not in create and not create.get('ports')
         await runtime.stop(found.runtime_id)
         assert stub.boxes[found.runtime_id]['status'] == 'stopped' and found.runtime_id not in stub.pending_stops
+        await runtime.close()
+
+
+async def test_real_sdk_loopback_transfers_large_stdin_and_output(tmp_path):
+    settings = configured(tmp_path)
+    with cloud_server() as (stub, url):
+        runtime = runtime_for(settings, url)
+        found = await runtime.ensure(NAME, settings.profiles['sandboxes']['minimal-linux:v1'])
+        raw = b'x' * 1048576
+        encoded = base64.b64encode(raw).decode()
+        request = {'operation': 'chunk', 'path': 'inputs/large.bin', 'upload_id': 'upl_' + 'a' * 32,
+                   'size_bytes': len(raw), 'offset': 0, 'data_base64': encoded, 'sha256': hashlib.sha256(raw).hexdigest()}
+        stub.transfer_response = lambda value: {'ok': True, 'value': {'offset': len(base64.b64decode(value['data_base64']))}}
+        assert await runtime.transfer(found.runtime_id, request) == {'offset': len(raw)}
+        assert json.loads(stub.stdin_bytes) == request
+        returned = {'path': 'outputs/large.bin', 'offset': 0, 'data_base64': encoded,
+                    'size_bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest(), 'eof': True}
+        stub.transfer_response = lambda value: {'ok': True, 'value': returned}
+        assert await runtime.transfer(found.runtime_id, {'operation': 'read', 'path': returned['path'], 'offset': 0, 'max_bytes': 1048576}) == returned
         await runtime.close()
         assert not any(method == 'DELETE' for method, _, _ in stub.requests)
         replacement = runtime_for(settings, url)
