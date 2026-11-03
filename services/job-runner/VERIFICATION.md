@@ -24,3 +24,5 @@ Runner API calls in this suite use Fastify's injection interface. Provider calls
 - Coordinated backup/restore drill and off-host backup schedule evidence from integration operations.
 
 The development host has no `/dev/kvm`. No real microVM or shared host reboot was performed by this service engineer. These gates must never be reported as passed from the mock tests. Runner does not need BoxLite to build, test or deploy.
+
+Follow-up regressions also passed in the same 19-test suite: a job scheduled 60 seconds ahead expires at its 350 ms absolute deadline after worker restart without any Provider execution; pending schedule quota rejects new admission while same-key replay still succeeds; a second authorized actor cancelling an owned schedule is recorded as the actual actor/correlation in immutable audit storage. Manual scheduled stops recheck the caller's current sandbox profile policy before acting.

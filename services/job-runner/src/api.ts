@@ -231,6 +231,7 @@ export function createApi(service: Service, isWorkerReady: () => boolean) {
       await service.cancelSchedule(
         principal(req),
         parameter(req, "schedule_id"),
+        req.id,
       ),
     ),
   );

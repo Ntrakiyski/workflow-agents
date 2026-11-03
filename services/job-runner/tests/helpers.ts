@@ -56,6 +56,7 @@ export function config(
     maxGlobalConcurrency: 3,
     maxOwnerConcurrency: 2,
     maxPendingJobs: 100,
+    maxPendingSchedules: 100,
     maxDurationSeconds: 120,
     maxAttempts: 3,
     providerTimeoutMs: 120,

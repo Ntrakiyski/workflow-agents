@@ -67,6 +67,7 @@ export type Principal = {
   allow_resume?: boolean;
   max_concurrency?: number;
   max_pending_jobs?: number;
+  max_pending_schedules?: number;
 };
 export type JobRow = {
   job_id: string;
