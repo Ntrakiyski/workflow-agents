@@ -18,6 +18,8 @@ The lead-captured GCC native qualification is retained at `docs/phase1/gcc-evide
 
 Independent review of runtime engineer commit `899be46` confirms its diagnostic extension is explicit operator opt-in, bounds exception text, redacts configured auth/DB/workload values and fixture arguments, and saves the private traceback through a mode600 temporary file in a private session directory. It changes no API response, host virtualization setting or runtime privilege. Running the diagnostic and reviewing its actual cause is the next runtime gate.
 
+QA independently executed `PYTHONDONTWRITEBYTECODE=1 /tmp/workflow-provider-qa-venv/bin/python -m pytest -q -p no:cacheprovider tests/test_qualification.py` from that commit's Provider directory: **9 passed in0.27s**. These verify replay, exact-identity cleanup, fail-closed unsafe names/paths, opt-in mode600 diagnostic redaction and the local missing-KVM negative. They use isolated fake runtime state or a negative prerequisite check; no database, remote mutation or real VM is involved.
+
 ## Independent HTTP client and local verification
 
 QA commits `6f2f70f` and `1e027dd` add the HTTP-only prepare/verify/explicit-cleanup probe and protect one-off task replay. Exact scope, commands and executed local checks are in [GCC-PROBE.md](GCC-PROBE.md). Syntax checks passed. An actually unavailable fake runtime was rejected before workload allocation. An explicitly healthy-labelled local test double exercised nine positive client protocol groups, concurrent invocation serialization, exact-record cleanup and owner-reference rejection. Verify correctly rejected the absence of a real recovery audit. None of those positive local fixture results is real BoxLite evidence.
