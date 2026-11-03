@@ -6,7 +6,7 @@
  */
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { setTimeout as sleep } from "node:timers/promises";
 
@@ -22,6 +22,7 @@ const contracts = {
 for (const [service, contract] of Object.entries(contracts)) ajv.addSchema(contract, service);
 const phase = process.env.QA_PHASE || process.argv[3] || "prepare";
 const sourceBase = process.argv[2];
+const invocation = process.env.QA_INVOCATION_ID || process.argv[4] || "gcc-phase1-migration-v1";
 const trace = "qa_gcc_" + randomUUID().replaceAll("-", "");
 const checks = [];
 const schemas = new Map();
@@ -33,7 +34,32 @@ const pass = (check, fields = {}) => checks.push({ check, outcome: "pass", ...fi
 const pointer = (value) => value.replaceAll("~", "~0").replaceAll("/", "~1");
 let stage = "configuration";
 let record = null;
+let recordValidated = false;
 let identity, other, credentials, urls;
+let cachePath, ownsInvocation = false, replayedOutput = null;
+
+async function claimInvocation() {
+  expect(/^[A-Za-z0-9_.:-]{1,128}$/.test(invocation), "Invalid operator invocation identifier");
+  // Coolify's one-off task uses cron and can launch again before its first run
+  // finishes. Serialize the same operator invocation and replay its result.
+  // A changed retained record/owner/source is a distinct invocation, so cached
+  // success can never bypass validation of different cleanup targets.
+  const key = sha256(JSON.stringify({ version: 1, phase, invocation, owner: identity.owner_id, sourceBase,
+    record: process.env.QA_RECORD_JSON || process.env.QA_RECORD_URL || "" }));
+  const base = "/tmp/workflow-gcc-qa-results";
+  mkdirSync(base, { recursive: true, mode: 0o700 });
+  const lock = base + "/" + key;
+  cachePath = lock + "/result.json";
+  try { mkdirSync(lock, { mode: 0o700 }); ownsInvocation = true; return null; }
+  catch (failure) { if (failure.code !== "EEXIST") throw failure; }
+  const until = Date.now() + 900000;
+  while (Date.now() < until) {
+    try { return JSON.parse(readFileSync(cachePath, "utf8")); }
+    catch (failure) { if (failure.code !== "ENOENT") throw failure; }
+    await sleep(500);
+  }
+  throw new Error("An existing invocation did not produce its result inside the operator bound");
+}
 
 function validate(service, method, path, status, payload) {
   const actual = path.split("?")[0].split("/");
@@ -151,6 +177,7 @@ async function prepare() {
   const marker = "gcc-marker-" + randomUUID();
   record = { version: 1, run_id: runId, owner_id: identity.owner_id, prepared_correlation_id: trace,
     owner_ref_a: "gcc-qa:" + runId + ":a", owner_ref_b: "gcc-qa:" + runId + ":b", marker_sha256: sha256(marker) };
+  recordValidated = true; // All values are generated generic QA metadata here.
   const write = submission(record.owner_ref_a, { profile: "fixture-write-file:v1", arguments: { file: "hello-world.txt", text: marker } });
   stage = "negative_boundaries";
   await request("runner", "POST", "/v1/jobs", { body: { ...write, unexpected: true }, key: runId + "_strict", expected: 422 });
@@ -252,6 +279,11 @@ async function loadRecord() {
     record = JSON.parse(raw);
   }
   expect(record.version === 1 && /^gccqa_[a-f0-9]{32}$/.test(record.run_id), "Unrecognized retained record");
+  const allowed = new Set(["version", "run_id", "owner_id", "prepared_correlation_id", "owner_ref_a", "owner_ref_b", "marker_sha256",
+    "cancelled_job_id", "cancelled_schedule_id", "write_job_id", "sandbox_a", "read_job_id", "isolation_job_id", "sandbox_b",
+    "write_event_ids", "sandbox_a_event_ids", "sandbox_b_event_ids"]);
+  expect(Object.keys(record).every((key) => allowed.has(key)), "Retained record contains an unsupported field");
+  expect(/^qa_gcc_[a-f0-9]{32}$/.test(record.prepared_correlation_id), "Retained correlation identifier is invalid");
   expect(record.owner_id === identity.owner_id && /^[a-f0-9]{64}$/.test(record.marker_sha256), "Retained owner or marker checksum mismatch");
   expect(record.owner_ref_a === "gcc-qa:" + record.run_id + ":a" && record.owner_ref_b === "gcc-qa:" + record.run_id + ":b", "Retained fixture references are invalid");
   for (const field of ["sandbox_a", "sandbox_b", "write_job_id", "read_job_id", "isolation_job_id", "cancelled_job_id", "cancelled_schedule_id"]) {
@@ -271,6 +303,7 @@ async function loadRecord() {
   const isolated = await request("runner", "GET", "/v1/jobs/" + record.isolation_job_id);
   expect(write.client_reference === record.owner_ref_a && write.sandbox_id === record.sandbox_a && write.status === "completed", "Recorded write job anchor mismatch");
   expect(isolated.client_reference === record.owner_ref_b && isolated.sandbox_id === record.sandbox_b && isolated.status === "failed", "Recorded isolation job anchor mismatch");
+  recordValidated = true;
 }
 
 async function verify() {
@@ -329,17 +362,31 @@ try {
   expect(credentials.provider, "Provider delegation credential is required");
   urls = { runner: (process.env.QA_RUNNER_URL || "http://127.0.0.1:" + (process.env.PORT || 8080)).replace(/\/$/, ""),
     provider: process.env.SANDBOX_PROVIDER_URL.replace(/\/$/, "") };
-  stage = "real_runtime_readiness";
-  await health();
-  if (phase === "prepare") await prepare();
-  if (phase === "verify") await verify();
-  if (phase === "cleanup") await cleanup();
-  stage = "complete";
+  stage = "operator_invocation";
+  replayedOutput = await claimInvocation();
+  if (!replayedOutput) {
+    stage = "real_runtime_readiness";
+    await health();
+    if (phase === "prepare") await prepare();
+    if (phase === "verify") await verify();
+    if (phase === "cleanup") await cleanup();
+    stage = "complete";
+  }
 } catch (failure) {
   // Render only constant assertions authored here, never third-party/HTTP errors.
   error = failure instanceof assert.AssertionError ? failure.message : "Probe could not complete its current stage";
 }
-console.log(JSON.stringify({ probe: "gcc-real-http-v1", phase, correlation_id: trace, stage,
+let output = replayedOutput || { probe: "gcc-real-http-v1", phase, invocation_id: invocation, correlation_id: trace, stage,
   runtime_proof: error ? "incomplete" : phase === "cleanup" ? "explicit_fixture_cleanup" : "real_marker_proof_requires_real_deployed_adapter",
-  checks, retained_record: record, error }));
-process.exitCode = error ? 1 : 0;
+  checks, retained_record: recordValidated ? record : null, error };
+if ([credentials?.runner, credentials?.provider, other?.token].filter(Boolean).some((value) => JSON.stringify(output).includes(value))) {
+  output = { probe: "gcc-real-http-v1", phase, stage: "output_validation", checks: [], retained_record: null, error: "Probe output failed credential redaction" };
+}
+if (ownsInvocation) {
+  try {
+    writeFileSync(cachePath + ".tmp", JSON.stringify(output), { mode: 0o600 });
+    renameSync(cachePath + ".tmp", cachePath);
+  } catch { output.error = "Operator invocation result could not be cached"; }
+}
+console.log(JSON.stringify({ ...output, invocation_replay: Boolean(replayedOutput) }));
+process.exitCode = output.error ? 1 : 0;
