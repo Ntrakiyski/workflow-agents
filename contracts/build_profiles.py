@@ -1,0 +1,20 @@
+"""Generate configuration schema and a deliberately unresolved operator template."""
+import json
+from pathlib import Path
+P=Path(__file__).parent/'v1'
+
+def obj(properties,required):return {'type':'object','properties':properties,'required':required,'additionalProperties':False}
+def integer(lo,hi):return {'type':'integer','minimum':lo,'maximum':hi}
+identifier={'type':'string','minLength':1,'maxLength':128,'pattern':'^[A-Za-z0-9][A-Za-z0-9_.:-]*$'}
+sandbox=obj({'image':{'type':'string','maxLength':512,'pattern':'^[A-Za-z0-9][A-Za-z0-9._:/-]*@sha256:[a-f0-9]{64}$'},'cpus':integer(1,64),'memory_mib':integer(64,262144),'disk_mib':integer(64,1048576),'network':{'enum':['denied','allowlist']},'allowed_hosts':{'type':'array','maxItems':64,'uniqueItems':True,'items':{'type':'string','minLength':1,'maxLength':253}}},['image','cpus','memory_mib','disk_mib','network'])
+sandbox['allOf']=[{'if':{'properties':{'network':{'const':'denied'}}},'then':{'properties':{'allowed_hosts':{'maxItems':0}}},'else':{'required':['allowed_hosts'],'properties':{'allowed_hosts':{'minItems':1}}}}]
+workload=obj({'sandbox_profiles':{'type':'array','minItems':1,'maxItems':32,'uniqueItems':True,'items':identifier},'argv':{'type':'array','minItems':1,'maxItems':64,'items':{'type':'string','minLength':1,'maxLength':16384},'description':'Trusted executable plus constant tokens or whole-token ${arg:NAME}; runtime performs direct argv execution. No caller-supplied executable or shell command.'},'arguments_schema':{'type':'object','description':'JSON Schema Draft 2020-12. Provider validates this schema at startup and request arguments before execution.'},'working_directory':{'type':'string','maxLength':256,'pattern':'^/[A-Za-z0-9_./-]*$'},'environment':{'type':'object','maxProperties':32,'additionalProperties':{'type':'string','maxLength':4096},'description':'Operator-owned nonsecret environment values; never interpolated from request data.'},'max_duration_seconds':integer(1,86400),'max_output_bytes':integer(1,65536)},['sandbox_profiles','argv','arguments_schema','working_directory','max_duration_seconds','max_output_bytes'])
+schema=obj({'version':{'const':1},'sandboxes':{'type':'object','minProperties':1,'maxProperties':64,'propertyNames':identifier,'additionalProperties':sandbox},'workloads':{'type':'object','minProperties':1,'maxProperties':128,'propertyNames':identifier,'additionalProperties':workload}},['version','sandboxes','workloads'])
+schema['$schema']='https://json-schema.org/draft/2020-12/schema'
+schema['$id']='https://workflow-agents.invalid/contracts/v1/profiles.schema.json'
+file_schema={'type':'string','minLength':1,'maxLength':64,'pattern':'^[A-Za-z0-9][A-Za-z0-9_.-]*$'}
+common={'sandbox_profiles':['minimal-linux:v1'],'working_directory':'/tmp','max_duration_seconds':120,'max_output_bytes':32768,'environment':{}}
+write={**common,'argv':['/usr/local/bin/python3','-c','import pathlib,sys; p=pathlib.Path("/tmp/workflow-fixture")/sys.argv[1]; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(sys.argv[2]); print("written")','${arg:file}','${arg:text}'],'arguments_schema':obj({'file':file_schema,'text':{'type':'string','maxLength':4096}},['file','text'])}
+read={**common,'argv':['/usr/local/bin/python3','-c','import pathlib,sys; print((pathlib.Path("/tmp/workflow-fixture")/sys.argv[1]).read_text(),end="")','${arg:file}'],'arguments_schema':obj({'file':file_schema},['file'])}
+template={'version':1,'sandboxes':{'minimal-linux:v1':{'image':'${FIXTURE_IMAGE_DIGEST}','cpus':1,'memory_mib':256,'disk_mib':512,'network':'denied','allowed_hosts':[]}},'workloads':{'fixture-write-file:v1':write,'fixture-read-file:v1':read}}
+for name,value in [('profiles.schema.json',schema),('profiles.template.json',template)]: (P/name).write_text(json.dumps(value,indent=2)+'\n')

@@ -1,0 +1,180 @@
+{
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "sandboxes": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 64,
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string",
+            "maxLength": 512,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*@sha256:[a-f0-9]{64}$"
+          },
+          "cpus": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 64
+          },
+          "memory_mib": {
+            "type": "integer",
+            "minimum": 64,
+            "maximum": 262144
+          },
+          "disk_mib": {
+            "type": "integer",
+            "minimum": 64,
+            "maximum": 1048576
+          },
+          "network": {
+            "enum": [
+              "denied",
+              "allowlist"
+            ]
+          },
+          "allowed_hosts": {
+            "type": "array",
+            "maxItems": 64,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253
+            }
+          }
+        },
+        "required": [
+          "image",
+          "cpus",
+          "memory_mib",
+          "disk_mib",
+          "network"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "network": {
+                  "const": "denied"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "allowed_hosts": {
+                  "maxItems": 0
+                }
+              }
+            },
+            "else": {
+              "required": [
+                "allowed_hosts"
+              ],
+              "properties": {
+                "allowed_hosts": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "workloads": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 128,
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "sandbox_profiles": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+            }
+          },
+          "argv": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 16384
+            },
+            "description": "Trusted executable plus constant tokens or whole-token ${arg:NAME}; runtime performs direct argv execution. No caller-supplied executable or shell command."
+          },
+          "arguments_schema": {
+            "type": "object",
+            "description": "JSON Schema Draft 2020-12. Provider validates this schema at startup and request arguments before execution."
+          },
+          "working_directory": {
+            "type": "string",
+            "maxLength": 256,
+            "pattern": "^/[A-Za-z0-9_./-]*$"
+          },
+          "environment": {
+            "type": "object",
+            "maxProperties": 32,
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 4096
+            },
+            "description": "Operator-owned nonsecret environment values; never interpolated from request data."
+          },
+          "max_duration_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 86400
+          },
+          "max_output_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65536
+          }
+        },
+        "required": [
+          "sandbox_profiles",
+          "argv",
+          "arguments_schema",
+          "working_directory",
+          "max_duration_seconds",
+          "max_output_bytes"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "sandboxes",
+    "workloads"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://workflow-agents.invalid/contracts/v1/profiles.schema.json"
+}
