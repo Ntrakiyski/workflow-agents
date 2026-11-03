@@ -25,7 +25,7 @@
       "job-runner": "xoirtvdhn7kofdlkekgdegry",
       "sandbox-provider": "byna6ecrish0jprg0dbywo37"
     },
-    "deployment_identity_note": "Current finished application IDs/source and lead-confirmed health are recorded above. Historical rc1 IDs, inventory and health remain separate; this documentation update performs no live control-plane calls.",
+    "deployment_identity_note": "Runner/Provider remain at the recorded 8387b5d deployments. The integration lead confirmed the application healthy at 1d21e27 and replaced it at the same source; independent browser QA verified recovered output retention. Historical capture/deployment identities remain separate. This documentation update performs no live control-plane calls.",
     "historical_rc1_health": {
       "job-runner": {
         "database": "ok",
@@ -45,7 +45,7 @@
     "latest_deployments": {
       "job-runner": "wuvkf6x1owxobcarqjtd7wbk",
       "sandbox-provider": "qmdjylvn3d3zou4r6mawp8al",
-      "application": "v7mt8odnad40fnxbgfdxnojy"
+      "application": "y0mgz7i3yndf7o1cmvutoopf"
     },
     "historical_rc1_resource_statuses": [
       {
@@ -119,9 +119,9 @@
         "name": "workflow-application",
         "uuid": "7vdsilhnu96tifz7yosm61j1",
         "status": "running:healthy",
-        "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+        "commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
         "is_public": true,
-        "observation_basis": "integration lead confirmation at 2026-11-03T19:03:19Z"
+        "observation_basis": "Lead confirmed replacement deployment y0mgz7i3yndf7o1cmvutoopf at 1d21e27; independent browser comparison passed at 2026-11-03T19:31:34.704Z."
       }
     ]
   },
@@ -243,7 +243,7 @@
       "id": "scoped_artifact_transfer_export",
       "outcome": "passed",
       "evidence": "docs/release/cloud-transfer-journey.json",
-      "scope": "Actual Cloud/private local Provider at exact 909980b:2,097,166-byte multichunk checksum/replay, ownership/path/symlink negatives and file checkpoint/reupload into a distinct sandbox. Legacy external artifact_output_ref remains 422. Hosted application result export is separately pending."
+      "scope": "Actual Cloud/private local Provider at exact 909980b:2,097,166-byte multichunk checksum/replay, ownership/path/symlink negatives and file checkpoint/reupload into a distinct sandbox. Legacy external artifact_output_ref remains 422. Hosted application same-job export recovery passed separately; uninterrupted automatic delivery remains pending."
     },
     {
       "id": "off_host_backup",
@@ -257,7 +257,7 @@
     {
       "id": "coordinated_registry_vm_volume_restore",
       "outcome": "partial",
-      "reason": "Selected required-file checkpoint export/reupload and isolated forensic/off-host registry restore passed separately. Coordinated application/registry/required result/session reconstruction and cutover are pending. Full Cloud VM snapshot/export/import/clone remain unavailable.",
+      "reason": "Selected required-file checkpoint export/reupload and isolated forensic/off-host registry restore passed separately. Hosted completed result/session objects are now durable and checksummed, but their final off-host capture/isolated restore and coordinated application/registry/required-file reconstruction/cutover remain pending. Full Cloud VM snapshot/export/import/clone remain unavailable. The new explicit offline forensic mode only compares retained binding records; its availability is not a successful final restore and it authorizes no Provider startup or cutover.",
       "evidence": [
         "docs/release/cloud-transfer-journey.json",
         "docs/release/offhost-restore-final-infrastructure.json",
@@ -411,9 +411,10 @@
       "outcome": "passed",
       "evidence": [
         "apps/application/VERIFICATION.md",
-        "docs/qa/MINIMAL-RELEASE-REVIEW.md"
+        "docs/qa/MINIMAL-RELEASE-REVIEW.md",
+        "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41703356921"
       ],
-      "scope": "10 backend checks with actual PostgreSQL/RustFS; two browser checks with mocked Runner/Provider/workload. Does not establish hosted document success."
+      "scope": "GitHub Actions passed 11 backend checks, two encrypted checkpoint/restore checks, five public runtime cache boundary checks and two browser checks on exact canonical-session fix 1d21e27. Actual PostgreSQL/RustFS; mocked Runner/Provider/workload. Does not establish hosted document success."
     },
     {
       "id": "pi_document_rc2_local_execution",
@@ -435,20 +436,40 @@
     },
     {
       "id": "application_hosted_v2_document_delivery",
-      "outcome": "incomplete",
-      "reason": "All three applications finished healthy at 8387b5d; fresh hosted QA is starting. No completed browser-to-Runner/Provider/Cloud/Pi/LiteLLM/OfficeCLI result, validated downloadable output or correlated successful full-path audit has been demonstrated.",
-      "evidence": "docs/release/hosted-application-attempt-1.json"
+      "outcome": "partial",
+      "reason": "Actual hosted request 598c30fa reached Runner completed on attempt 1, then application 8387b5d rejected canonical session_files.media_type. Strict canonical fix at 1d21e27 and explicit same-job export-only recovery preserved identities/failure audits without workload replay. Independent browser download, DOCX/marker/original integrity and owner protection passed. A fresh uninterrupted automatic journey remains pending. Fresh automatic request 6f3085e0 is admitted and uploading; its completion is not yet demonstrated.",
+      "evidence": [
+        "docs/release/hosted-completed-export-diagnostic.json",
+        "docs/release/hosted-completed-export-recovery.json",
+        "docs/release/hosted-recovered-checkpoints.json",
+        "docs/release/hosted-application-recovered-journey.json"
+      ]
     },
     {
       "id": "application_completed_result_persistence_and_stop",
-      "outcome": "incomplete",
-      "reason": "Hosted completed-result export-before-stop, protected output download and request/result identity/checksum persistence through application replacement remain pending."
+      "outcome": "passed",
+      "reason": "Recovered hosted request completed with immutable original/output/session/request/result manifest objects verified, export_complete=true and same sandbox confirmed stopped; correlated submit/failure/recovery/completion/stop audits retained. Protected browser download and exact request/output identity, bytes/checksum and original-byte retention through actual same-source application replacement passed. Scope is the explicitly recovered request; uninterrupted automatic delivery remains separate.",
+      "evidence": [
+        "docs/release/hosted-recovered-checkpoints.json",
+        "docs/release/hosted-application-recovered-journey.json",
+        "docs/release/hosted-application-replacement.json",
+        "docs/release/hosted-recovered-logs.json"
+      ]
     },
     {
       "id": "application_offhost_rows_objects_restore",
       "outcome": "partial",
       "evidence": "docs/release/application-restore-attempt-1.json",
-      "scope": "Actual deployed 2f7820f snapshot restored twice into new local PostgreSQL/RustFS; all five tables, audit/sequence identities and one original object of 5,205 bytes matched. Snapshot has a failed request and no completed result/session objects; those require a new capture/restore."
+      "scope": "Historical deployed 2f7820f snapshot restored twice into new local PostgreSQL/RustFS; all five tables, audit/sequence identities and one original object of 5,205 bytes matched. Current hosted completed result/session objects require a new encrypted capture/restore. Public runtime cache is verified separately; installed backup operator 284c650 and reconstruction verifier availability do not establish that final restore."
+    },
+    {
+      "id": "approved_public_runtime_offhost_cache",
+      "outcome": "passed",
+      "evidence": [
+        "docs/release/public-runtime-cache.json",
+        "deploy/README.md"
+      ],
+      "scope": "Actual approved published 95,977,914-byte rc2 runtime copied to independent host with pinned SHA256, private file/directory permissions and offline checksum-verified replay. Public profile inventory and isolated-bucket reconstruction verifier are implemented; completed private document/session restore remains separate."
     }
   ],
   "evidence_report": "docs/phase1/CLOUD-VALIDATION.md",
@@ -464,19 +485,19 @@
     "report": "docs/phase1/GCC-MIGRATION-REPORT.md"
   },
   "ci": {
-    "commit": "2ee0d4d07827292b0fd2664e4f9a3c51413755ba",
-    "run": 41700438863,
-    "url": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41700438863",
+    "commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+    "run": 41703357570,
+    "url": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41703357570",
     "outcome": "passed",
     "contracts": 6,
     "runner_tap_passes": 21,
     "provider_passes": 75,
     "provider_hardware_conditional_skips": 2,
     "real_runtime_deselected": 1,
-    "scope": "Actual GitHub Actions PostgreSQL; Provider fake runtimes/actual SDK loopback; no hosted Cloud claim. Local Provider run passed77 without those conditional skips. Application CI is separate."
+    "scope": "Actual GitHub Actions PostgreSQL; Provider fake runtimes/actual SDK loopback; no hosted Cloud claim. Local Provider run passed 77 without those conditional skips. Infrastructure remains deployed at 8387b5d; this is source verification at the independently advanced application commit."
   },
   "runtime_backend": "boxlite-cloud",
-  "recorded_at_utc": "2026-11-03T19:03:19Z",
+  "recorded_at_utc": "2026-11-03T19:35:18Z",
   "service_versions": {
     "job-runner": "1.0.0-rc.1",
     "sandbox-provider": "1.0.0-rc.2",
@@ -485,16 +506,16 @@
   },
   "deployments": {
     "observation_time_utc": "2026-11-03T19:03:19Z",
-    "basis": "integration lead confirmed finished healthy deployments and trusted HTTPS authentication responses; documentation worker did not repeat control-plane calls",
+    "basis": "Integration lead confirmed the recorded finished healthy deployments; application advanced independently after the 19:03 infrastructure observation. Documentation worker did not repeat control-plane calls.",
     "last_confirmed": {
       "job-runner": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
       "sandbox-provider": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
-      "application": "8387b5da2084e062e7409b1af5ce81ae57b45dfd"
+      "application": "1d21e27a571388484774e401cc5d5a5a3cec0973"
     },
     "deployment_ids": {
       "job-runner": "wuvkf6x1owxobcarqjtd7wbk",
       "sandbox-provider": "qmdjylvn3d3zou4r6mawp8al",
-      "application": "v7mt8odnad40fnxbgfdxnojy"
+      "application": "y0mgz7i3yndf7o1cmvutoopf"
     },
     "state": "finished and running:healthy",
     "application_https": {
@@ -506,7 +527,9 @@
     "previous_backup_capture_sources": {
       "infrastructure": "4bab06ca1c1b4560b68c1ff561fc5d33deb37bf8",
       "application": "2f7820f619fe023b4278c2f97e43f7709d59d8cd"
-    }
+    },
+    "application_deployment_basis": "Lead-reported replacement y0mgz7i3yndf7o1cmvutoopf retained same source 1d21e27; independent recovered-result persistence browser check passed at 19:31 UTC. Earlier canonical-fix deployment was q0u798bcoypkea4fjp9wkwxc; 19:03 observation_time_utc applies only to unchanged infrastructure deployments.",
+    "hosted_document_v2_success_scope": "Uninterrupted automatic journey remains pending; same-job operator-assisted export recovery and recovered-result replacement retention passed separately."
   },
   "application_candidate": {
     "origin": "https://workflow-agents.68.210.88.115.sslip.io",
@@ -515,7 +538,38 @@
     "workload_profile": "pi-document-agent:v2",
     "runtime_bundle_sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
     "runtime_bundle_bytes": 95977914,
-    "hosted_qualified": false
+    "hosted_qualified": false,
+    "hosted_qualification_scope": "Actual hosted Pi/OfficeCLI completion, same-job export-only recovery with validated browser download and recovered-result replacement retention passed; uninterrupted automatic journey remains pending.",
+    "same_job_export_recovery": {
+      "outcome": "passed",
+      "request_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+      "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+      "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+      "runner_attempts": 1,
+      "workload_reexecuted": false,
+      "original_failed_audit_preserved": true,
+      "export_complete": true,
+      "sandbox_stopped": true,
+      "original_bytes": 5205,
+      "output_bytes": 5282,
+      "output_sha256": "e5d9c571cd9743000170961c436f6580f0e4d3afa4a9e9e00739d2e734faa81e",
+      "session_bytes": 11194,
+      "evidence": [
+        "docs/release/hosted-completed-export-diagnostic.json",
+        "docs/release/hosted-completed-export-recovery.json",
+        "docs/release/hosted-recovered-checkpoints.json",
+        "docs/release/hosted-application-recovered-journey.json",
+        "docs/release/hosted-application-replacement.json",
+        "docs/release/hosted-recovered-logs.json"
+      ],
+      "replacement_persistence": "passed",
+      "replacement_deployment_id": "y0mgz7i3yndf7o1cmvutoopf"
+    },
+    "fresh_automatic_journey": {
+      "request_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+      "outcome": "pending",
+      "basis": "Integration lead confirmed one clean third browser request admitted after same-source application replacement; runtime upload in progress. No operator recovery is planned. Do not infer completion from admission."
+    }
   },
   "historical_rc1_ci": {
     "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
@@ -527,5 +581,18 @@
     "provider_skips": 2,
     "real_runtime_deselected": 1,
     "scope": "Historical rc1 CI at the recorded source; later local and hosted evidence does not replace or extend this CI result."
-  }
+  },
+  "deployed_application_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+  "application_ci": {
+    "commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+    "run": 41703356921,
+    "url": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41703356921",
+    "outcome": "passed",
+    "api_passes": 11,
+    "checkpoint_passes": 2,
+    "cache_passes": 5,
+    "browser_passes": 2,
+    "scope": "Actual GitHub Actions on deployed canonical-session fix: PostgreSQL/RustFS real; Runner/Provider/workload execution mocked. Also passed duplicate run 41703348832. Fresh hosted execution, replacement and recovery evidence remain separately scoped."
+  },
+  "deployed_service_commit_scope": "Runner and Provider infrastructure only; deployed_application_commit tracks the independently advanced application."
 }
