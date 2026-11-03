@@ -3,7 +3,8 @@
 
 No Provider/Runner server or Cloud client is started. Historical destroyed
 sandbox identities remain tombstones; retained guest identities are refused
-unless their separately coordinated recovery procedure has been completed.
+unless the explicit offline forensic mode is selected. That mode preserves records
+for comparison only and never permits starting a Provider or operational cutover.
 """
 import argparse
 import json
@@ -34,7 +35,11 @@ def main():
     parser.add_argument('--evidence', type=Path, required=True)
     parser.add_argument('--infrastructure-only', action='store_true',
                         help='Exclude application archive; verify it with verify-application-restore.mjs')
+    parser.add_argument('--forensic-registry-only', action='store_true',
+                        help='Restore retained external bindings for offline comparison only; never permits a Provider startup/cutover')
     args = parser.parse_args()
+    if args.forensic_registry_only and not args.infrastructure_only:
+        parser.error('--forensic-registry-only requires --infrastructure-only')
     manifest = json.loads((args.archive / 'manifest.json').read_text())
     assert manifest['outcome'] == 'passed' and manifest['source_origin'] == 'https://hosting.gccssofia.com'
     credentials = json.loads(args.credentials.read_text())
@@ -44,6 +49,11 @@ def main():
                 'source_session': manifest['session'], 'outcome': 'incomplete', 'services': [],
                 'cloud_guest_restore': 'not exercised; source identities are destroyed tombstones or have no runtime',
                 'runtime_client_started': False}
+    if args.forensic_registry_only:
+        evidence['operation'] = 'isolated-offhost-forensic-registry-restore'
+        evidence['cloud_guest_restore'] = 'not exercised; retained external bindings are forensic records only, without attached guest disks'
+        evidence['operational_provider_cutover_permitted'] = False
+        evidence['forensic_registry_only'] = True
     evidence['excluded_services'] = [archive['service'] for archive in manifest['archives'] if archive not in archives]
     containers = []
     try:
@@ -88,8 +98,11 @@ def main():
                 raise RuntimeError('unexpected_archive_service')
             env['PHASE1_ARCHIVE_ENVELOPE'] = (args.archive / (name + '.encrypted.json')).read_text()
             results = []
+            restore_flags = ['--restore', '--allow-bootstrap-metadata']
+            if name == 'sandbox-provider' and args.forensic_registry_only:
+                restore_flags.append('--allow-retained-runtime-records')
             for replay in range(2):
-                raw = command(executable + ['--restore', '--allow-bootstrap-metadata'], env, service)
+                raw = command(executable + restore_flags, env, service)
                 result = json.loads(raw)
                 assert result['outcome'] == 'passed'
                 results.append(result)
