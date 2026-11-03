@@ -42,6 +42,19 @@ For verify, use a commit containing both the source and retained record; select 
 
 No GCC/Worfklow infrastructure or workload was mutated by this QA agent, and no new real-runtime acceptance claim is made from these local checks. The lead must capture actual deployed outputs before reporting these phases passed.
 
+## Migration inspection without workloads
+
+`tests/qa/migration_readonly.mjs` is a separate production-dependency-only inspection for a runtime-blocked migration. It reads original historical IDs/correlation/audit anchors from the immutable Git base's existing `DEPLOYED-QA-EVIDENCE.json` and `DEPLOYED-RETENTION-EVIDENCE.json`. It checks health response contracts, authentication/metrics protection, owner isolation, strict schema/profile negatives and restored historical jobs/sandbox/audits. No successful mutation, SDK operation or SQL statement is requested. Reviewed negative POST routes validate schema/profile policy before opening storage/runtime operations. The DB check attempts Runner credentials against an explicitly supplied other host/database and accepts only SQLSTATE28P01 or28000; network failure and a successful login both fail the check. It outputs the safe boolean `cross_db_denied`, never a connection string or credential.
+
+Run inside Runner, supplying the Provider database host/name independently from deployment configuration:
+
+```sh
+g=https://raw.githubusercontent.com/Ntrakiyski/workflow-agents/IMMUTABLE_SHA
+curl -fsSL "$g/tests/qa/migration_readonly.mjs" | node --input-type=module - "$g" PROVIDER_DB_HOST/sandbox_provider
+```
+
+`QA_OTHER_DATABASE_TARGET` can replace the final argument; `QA_APP_ROOT` supports a local fixture. No GCC hostname or database password is hardcoded in the probe. Provider readiness200 is recorded as prerequisite observation with `microvm_qualified:false`, never a runtime pass. Node syntax verification passed; deployed execution is a separate operator action and must be captured before claiming these checks passed remotely.
+
 ## Remaining coverage boundaries
 
 Same-sandbox marker retention and absence in a second sandbox do not prove every kernel/host/network escape boundary or resource limit. This probe does not inject transport loss, force a proven transient workload retry, restart an active execution, reboot a shared host, or restore a VM backup. Those need independent dedicated evidence. Completed job/audit retention after replacement is not active-run recovery. Scope-limited artifact export and off-host recovery remain separate infrastructure gates.
