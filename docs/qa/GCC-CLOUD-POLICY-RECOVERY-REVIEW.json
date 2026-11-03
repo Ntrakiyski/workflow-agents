@@ -1,0 +1,132 @@
+{
+  "scope": "QA independently read Coolify terminal task history. Lead executed remote tasks; reviewer made no remote mutations.",
+  "before_identity": {
+    "execution": {
+      "uuid": "tuqvmqintlj0ajxncyollaon",
+      "status": "success",
+      "started_at": "2026-11-03T13:48:01.000000Z",
+      "finished_at": "2026-11-03T13:48:06.000000Z",
+      "duration_seconds": 4.28,
+      "retry_count": 0
+    },
+    "report": {
+      "probe": "phase1-cloud-registry-attestation",
+      "outcome": "passed",
+      "scope": "Read-only own-DB mappings and Cloud control-plane metadata; disk capacity requires guest proof.",
+      "records": [
+        {
+          "sandbox_id": "sbx_fde66cf57d634a6882b58b1c166beda3",
+          "owner_ref": "gcc-qa:gccqa_4bdff4604a494b87adc569fa4ca398f0:a",
+          "profile": "cloud-minimal-linux:v1",
+          "runtime_name": "workflow-agents-phase1-gcc-sbx_fde66cf57d634a6882b58b1c166beda3",
+          "runtime_id": "TjTZPjQ8eEEM",
+          "disk_ref": "boxlite-cloud:c4027bdff55ccd05ff3038d296cccb49601b875815ad5ad44adf4f66f06f3be8/TjTZPjQ8eEEM",
+          "runtime_backend": "boxlite-cloud:c4027bdff55ccd05ff3038d296cccb49601b875815ad5ad44adf4f66f06f3be8",
+          "runtime_create_attempted": true,
+          "status": "stopped",
+          "cloud_id": "TjTZPjQ8eEEM",
+          "cloud_name": "workflow-agents-phase1-gcc-sbx_fde66cf57d634a6882b58b1c166beda3",
+          "cloud_state": "stopped",
+          "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+          "cpus": 1,
+          "memory_mib": 1024,
+          "requested_disk_mib": 1024,
+          "auto_delete": 0,
+          "auto_stop": 0,
+          "auto_resume": false,
+          "network": {
+            "inbound": {
+              "allow_net": [],
+              "mode": "disabled"
+            },
+            "outbound": {
+              "allow_net": [],
+              "mode": "disabled"
+            },
+            "published_ports": null
+          }
+        },
+        {
+          "sandbox_id": "sbx_fbb119b5a8204556bfcd638cdaecad57",
+          "owner_ref": "gcc-qa:gccqa_4bdff4604a494b87adc569fa4ca398f0:b",
+          "profile": "cloud-minimal-linux:v1",
+          "runtime_name": "workflow-agents-phase1-gcc-sbx_fbb119b5a8204556bfcd638cdaecad57",
+          "runtime_id": "12GuwYonABzz",
+          "disk_ref": "boxlite-cloud:c4027bdff55ccd05ff3038d296cccb49601b875815ad5ad44adf4f66f06f3be8/12GuwYonABzz",
+          "runtime_backend": "boxlite-cloud:c4027bdff55ccd05ff3038d296cccb49601b875815ad5ad44adf4f66f06f3be8",
+          "runtime_create_attempted": true,
+          "status": "stopped",
+          "cloud_id": "12GuwYonABzz",
+          "cloud_name": "workflow-agents-phase1-gcc-sbx_fbb119b5a8204556bfcd638cdaecad57",
+          "cloud_state": "stopped",
+          "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+          "cpus": 1,
+          "memory_mib": 1024,
+          "requested_disk_mib": 1024,
+          "auto_delete": 0,
+          "auto_stop": 0,
+          "auto_resume": false,
+          "network": {
+            "inbound": {
+              "allow_net": [],
+              "mode": "disabled"
+            },
+            "outbound": {
+              "allow_net": [],
+              "mode": "disabled"
+            },
+            "published_ports": null
+          }
+        }
+      ]
+    }
+  },
+  "before_policy": {
+    "execution": {
+      "uuid": "mqq6meusofotiubvjw6jxmn2",
+      "status": "success",
+      "started_at": "2026-11-03T13:48:02.000000Z",
+      "finished_at": "2026-11-03T13:48:12.000000Z",
+      "duration_seconds": 9.78,
+      "retry_count": 0
+    },
+    "report": {
+      "probe": "cloud-owned-fixture-policy-v1",
+      "correlation_id": "qa_cloud_policy_51772e1b07d74617898b4408414c54ba",
+      "invocation_id": "before",
+      "stage": "complete",
+      "outcome": "passed",
+      "sandbox_id": "sbx_fde66cf57d634a6882b58b1c166beda3",
+      "job_id": "job_555b6d18-2845-444a-a86d-b02a5aa5651b",
+      "observations": {
+        "cpu_count": 1,
+        "memory_total_bytes": 1070071808,
+        "rootfs_capacity_bytes": 1039155200,
+        "interfaces": [
+          "dummy0",
+          "lo"
+        ],
+        "external_tcp_attempts": [
+          {
+            "errno": 101,
+            "connected": false
+          },
+          {
+            "errno": 101,
+            "connected": false
+          }
+        ]
+      },
+      "error": null,
+      "stop_error": null,
+      "scope": "Observed provisioned guest capacity and absent-route TCP denial; no stress quota, general escape, hostname allowlist, artifact export or backup claim",
+      "invocation_replay": false
+    }
+  },
+  "pending": [
+    "Independent Provider and Runner replacements",
+    "Marker reread retaining original audit/job identities",
+    "External Cloud IDs unchanged after replacements",
+    "Exact-fixture explicit cleanup"
+  ]
+}
