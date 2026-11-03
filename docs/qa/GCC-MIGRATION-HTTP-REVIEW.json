@@ -1,0 +1,65 @@
+{
+  "observed_at_utc": "2026-11-03 13:08:00 UTC",
+  "method": "Independent direct read-only Coolify scheduled_tasks list_executions and application logs",
+  "task_uuid": "htolczromxdssyujn164fwgs",
+  "source_commit": "01e0729",
+  "execution": {
+    "uuid": "z0md5oxhwtjtunwzbxdvispb",
+    "started_at": "2026-11-03T13:07:01.000000Z",
+    "finished_at": "2026-11-03T13:07:04.000000Z",
+    "duration_seconds": 3.38,
+    "status": "success"
+  },
+  "result": {
+    "probe": "independent-migration-readonly-v1",
+    "correlation_id": "qa_migration_65bdbba7af1b439f922e3f1d56dd5ef4",
+    "stage": "complete",
+    "outcome": "passed",
+    "groups_passed": 9,
+    "cross_db_denied": true,
+    "runner_readiness_http": 200,
+    "provider_readiness_http": 200,
+    "microvm_qualified": false,
+    "error": null
+  },
+  "log_review": {
+    "scope": "Bounded140line sample per service; counts only, no raw logs. No claim about every possible logging path.",
+    "required_structured_fields": [
+      "timestamp",
+      "service",
+      "correlation_id",
+      "action",
+      "duration_ms",
+      "outcome"
+    ],
+    "required_structured_fields_verified": true,
+    "sensitive_payload_keys_absent": true,
+    "credential_values_not_retrieved_by_reviewer": true,
+    "services": [
+      {
+        "service": "job-runner",
+        "bounded_log_lines": 140,
+        "matching_records": 17,
+        "counts_by_http_status": {
+          "200": 7,
+          "401": 3,
+          "403": 2,
+          "404": 4,
+          "422": 1
+        }
+      },
+      {
+        "service": "sandbox-provider",
+        "bounded_log_lines": 140,
+        "matching_records": 12,
+        "counts_by_http_status": {
+          "200": 5,
+          "401": 3,
+          "403": 1,
+          "404": 2,
+          "422": 1
+        }
+      }
+    ]
+  }
+}
