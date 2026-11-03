@@ -22,7 +22,7 @@
   if(row.status!=='failed'||!row.terminal_error||!row.sandbox_stopped||row.export_complete)throw Error('failed_row_guard');
   const job=await remote.job(jobId,id);if(job.status!=='completed'||job.sandbox_id!==sid||job.result?.exit_code!==0)throw Error('completed_job_guard');
   const box=await provider('/v1/sandboxes/'+sid);if(box.owner_ref!=='application:'+id||box.status!=='stopped')throw Error('stopped_identity_guard');
-  await provider('/v1/sandboxes/'+sid+'/start','POST',{});started=true;
+  started=true;await provider('/v1/sandboxes/'+sid+'/start','POST',{});
   const bytes=await remote.download(sid,'requests/'+id+'/outputs/result.json',1024*1024,id);
   if(hash(bytes)!==expected)throw Error('recorded_manifest_checksum');
   const result=manifest.parse(JSON.parse(bytes.toString('utf8')));
@@ -35,15 +35,17 @@
   for(const file of originals){const data=await objects.get(file.object_key,10*1024*1024);if(data.length!==file.size_bytes||hash(data)!==file.sha256)throw Error('original_integrity');}
   await db.query('BEGIN');
   try {
-   const changed=await db.query("UPDATE application.requests SET status='running',terminal_error=false,sandbox_stopped=false,attempts=0,next_attempt_at=now(),updated_at=now() WHERE id=$1 AND status='failed' AND terminal_error=true AND job_id=$2 AND sandbox_id=$3 AND export_complete=false",[id,jobId,sid]);
+   const changed=await db.query("UPDATE application.requests SET status='running',failure_message=NULL,terminal_error=false,sandbox_stopped=false,attempts=0,next_attempt_at=now(),updated_at=now() WHERE id=$1 AND status='failed' AND terminal_error=true AND job_id=$2 AND sandbox_id=$3 AND export_complete=false",[id,jobId,sid]);
    if(changed.rowCount!==1)throw Error('recovery_state_changed');
    await db.query("INSERT INTO application.audit(request_id,owner_id,actor_id,action,correlation_id,detail) VALUES($1::uuid,$2,'release-operator','request.output_recovery_authorized',$1::text,$3)",[id,row.owner_id,JSON.stringify({reason:'corrected_session_manifest_v1_compatibility',result_manifest_sha256:expected,completed_job_verified:true,workload_reexecuted:false})]);
    await db.query('COMMIT');authorized=true;
   } catch(error){await db.query('ROLLBACK');throw error;}
   console.log(JSON.stringify({operation:'authorize-completed-export-recovery',outcome:'authorized_export_only',request_id:id,job_id:jobId,sandbox_id:sid,manifest_sha256:expected,artifacts_checked:result.artifacts.length,sessions_checked:sessionChecks,originals_verified:originals.length,failed_audit_preserved:true,identities_unchanged:true,workload_reexecuted:false,next_step:'existing worker revalidates and exports the same completed job, then stops the same sandbox'}));
  } finally {
-  if(started&&!authorized)await remote.stop(sid,id);
-  if(locked)await db.query('SELECT pg_advisory_unlock(hashtextextended($1,0))',[id]);
-  await db.end();objects.close();
+  try { if(started&&!authorized)await remote.stop(sid,id); }
+  finally {
+   try { if(locked)await db.query('SELECT pg_advisory_unlock(hashtextextended($1,0))',[id]); }
+   finally { try { await db.end(); } finally { objects.close(); } }
+  }
  }
 })().catch(error=>{console.log(JSON.stringify({operation:'authorize-completed-export-recovery',outcome:'failed',error_classification:/^[a-z_0-9]+$/.test(error.message)?error.message:error.name}));process.exitCode=1;});

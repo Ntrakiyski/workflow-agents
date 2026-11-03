@@ -14,12 +14,12 @@
   if(!row||row.status!=='failed'||!row.terminal_error||!row.sandbox_stopped||row.sandbox_id!==sid||row.job_id!==jobId)throw Error('failed_row_guard');
   const job=await remote.job(jobId,id);if(job.status!=='completed'||job.sandbox_id!==sid||job.result?.exit_code!==0)throw Error('completed_job_guard');
   const box=await provider('/v1/sandboxes/'+sid);if(box.owner_ref!=='application:'+id||box.status!=='stopped')throw Error('stopped_identity_guard');
-  await provider('/v1/sandboxes/'+sid+'/start','POST',{});started=true;
+  started=true;await provider('/v1/sandboxes/'+sid+'/start','POST',{});
   const data=await remote.download(sid,'requests/'+id+'/outputs/result.json',1024*1024,id);const value=JSON.parse(data.toString('utf8')),parsed=manifest.safeParse(value);
   console.log(JSON.stringify({operation:'inspect-failed-completed-export',outcome:'passed_diagnostic',request_id:id,job_id:jobId,sandbox_id:sid,runner_status:job.status,runner_exit_code:job.result.exit_code,
     manifest_sha256:createHash('sha256').update(data).digest('hex'),manifest_bytes:data.length,manifest_outcome:value.outcome,
     manifest_keys:Object.keys(value),artifact_keys:value.artifacts?.map(x=>Object.keys(x)),session_keys:value.session_files?.map(x=>Object.keys(x)),
     controller_schema_valid:parsed.success,schema_issues:parsed.success?[]:parsed.error.issues.map(({path,code,keys})=>({path,code,keys})),
     original_failed_row_and_audits:'unchanged',workload_reexecuted:false}));
- } finally {if(started)await remote.stop(sid,id);await db.end();}
+ } finally {try {if(started)await remote.stop(sid,id);} finally {await db.end();}}
 })().catch(error=>{console.log(JSON.stringify({operation:'inspect-failed-completed-export',outcome:'failed',error_classification:/^[a-z_0-9]+$/.test(error.message)?error.message:error.name}));process.exitCode=1;});
