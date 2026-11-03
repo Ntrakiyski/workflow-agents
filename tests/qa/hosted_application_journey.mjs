@@ -40,6 +40,9 @@ const { chromium, request, expect } = require('@playwright/test');
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const recheck = Boolean(options['recheck-state']);
 const prior = recheck ? JSON.parse(await readFile(options['recheck-state'], 'utf8')) : null;
+const foreignDisabled = options['foreign-disabled'] === 'true';
+if (options['foreign-disabled'] !== undefined && (!foreignDisabled || !recheck || !prior?.output))
+  throw new Error('foreign_disabled_requires_completed_saved_state_recheck');
 if (prior && prior.origin !== origin.origin) throw new Error('recheck_origin_mismatch');
 const session = prior?.session ?? randomUUID();
 const privateDirectory = path.join(root, 'private', 'hosted-browser-' + session);
@@ -58,6 +61,7 @@ const report = { version: 1, operation: prior?.output ? 'hosted-browser-persiste
   session, origin: origin.origin, recorded_at_utc: new Date().toISOString(), outcome: 'incomplete',
   deployed_commit: options['deployed-commit'] ?? 'not supplied; verify separately',
   browser: 'Playwright Chromium; Browser plugin not available',
+  foreign_account_expected: foreignDisabled ? 'disabled' : 'authenticated distinct owner',
   execution: 'actual hosted application; no request routing or execution mocks installed by this helper',
   checks: [], screenshots: [], state_file: statePath,
   limits: ['No database/deployment mutation or infrastructure credential access',
@@ -126,8 +130,10 @@ try {
     const response = await unauthenticated.get(endpoint);
     insist(response.status() === 401, 'unauthenticated_access_not_denied');
   }
-  insist((await foreignContext.get('/api/session')).status() === 200, 'foreign_account_not_configured');
-  await record('unauthenticated_entry_denied_and_foreign_account_authenticated');
+  insist((await foreignContext.get('/api/session')).status() === (foreignDisabled ? 401 : 200),
+    foreignDisabled ? 'removed_foreign_account_still_authenticated' : 'foreign_account_not_configured');
+  await record(foreignDisabled ? 'unauthenticated_entry_denied_and_removed_foreign_account_rejected'
+    : 'unauthenticated_entry_denied_and_foreign_account_authenticated');
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ baseURL: origin.origin, viewport: { width: 1366, height: 900 }, acceptDownloads: true,
     httpCredentials: { username: primary.username, password: primary.password, origin: origin.origin } });
@@ -250,15 +256,18 @@ try {
   for (const endpoint of ['/api/requests/' + state.request_id,
     '/api/files/' + state.attachment_id + '/download', '/api/files/' + output.id + '/download']) {
     insist((await unauthenticated.get(endpoint)).status() === 401, 'unauthenticated_resource_access_not_denied');
-    insist((await foreignContext.get(endpoint)).status() === 404, 'foreign_owner_resource_access_not_denied');
+    insist((await foreignContext.get(endpoint)).status() === (foreignDisabled ? 401 : 404),
+      foreignDisabled ? 'removed_foreign_account_resource_access_not_denied' : 'foreign_owner_resource_access_not_denied');
   }
   const foreignList = await foreignContext.get('/api/requests?limit=100');
-  insist(foreignList.status() === 200 && !(await foreignList.json()).requests.some((item) => item.id === state.request_id),
+  insist(foreignDisabled ? foreignList.status() === 401
+    : foreignList.status() === 200 && !(await foreignList.json()).requests.some((item) => item.id === state.request_id),
     'foreign_owner_request_list_leak');
   const rejectedOrigin = await context.request.post('/api/requests', { headers: { Origin: 'https://unrelated.invalid',
     'Idempotency-Key': 'origin-negative-' + session }, data: { instructions: 'Untrusted-origin synthetic body', attachment_ids: [] } });
   insist(rejectedOrigin.status() === 403, 'foreign_origin_mutation_not_rejected');
-  await record('unauthenticated_and_foreign_owner_request_input_output_denied_and_origin_rejected');
+  await record(foreignDisabled ? 'unauthenticated_and_removed_foreign_account_request_input_output_denied_and_origin_rejected'
+    : 'unauthenticated_and_foreign_owner_request_input_output_denied_and_origin_rejected');
   for (const [label, viewport] of [['desktop', { width: 1366, height: 900 }], ['mobile', { width: 390, height: 844 }]]) {
     await page.setViewportSize(viewport);
     await page.reload();
