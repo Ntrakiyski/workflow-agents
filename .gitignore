@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+!.env.*.example
+private/
+*.secret
+node_modules/
+__pycache__/
+.pytest_cache/
+.venv/
+*.egg-info/
+.coverage
+htmlcov/
+dist/
+*.log
+.DS_Store

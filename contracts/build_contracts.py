@@ -59,7 +59,7 @@ def operation(doc,path,method,opid,result,code=200,body=None,ids=(),idempotency=
  if idempotency: ps.append(param('IdempotencyKey'))
  if owner: ps.append(param('OwnerId'))
  if path.endswith('/events'): ps += [param('Cursor'),param('Limit')]
- op={'operationId':opid,'description':description,'parameters':ps,'responses':{str(code):response(result),**{str(c):response('Error',d) for c,d in ((400,'Malformed JSON, query or header'),(401,'Missing or invalid credentials'),(403,'Denied profile, permission or delegation'),(404,'Unknown or wrong-owner resource'),(409,'Idempotency conflict, busy resource or illegal transition'),(422,'Payload or approved workload schema invalid'),(429,'Configured quota exceeded'),(503,'Database, runtime or dependency unavailable'))}}}
+ op={'operationId':opid,'description':description,'parameters':ps,'responses':{str(code):response(result),**{str(c):response('Error',d) for c,d in ((400,'Malformed JSON, query or header'),(401,'Missing or invalid credentials'),(403,'Denied profile, permission or delegation'),(404,'Unknown or wrong-owner resource'),(409,'Idempotency conflict, busy resource or illegal transition'),(413,'Request body exceeds configured size bound'),(415,'Unsupported request media type'),(422,'Payload or approved workload schema invalid'),(429,'Configured quota exceeded'),(503,'Database, runtime or dependency unavailable'))}}}
  if body: op['requestBody']={'required':True,'content':{'application/json':{'schema':ref(body)}}}
  doc['paths'].setdefault(path,{})[method]=op
 
@@ -81,12 +81,17 @@ operation(runner,'/v1/schedules/{schedule_id}','delete','cancelSchedule','Schedu
 health(runner)
 provider=base('Workflow Agents Sandbox Provider API')
 provider['components']['schemas'].update({'Resources':RESOURCES,'Sandbox':SANDBOX,'CreateSandbox':CREATE_SANDBOX,'ExecuteRequest':EXECUTE,'Run':RUN,'DestroyRequest':obj({'confirm':{'type':'boolean','const':True},'reason':string(256)},('confirm','reason'))})
+provider['components']['schemas'].update({
+ 'CancelByReferenceRequest':obj({'execution_ref':string(256),'reason':string(256)},('execution_ref',)),
+ 'CancellationFence':obj({'execution_ref':string(256),'run_id':nullable(ID),'status':enum('fenced','queued','running','cancelling','completed','failed','cancelled','timed_out')},('execution_ref','run_id','status'))
+})
 operation(provider,'/v1/sandboxes','post','createSandbox','Sandbox',201,'CreateSandbox',idempotency=True,owner=True,description='Ensure one retained sandbox per effective owner + owner_ref. Profile is immutable: mismatched profile gives 409. Stable runtime identity must be persisted before side effects so ambiguous create is recovered, not recreated. Return current resource on replay.')
 operation(provider,'/v1/sandboxes/{sandbox_id}','get','getSandbox','Sandbox',ids=('sandbox_id',),owner=True)
 operation(provider,'/v1/sandboxes/{sandbox_id}/events','get','getSandboxEvents','EventPage',ids=('sandbox_id',),owner=True)
 for action in ('start','stop'):
  operation(provider,'/v1/sandboxes/{sandbox_id}/'+action,'post',action+'Sandbox','Sandbox',200,'Empty',ids=('sandbox_id',),owner=True,description=('Idempotently reattach/start the same retained runtime identity. Never replace missing disk with new data.' if action=='start' else 'Idempotently stop without deletion. Busy/cancelling runs give 409. Stop preserves writable disks across process/container restart.'))
 operation(provider,'/v1/sandboxes/{sandbox_id}/execute','post','executeWorkload','Run',202,'ExecuteRequest',ids=('sandbox_id',),idempotency=True,owner=True,description='Start only an approved configured workload; sandbox must be running. Atomically claim one active run per sandbox. Durable idempotency and execution_ref allow recovery after unknown HTTP outcome. No shell is built from caller input. Unsupported artifact transfer gives 422 before execution.')
+operation(provider,'/v1/sandboxes/{sandbox_id}/runs/cancel-by-reference','post','cancelExecutionByReference','CancellationFence',202,'CancelByReferenceRequest',ids=('sandbox_id',),owner=True,description='Durably fence execution_ref under the same sandbox serialization lock as execute. If no run exists, return run_id:null,status:fenced and reject future new execute for this reference with 409 execution_cancelled. If a run exists, return its ID/status and reconcile cancellation; completed terminal runs remain terminal. Repeated fences are idempotent. Never create a workload while cancelling an ambiguous execute request.')
 operation(provider,'/v1/sandboxes/{sandbox_id}/runs/{run_id}','get','getRun','Run',ids=('sandbox_id','run_id'),owner=True)
 operation(provider,'/v1/sandboxes/{sandbox_id}/runs/{run_id}/cancel','post','cancelRun','Run',202,'CancelRequest',ids=('sandbox_id','run_id'),owner=True,description='Idempotent cancellation intent. Cancel and reconcile actual execution before final cancelled state; preserve sandbox storage. Completed terminal runs remain terminal.')
 operation(provider,'/v1/sandboxes/{sandbox_id}/destroy','post','destroySandbox','Sandbox',200,'DestroyRequest',ids=('sandbox_id',),owner=True,description='Requires owner plus sandbox:destroy permission, confirm=true and bounded reason. Refuse active runs. Only this operation may permanently remove disk; repeated destruction returns destroyed tombstone.')
