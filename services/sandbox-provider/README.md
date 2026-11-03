@@ -2,7 +2,7 @@
 
 Independent Python 3.12 / FastAPI / PostgreSQL service with BoxLite 0.11.0 behind `SandboxRuntime`. It owns its registry and never queries Runner tables. The API contains no application-specific behavior.
 
-**Release status: incomplete.** Local BoxLite on GCC remains blocked at the bubblewrap user-namespace boundary. An explicitly configured hosted BoxLite Cloud adapter is now available without local KVM or host security changes. Its pinned SDK wire/registry tests pass; deployed service integration, isolation, recovery and backup gates require separate real evidence. Neither local prerequisite readiness nor authenticated Cloud readiness alone qualifies workload execution.
+**Release status: incomplete.** Explicit hosted BoxLite Cloud on GCC passed real Runner→Provider HTTP execution, same-box stop/start file retention, two-box file separation and stopped-box recovery across independent service replacements. See [Cloud validation](../../docs/phase1/CLOUD-VALIDATION.md) for exact evidence and deployed commit. Scoped artifact transfer, active-output recovery, full backup/restore and broader resource/security gates remain incomplete. Local BoxLite still fails the GCC bubblewrap user-namespace boundary. Authenticated Cloud readiness alone does not qualify workloads.
 
 ## Build and run
 

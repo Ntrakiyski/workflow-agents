@@ -1,0 +1,47 @@
+{
+  "task_uuid": "hgpsfcaazmo8nvmjtpi1lsdm",
+  "execution": {
+    "uuid": "mqq6meusofotiubvjw6jxmn2",
+    "duration": 9.78,
+    "error_details": null,
+    "finished_at": "2026-11-03T13:48:12.000000Z",
+    "message": "{\"probe\":\"cloud-owned-fixture-policy-v1\",\"correlation_id\":\"qa_cloud_policy_51772e1b07d74617898b4408414c54ba\",\"invocation_id\":\"before\",\"stage\":\"complete\",\"outcome\":\"passed\",\"sandbox_id\":\"sbx_fde66cf57d634a6882b58b1c166beda3\",\"job_id\":\"job_555b6d18-2845-444a-a86d-b02a5aa5651b\",\"observations\":{\"cpu_count\":1,\"memory_total_bytes\":1070071808,\"rootfs_capacity_bytes\":1039155200,\"interfaces\":[\"dummy0\",\"lo\"],\"external_tcp_attempts\":[{\"errno\":101,\"connected\":false},{\"errno\":101,\"connected\":false}]},\"error\":null,\"stop_error\":null,\"scope\":\"Observed provisioned guest capacity and absent-route TCP denial; no stress quota, general escape, hostname allowlist, artifact export or backup claim\",\"invocation_replay\":false}",
+    "retry_count": 0,
+    "started_at": "2026-11-03T13:48:02.000000Z",
+    "status": "success",
+    "created_at": "2026-11-03T13:48:02.000000Z",
+    "updated_at": "2026-11-03T13:48:12.000000Z"
+  },
+  "result": {
+    "probe": "cloud-owned-fixture-policy-v1",
+    "correlation_id": "qa_cloud_policy_51772e1b07d74617898b4408414c54ba",
+    "invocation_id": "before",
+    "stage": "complete",
+    "outcome": "passed",
+    "sandbox_id": "sbx_fde66cf57d634a6882b58b1c166beda3",
+    "job_id": "job_555b6d18-2845-444a-a86d-b02a5aa5651b",
+    "observations": {
+      "cpu_count": 1,
+      "memory_total_bytes": 1070071808,
+      "rootfs_capacity_bytes": 1039155200,
+      "interfaces": [
+        "dummy0",
+        "lo"
+      ],
+      "external_tcp_attempts": [
+        {
+          "errno": 101,
+          "connected": false
+        },
+        {
+          "errno": 101,
+          "connected": false
+        }
+      ]
+    },
+    "error": null,
+    "stop_error": null,
+    "scope": "Observed provisioned guest capacity and absent-route TCP denial; no stress quota, general escape, hostname allowlist, artifact export or backup claim",
+    "invocation_replay": false
+  }
+}

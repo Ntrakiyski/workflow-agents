@@ -1,6 +1,6 @@
 # Preflight evidence
 
-> **Current target:** GCC migration is complete; the Worfklow deployment described below was deleted. [Current report](GCC-MIGRATION-REPORT.md) records actual GCC KVM access and the failing bubblewrap namespace preflight. The earlier Worfklow/local observations remain historical evidence.
+> **Current Cloud validation, 2026-11-03:** The active GCC deployment explicitly uses BoxLite Cloud; real HTTP execution and stopped-box recovery passed without KVM or host-policy changes. The Worfklow/local preflight below remains historical. Read [CLOUD-VALIDATION.md](CLOUD-VALIDATION.md) and [readiness.json](readiness.json).
 
 Observed 2026-11-03. No existing Coolify resource was changed.
 

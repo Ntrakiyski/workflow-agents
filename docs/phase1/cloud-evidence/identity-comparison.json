@@ -1,0 +1,32 @@
+{
+  "outcome": "passed",
+  "before": "identity-before.json",
+  "after": "identity-after.json",
+  "comparisons": [
+    {
+      "sandbox_id": "sbx_fde66cf57d634a6882b58b1c166beda3",
+      "external_id": "TjTZPjQ8eEEM",
+      "unchanged_fields": [
+        "runtime_id",
+        "disk_ref",
+        "runtime_backend",
+        "runtime_name",
+        "cloud_id",
+        "cloud_name"
+      ]
+    },
+    {
+      "sandbox_id": "sbx_fbb119b5a8204556bfcd638cdaecad57",
+      "external_id": "12GuwYonABzz",
+      "unchanged_fields": [
+        "runtime_id",
+        "disk_ref",
+        "runtime_backend",
+        "runtime_name",
+        "cloud_id",
+        "cloud_name"
+      ]
+    }
+  ],
+  "scope": "Exact persisted IDs/name/backend/disk reference comparison; file content verified separately over HTTP."
+}

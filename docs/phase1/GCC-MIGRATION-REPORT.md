@@ -1,5 +1,7 @@
 # GCC migration and current Phase 1 status
 
+> **Current Cloud validation, 2026-11-03:** Cloud-backed GCC execution and stopped-box retention now passed. This preserved migration/local-runtime report records the earlier namespace blocker; it does not describe the active Cloud backend. Read [CLOUD-VALIDATION.md](CLOUD-VALIDATION.md) and [readiness.json](readiness.json).
+
 2026-11-03. **Migration complete; Phase 1 remains blocked for Phase 2 consumption.** The authorized move preserved historical database state and audit records. Real BoxLite creation fails under current namespace security restrictions; no successful microVM or retained guest filesystem is claimed.
 
 ## Active deployment

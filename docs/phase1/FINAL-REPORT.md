@@ -1,6 +1,6 @@
 # Phase 1 candidate — implementation and staging acceptance
 
-> **Current deployment update, 2026-11-03:** infrastructure and historical database/audit state moved to GCC; the old Worfklow Phase 1 project was deleted. Read [GCC-MIGRATION-REPORT.md](GCC-MIGRATION-REPORT.md) and [readiness.json](readiness.json) for active resources. GCC has accessible KVM, but BoxLite is blocked by bubblewrap namespace creation under current security policies. The remainder is the preserved **historical Worfklow report**. Phase 2 remains blocked.
+> **Current Cloud validation, 2026-11-03:** The GCC BoxLite Cloud journey now passed real execution, stop/start file retention, two-box file separation and stopped-box recovery across both service replacements. Full Phase 1 remains incomplete for artifact transfer, active-output recovery and backup/restore. The Worfklow report below is historical. Read [CLOUD-VALIDATION.md](CLOUD-VALIDATION.md) and [readiness.json](readiness.json).
 
 **Decision, 2026-11-03: blocked; neither the combined infrastructure nor Provider v1 is approved for Phase 2 consumption.** Both independently deployable service candidates are implemented, reviewed, pushed and running in the one authorized new Coolify project. Real BoxLite execution is blocked by the actual execution host's missing `/dev/kvm`. Scoped artifact transfer/export is also an incomplete implementation, independent of that hardware blocker. No stable release or Phase 2 implementation is claimed.
 

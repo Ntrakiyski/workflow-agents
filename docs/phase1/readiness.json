@@ -2,13 +2,13 @@
   "schema_version": 1,
   "recorded_date": "2026-11-03",
   "phase": 1,
-  "decision": "blocked",
+  "decision": "incomplete",
   "ready_for_phase2": false,
   "release_version": "1.0.0-rc.1",
   "stable_release": false,
   "repository": "https://github.com/Ntrakiyski/workflow-agents",
   "integration_branch": "phase1/integration",
-  "deployed_service_commit": "60a49dbc52121126e8e214c1a774ae627d8ed5f4",
+  "deployed_service_commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
   "api_version": "v1",
   "contracts": [
     "contracts/v1/runner-v1.openapi.json",
@@ -22,8 +22,8 @@
     "environment_uuid": "tiiebld0vegfeegaapo3cdt3",
     "resource_ids": "deploy/staging-resources.json",
     "latest_deployments": {
-      "job-runner": "e2gbbywa27gpqvmkjg2uiqcy",
-      "sandbox-provider": "tr3zcg6hkhz7if6xbhaoakm3"
+      "job-runner": "xoirtvdhn7kofdlkekgdegry",
+      "sandbox-provider": "byna6ecrish0jprg0dbywo37"
     },
     "resource_statuses": [
       {
@@ -34,7 +34,8 @@
         "fqdn": null,
         "ports_mappings": null,
         "is_public": false,
-        "commit": "60a49dbc52121126e8e214c1a774ae627d8ed5f4"
+        "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+        "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=128"
       },
       {
         "kind": "applications",
@@ -44,7 +45,8 @@
         "fqdn": null,
         "ports_mappings": null,
         "is_public": false,
-        "commit": "60a49dbc52121126e8e214c1a774ae627d8ed5f4"
+        "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+        "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256"
       },
       {
         "kind": "databases",
@@ -76,11 +78,11 @@
       "sandbox-provider": {
         "liveness": "ok",
         "database": "ok",
-        "actual_runtime_qualification": "failed_before_vm_start",
-        "readiness_implementation": "known_false_positive_risk_kvm_sdk_check_only",
         "readiness_http": 200,
         "reported_runtime": "ok",
-        "qualification_interpretation": "False positive for actual microVM readiness; native creation failed namespace preflight."
+        "readiness_scope": "authenticated hosted Cloud read; separate actual HTTP workload qualification passed",
+        "actual_runtime_qualification": "passed_cloud_generic_fixture_journey",
+        "local_runtime_qualification": "historical_namespace_preflight_blocked"
       }
     }
   },
@@ -99,10 +101,11 @@
     {
       "id": "provider_real_database_fake_runtime",
       "outcome": "passed",
-      "pytest_passes": 41,
-      "evidence": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41640540909",
+      "pytest_passes": 52,
       "hardware_conditional_negative_skips": 2,
-      "real_runtime_deselected": 1
+      "real_runtime_deselected": 1,
+      "evidence": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41647734872",
+      "scope": "Actual PostgreSQL; fake runtime and actual SDK against loopback HTTP stub, no hosted guest from CI"
     },
     {
       "id": "independent_boundary_security",
@@ -149,26 +152,44 @@
     },
     {
       "id": "real_boxlite_execution_stop_start_disk_retention",
-      "outcome": "blocked",
-      "reason": "GCC KVM is accessible, but BoxLite bubblewrap user-namespace preflight fails EPERM; AppArmor restriction detected, Docker seccomp contribution unisolated.",
-      "evidence": "docs/phase1/gcc-evidence/native-runtime-log.json"
+      "outcome": "passed",
+      "backend": "boxlite-cloud",
+      "evidence": "docs/phase1/cloud-evidence/http-prepare.json",
+      "scope": "Approved generic rootfs marker, same public and external identity; historical local-mode blocker unchanged"
     },
     {
       "id": "real_microvm_isolation_and_resource_enforcement",
-      "outcome": "blocked",
-      "reason": "GCC KVM is accessible, but BoxLite bubblewrap user-namespace preflight fails EPERM; AppArmor restriction detected, Docker seccomp contribution unisolated.",
-      "evidence": "docs/phase1/gcc-evidence/native-runtime-log.json"
+      "outcome": "partial",
+      "backend": "boxlite-cloud",
+      "evidence": [
+        "docs/phase1/cloud-evidence/http-prepare.json",
+        "docs/phase1/cloud-evidence/policy-before.json"
+      ],
+      "passed": [
+        "second real sandbox missing first marker",
+        "guest capacity observations",
+        "two fixed external TCP probes ENETUNREACH",
+        "both networking directions disabled in returned metadata"
+      ],
+      "incomplete": [
+        "stress quota enforcement",
+        "comprehensive escape and network boundary qualification"
+      ]
     },
     {
       "id": "real_boxlite_provider_restart_reattachment",
-      "outcome": "blocked",
-      "reason": "GCC KVM is accessible, but BoxLite bubblewrap user-namespace preflight fails EPERM; AppArmor restriction detected, Docker seccomp contribution unisolated.",
-      "evidence": "docs/phase1/gcc-evidence/native-runtime-log.json"
+      "outcome": "passed",
+      "backend": "boxlite-cloud",
+      "evidence": [
+        "docs/phase1/cloud-evidence/http-recovery.json",
+        "docs/phase1/cloud-evidence/identity-comparison.json"
+      ],
+      "scope": "Stopped boxes and original disk markers retained through independent Provider and Runner replacements; excludes active-command recovery"
     },
     {
       "id": "host_restart_persistence",
       "outcome": "unverified",
-      "reason": "shared host reboot not authorized"
+      "reason": "No shared GCC reboot authorized/performed; vendor Cloud physical-host restart outside this test control"
     },
     {
       "id": "scoped_artifact_transfer_export",
@@ -183,7 +204,8 @@
     {
       "id": "coordinated_registry_vm_volume_restore",
       "outcome": "blocked",
-      "reason": "requires actual stopped VM recovery set and authorized isolated KVM restore target"
+      "reason": "Cloud disks are external; observed capabilities disable export/snapshot/import/clone. Approved remote data export/backup procedure and isolated restore proof missing.",
+      "evidence": "docs/contracts/boxlite-cloud-capabilities.md"
     },
     {
       "id": "gcc_logical_database_migration",
@@ -210,8 +232,12 @@
     },
     {
       "id": "gcc_provider_readiness_accuracy",
-      "outcome": "incomplete",
-      "reason": "KVM ioctl and SDK presence do not detect known failing namespace/jailer preflight."
+      "outcome": "passed_for_cloud_control_connectivity",
+      "evidence": [
+        "docs/phase1/cloud-evidence/http-prepare.json",
+        "docs/phase1/cloud-evidence/http-recovery.json"
+      ],
+      "scope": "Cloud readiness authenticates bounded SDK read, no local KVM dependence; guest execution qualified separately; local-mode namespace readiness limitation unchanged"
     },
     {
       "id": "worfklow_scoped_source_removal",
@@ -234,10 +260,63 @@
       "provider_records": 12,
       "evidence": "docs/qa/GCC-MIGRATION-HTTP-REVIEW.json",
       "scope": "bounded correlated API log sample; not an exhaustive logging guarantee"
+    },
+    {
+      "id": "cloud_active_command_and_complete_output_recovery",
+      "outcome": "incomplete",
+      "reason": "Active attach fails closed ambiguous_execution; SDK may lose fresh-stream output with exit0/error_message=None. No generic complete-output or transport-recovery proof.",
+      "evidence": "docs/qa/CLOUD-REVIEW.md"
+    },
+    {
+      "id": "cloud_exact_fixture_explicit_destruction",
+      "outcome": "passed",
+      "evidence": [
+        "docs/phase1/cloud-evidence/http-cleanup.json",
+        "docs/qa/GCC-CLOUD-POLICY-RECOVERY-REVIEW.json"
+      ],
+      "scope": "Only recorded two fixtures; tombstones and durable destruction audits retained"
+    },
+    {
+      "id": "cloud_independent_structured_log_and_audit_review",
+      "outcome": "passed",
+      "evidence": [
+        "docs/qa/GCC-CLOUD-HTTP-REVIEW.json",
+        "docs/qa/GCC-CLOUD-POLICY-RECOVERY-REVIEW.json"
+      ],
+      "prepare_records": {
+        "provider": 59,
+        "runner": 66
+      },
+      "verify_records": {
+        "provider": 27,
+        "runner": 22
+      },
+      "scope": "Bounded correlated samples and original durable audit-ID retention, not exhaustive secret detection"
+    },
+    {
+      "id": "cloud_temporary_resource_cleanup",
+      "outcome": "passed",
+      "evidence": [
+        "docs/phase1/cloud-evidence/temporary-resource-cleanup.json",
+        "docs/phase1/cloud-evidence/cloud-cleanup-enumeration.json"
+      ],
+      "scope": "No own Cloud fixtures or temporary Coolify tasks/QA envs remain"
+    },
+    {
+      "id": "unrelated_cloud_account_box_continuity",
+      "outcome": "unverified",
+      "reason": "Original unrelated ID/name no longer visible; one different unrelated box visible. No unrelated mutations performed; cause not established.",
+      "evidence": "docs/phase1/cloud-evidence/cloud-cleanup-enumeration.json"
+    },
+    {
+      "id": "cloud_real_transient_retry_timeout_active_worker_recovery",
+      "outcome": "incomplete",
+      "reason": "Deployed write used one attempt; transient failure/retry/provider timeout/active worker crash duplicate-prevention journeys have mocked regression coverage but no hosted failure-injection evidence.",
+      "evidence": "docs/qa/CLOUD-REVIEW.md"
     }
   ],
-  "evidence_report": "docs/phase1/GCC-MIGRATION-REPORT.md",
-  "independent_qa": "docs/qa/GCC-MIGRATION-REVIEW.md",
+  "evidence_report": "docs/phase1/CLOUD-VALIDATION.md",
+  "independent_qa": "docs/qa/CLOUD-REVIEW.md",
   "migration": {
     "decision": "complete",
     "source_origin": "https://worfklow.org",
@@ -249,13 +328,14 @@
     "report": "docs/phase1/GCC-MIGRATION-REPORT.md"
   },
   "ci": {
-    "commit": "01e0729bbc6656dd93d9ff034a796123d6187672",
-    "run": 41641429108,
+    "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+    "run": 41647734872,
     "outcome": "passed",
     "contracts": 5,
     "runner_tap_passes": 21,
-    "provider_passes": 41,
+    "provider_passes": 52,
     "provider_skips": 2,
     "real_runtime_deselected": 1
-  }
+  },
+  "runtime_backend": "boxlite-cloud"
 }
