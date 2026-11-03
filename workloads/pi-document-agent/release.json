@@ -37,6 +37,7 @@
     "no_tools_litellm_preflight": "passed",
     "cloud_policy": "not_qualified",
     "rendered_layout": "not_performed",
-    "content_accuracy": "not_performed"
+    "content_accuracy": "not_performed",
+    "full_guest_docx_preflight": "passed"
   }
 }
