@@ -32,7 +32,7 @@ export default function register(pi: ExtensionAPI) {
         buildArguments(doc, params.operation, params), {
           encoding: "utf8", timeout: 30000, maxBuffer: 1024 * 1024,
           env: { HOME: process.env.HOME, PATH: "/usr/bin:/bin", LANG: "C.UTF-8",
-            OFFICECLI_NO_AUTO_RESIDENT: "1" },
+            OFFICECLI_NO_AUTO_RESIDENT: "1", LD_LIBRARY_PATH: fileURLToPath(new URL("./lib", import.meta.url)) },
         });
       const output = (result.stdout ?? "") + (result.stderr ?? "");
       return {

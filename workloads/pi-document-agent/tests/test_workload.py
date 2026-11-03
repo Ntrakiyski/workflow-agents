@@ -144,8 +144,11 @@ class WorkloadTests(unittest.TestCase):
     def test_profile_contains_no_secret_and_narrow_https_host(self):
         value = profile({'sha256': 'a' * 64}, 'docker.io/library/python@sha256:' + 'b' * 64,
                         'https://litellm.example.com/v1', 'approved-alias')
-        self.assertEqual(value['sandboxes']['pi-document-cloud:v1']['allowed_hosts'], ['litellm.example.com:443'])
-        self.assertNotIn('LITELLM_API_KEY', value['workloads']['pi-document-agent:v1']['environment'])
+        self.assertEqual(value['sandboxes']['pi-document-cloud:v2']['allowed_hosts'], ['litellm.example.com'])
+        self.assertNotIn('LITELLM_API_KEY', value['workloads']['pi-document-agent:v2']['environment'])
+        for endpoint in ('http://litellm.example.com/v1', 'https://litellm.example.com:8443/v1'):
+            with self.assertRaises(ValueError):
+                profile({'sha256': 'a' * 64}, 'docker.io/library/python@sha256:' + 'b' * 64, endpoint, 'model')
         with self.assertRaises(ValueError):
             profile({'sha256': 'a' * 64}, 'python:latest', 'https://litellm.example.com/v1', 'model')
 

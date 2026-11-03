@@ -1,4 +1,4 @@
-# Pi document agent 0.1.0
+# Pi document agent 0.1.0-rc.2
 
 An approved workload for text requests and constrained editing of one DOCX working copy, with optional UTF-8 TXT/Markdown reference files. It uses the existing externally configured LiteLLM service. There are no infrastructure imports or database clients.
 
@@ -6,7 +6,7 @@ This is a candidate package. Phase 1 readiness remains incomplete. [Verification
 
 ## Runtime bundle
 
-`runtime-lock.json` pins Linux x86_64 Node 24.22.2 and OfficeCLI 1.0.160 by vendor-published SHA256. `package-lock.json` pins Pi 1.5.0 and transitive npm package integrity. The builder downloads those exact binaries, runs npm's integrity-checked install with lifecycle scripts disabled and emits a normalized archive plus metadata. It does not create, snapshot, export or clone a VM.
+`runtime-lock.json` pins Linux x86_64 Node 24.22.2 and OfficeCLI 1.0.160 by vendor-published SHA256. `package-lock.json` pins Pi 1.5.0 and transitive npm package integrity. The bundle also includes ICU 72.1-3+deb12u1 (amd64), extracted using Docker from the immutable Debian bookworm Python image pinned in the lock. Each library and its copyright are checked against recorded hashes; host libraries are never copied. The builder requires Docker and access to that pinned source image. It downloads the exact binaries, runs npm's integrity-checked install with lifecycle scripts disabled and emits a normalized archive plus metadata. It does not create, snapshot, export or clone a VM.
 
 ```sh
 npm ci --ignore-scripts
@@ -30,7 +30,9 @@ PY
 python3 tests/runtime-smoke.py --runtime output/runtime
 ```
 
-The guest image must supply compatible glibc, libstdc++/libgcc and Python 3; binary execution must be verified in the exact pinned Cloud image. Local binary success does not prove that guest compatibility.
+The guest image must supply compatible glibc, libstdc++/libgcc and Python 3. OfficeCLI receives a fixed library path pointing at the bundled ICU libraries; invariant globalization is never enabled. The exact cached slim image `docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337` passed the actual-binary smoke locally in Docker, including persisted Unicode edits through the constrained extension and the bundled guest validator. The previous host-only smoke missed the slim image's absent ICU; that earlier bundle failed OfficeCLI startup in the guest. Local Docker proof remains separate from BoxLite Cloud and application acceptance.
+
+For the exact-image check, mount the extracted runtime at `/runtime` and this package at `/workload`, both read-only, then execute `python3 -B /workload/tests/runtime-smoke.py --runtime /runtime` in that immutable image with `--network none --read-only --cap-drop ALL --security-opt no-new-privileges:true --cpus 2 --memory 2048m --pids-limit 128 --tmpfs /tmp:rw,nosuid,nodev,size=256m`.
 
 ## Approved profile and credentials
 
@@ -45,7 +47,7 @@ Placeholders fail validation; supply actual verified values. Merge the emitted s
 
 The nonsecret environment holds `LITELLM_BASE_URL`, `LITELLM_MODEL_ALIAS` and a bounded execution timeout. `secret_environment` maps `LITELLM_API_KEY` to Provider runtime variable `WORKLOAD_SECRET_LITELLM_API_KEY`. The Provider resolves it immediately before execution. It is not a literal profile value or archive member. Pi configuration contains the environment reference `$LITELLM_API_KEY`; OfficeCLI subprocesses receive a minimal environment without the key. Required session/output files are scanned for a literal key before successful publication.
 
-The workload sandbox disables inbound and allows only the configured LiteLLM hostname/port outbound. BoxLite hostname allowlists have documented DNS/UDP limitations; metadata alone is not network qualification. Do not replace the rule with unrestricted egress if a vendor restriction blocks the model connection. Exact effective-policy and traffic checks belong in hosted evidence.
+The rc2 renderer emits immutable profiles `pi-document-cloud:v2` and `pi-document-agent:v2`. It accepts only an HTTPS LiteLLM URL using the default port or explicit 443. The sandbox disables inbound and its outbound rule uses the LiteLLM hostname only: Cloud matching does not accept `hostname:443` as an effective hostname rule. This rule does not prove destination-port enforcement. BoxLite hostname allowlists also have documented DNS/UDP limitations; metadata alone is not network qualification. Do not replace the rule with unrestricted egress if a vendor restriction blocks the model connection. Exact effective-policy and traffic checks belong in hosted evidence.
 
 ## Scoped files and request contract
 
@@ -61,7 +63,7 @@ All paths are below `/opt/workflow-transfer`:
 | `requests/<uuid>/outputs/document.docx` | Separate working copy, when a DOCX input exists |
 | `requests/<uuid>/session/*.jsonl` | Required retained Pi session checkpoint |
 
-The application stages all files through Provider's scoped upload API, then submits Runner workload `pi-document-agent:v1` with `arguments:{request_id:<uuid>}` and the retained sandbox reference. The application must never accept client-selected runtime archives, profiles or guest roots.
+The application stages all files through Provider's scoped upload API, then submits Runner workload `pi-document-agent:v2` with `arguments:{request_id:<uuid>}` and the retained sandbox reference. The application must never accept client-selected runtime archives, profiles or guest roots.
 
 Request JSON is `{schema_version:1,request_id,instructions,inputs:[{name,path,media_type,size_bytes,sha256}]}`. Input `path` is a safe single basename under `inputs/`; `name` is display metadata. Up to eight inputs are supported, each <=10 MiB and combined <=20 MiB, with at most one DOCX plus TXT/Markdown references. Reference text is bounded to 100,000 characters per file and 200,000 total. Instructions are 1–16,000 characters. With no DOCX, Pi returns text without tools. With a DOCX, only the assigned copied output may be edited.
 
