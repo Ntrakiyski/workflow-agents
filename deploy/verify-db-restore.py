@@ -42,7 +42,9 @@ try:
         source_count = psql("SELECT count(*) FROM " + quoted)
         restored_count = psql("SELECT count(*) FROM " + quoted, restored)
         assert source_count == restored_count, f"Restored count differs for {table}: source={source_count}, restored={restored_count}"
-        counts[table] = int(source_count)
+        digest_query = "SELECT md5(coalesce(string_agg(md5(to_jsonb(t)::text), '' ORDER BY md5(to_jsonb(t)::text)), '')) FROM " + quoted + " t"
+        assert psql(digest_query) == psql(digest_query, restored), "Restored row content differs for " + table
+        counts[table] = {"rows": int(source_count), "row_content_equal": True}
     print(json.dumps({"outcome":"passed", "source":database, "tables":counts,
                       "scope":"local PostgreSQL logical backup/restore only; BoxLite disks excluded"}, indent=2))
 finally:

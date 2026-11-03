@@ -2,12 +2,30 @@
   "outcome": "passed",
   "source": "sandbox_provider_integration",
   "tables": {
-    "public.audit_events": 28,
-    "public.cancellation_fences": 0,
-    "public.idempotency": 8,
-    "public.runs": 5,
-    "public.sandboxes": 3,
-    "public.schema_migrations": 2
+    "public.audit_events": {
+      "rows": 28,
+      "row_content_equal": true
+    },
+    "public.cancellation_fences": {
+      "rows": 0,
+      "row_content_equal": true
+    },
+    "public.idempotency": {
+      "rows": 8,
+      "row_content_equal": true
+    },
+    "public.runs": {
+      "rows": 5,
+      "row_content_equal": true
+    },
+    "public.sandboxes": {
+      "rows": 3,
+      "row_content_equal": true
+    },
+    "public.schema_migrations": {
+      "rows": 2,
+      "row_content_equal": true
+    }
   },
   "scope": "local PostgreSQL logical backup/restore only; BoxLite disks excluded"
 }
