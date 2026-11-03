@@ -65,8 +65,16 @@ function required(env: NodeJS.ProcessEnv, key: string) {
   if (!s) throw new Error(`Missing ${key}`);
   return s;
 }
+function jsonEnvironment(env: NodeJS.ProcessEnv, key: string): unknown {
+  const value = required(env, key);
+  try {
+    return JSON.parse(value);
+  } catch {
+    throw new Error(`Invalid ${key} JSON`);
+  }
+}
 export function loadConfig(env = process.env): Config {
-  const auth = JSON.parse(required(env, "RUNNER_AUTH_JSON")) as Principal[];
+  const auth = jsonEnvironment(env, "RUNNER_AUTH_JSON") as Principal[];
   if (!Array.isArray(auth) || !auth.length)
     throw new Error("RUNNER_AUTH_JSON must be a nonempty array");
   const ids = new Set<string>(),
@@ -100,8 +108,9 @@ export function loadConfig(env = process.env): Config {
     ids.add(a.actor_id);
     tokens.add(a.token);
   }
-  const profiles = JSON.parse(
-    required(env, "RUNNER_PROFILES_JSON"),
+  const profiles = jsonEnvironment(
+    env,
+    "RUNNER_PROFILES_JSON",
   ) as ProfileConfig;
   const profileSchema = JSON.parse(
     readFileSync(
