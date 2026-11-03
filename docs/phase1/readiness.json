@@ -262,7 +262,7 @@
         "docs/release/offhost-restore-final-infrastructure.json",
         "deploy/README.md",
         "docs/release/offhost-backup-completed.json",
-        "docs/release/offhost-forensic-restore-completed-bound.json"
+        "docs/release/offhost-forensic-restore-completed-stdin.json"
       ],
       "scope": "Final installed systemd service invocation passed with three authenticated encrypted archives: Runner/Provider 8387b5d and application 1d21e27. All referenced application objects, approved runtime cache and public profile inventory retained on independent host; enabled daily timer is active. Both infrastructure archives restored twice with exact rows/audits/sequences in isolated offline databases. No guest-disk recovery or operational cutover claim. Actual restored infrastructure envelope bytes were bound to the capture manifest SHA256 before database creation."
     },
@@ -276,7 +276,7 @@
         "docs/release/application-restore-attempt-1.json",
         "docs/contracts/boxlite-cloud-capabilities.md",
         "docs/release/application-restore-completed.json",
-        "docs/release/offhost-forensic-restore-completed-bound.json"
+        "docs/release/offhost-forensic-restore-completed-stdin.json"
       ]
     },
     {
@@ -717,7 +717,7 @@
     "evidence": [
       "docs/release/offhost-backup-completed.json",
       "docs/release/application-restore-completed.json",
-      "docs/release/offhost-forensic-restore-completed-bound.json"
+      "docs/release/offhost-forensic-restore-completed-stdin.json"
     ],
     "forensic_source_envelopes": [
       {

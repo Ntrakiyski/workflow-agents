@@ -142,7 +142,8 @@ class VerifierGuards(unittest.TestCase):
             self.assertEqual(args[:2], ['docker', 'exec'])
             return SimpleNamespace(returncode=0)
 
-        code, evidence, _, _ = self.invoke(manifest(), command, subprocess_run)
+        with patch.dict(os.environ, {'PHASE1_ARCHIVE_ENVELOPE': 'inert-stale-envelope'}):
+            code, evidence, _, _ = self.invoke(manifest(), command, subprocess_run)
         self.assertEqual(code, 1)
         self.assertEqual(evidence['outcome'], 'failed')
         self.assertEqual(evidence['error_classification'], 'restore_cleanup_failed')
