@@ -40,7 +40,7 @@ Use `.env.example` as a key reference, not a credential source. The program does
 | Variable | Meaning / default |
 | --- | --- |
 | `DATABASE_URL` | Required private, service-owned PostgreSQL connection. Use `sslmode=verify-full` where TLS is required. |
-| `RUNNER_AUTH_JSON` | Required array of credentials with `token`, `actor_id`, `owner_id`, `permissions`, `workload_profiles`, `sandbox_profiles`; optional `allow_resume`, `max_concurrency`, `max_pending_jobs`. Use random scoped secrets. |
+| `RUNNER_AUTH_JSON` | Required array of credentials with `token`, `actor_id`, `owner_id`, `permissions`, `workload_profiles`, `sandbox_profiles`; optional `allow_resume`, `max_concurrency`, `max_pending_jobs`, `max_pending_schedules`. Use random scoped secrets. |
 | `RUNNER_PROFILES_JSON` | Required complete profile JSON `{version:1,sandboxes,workloads}` matching `config/profiles.schema.json`. |
 | `SANDBOX_PROVIDER_URL` | Required private HTTP(S) base URL, without embedded credentials/query/fragment. |
 | `SANDBOX_PROVIDER_TOKEN` | Required private Provider credential configured for explicit delegation to the authorized Runner owners. |
@@ -48,7 +48,7 @@ Use `.env.example` as a key reference, not a credential source. The program does
 | `QUEUE_CONCURRENCY` | Local Graphile task concurrency: `2`, maximum `64`. |
 | `MAX_GLOBAL_CONCURRENCY` | Database-enforced active dispatch/run limit across Runner processes: `2`. |
 | `MAX_OWNER_CONCURRENCY` | Default active jobs per owner: `1`; credential override allowed. |
-| `MAX_PENDING_JOBS` | Default nonterminal admission quota per owner: `100`; credential override allowed. |
+| `MAX_PENDING_JOBS`, `MAX_PENDING_SCHEDULES` | Default nonterminal job and pending schedule admission quotas per owner: `100` each; credential overrides allowed. |
 | `MAX_DURATION_SECONDS`, `MAX_ATTEMPTS` | Hard policy ceilings: `3600`, `3`; workload profile cap also applies. |
 | `PROVIDER_TIMEOUT_MS` | Per HTTP operation timeout including bounded response reading: `5000`. |
 | `POLL_INTERVAL_MS` | Graphile polling / durable run inspection delay: `250`. |
@@ -83,7 +83,7 @@ Example submission body:
 
 Poll the returned Job until terminal. Reuse an existing retained box via `sandbox:{mode:"reuse",sandbox_id:"..."}` or resume a terminal job with a new workload/limits. Resume creates a new job; the previous result remains immutable. Configure new approved workloads/profiles without editing the Runner source. Arbitrary client shell, image overrides and unbounded file bodies are rejected.
 
-`run_at` delays a job. `limits.deadline_at` is an absolute cutoff. Schedules support `submit_job`, `stop_sandbox`, and `cancel_job`. A stop skips busy boxes and never destroys them. Automatic idle stops capture the completion that created them and skip when newer activity exists. Schedule cancellation and external firing serialize under the same advisory lock; once a side effect begins, DELETE waits and returns conflict after the schedule fires, rather than reporting cancelled after an effect.
+`run_at` delays a job. `limits.deadline_at` is an absolute cutoff. A delayed job wakes at its earlier deadline even when `run_at` is much later, including after process recovery. Schedules support `submit_job`, `stop_sandbox`, and `cancel_job`. A stop skips busy boxes and never destroys them. Automatic idle stops capture the completion that created them and skip when newer activity exists. Schedule cancellation and external firing serialize under the same advisory lock; once a side effect begins, DELETE waits and returns conflict after the schedule fires, rather than reporting cancelled after an effect.
 
 ## Durability, limits and recovery
 

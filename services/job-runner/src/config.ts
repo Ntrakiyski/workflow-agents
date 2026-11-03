@@ -39,6 +39,7 @@ export type Config = {
   maxGlobalConcurrency: number;
   maxOwnerConcurrency: number;
   maxPendingJobs: number;
+  maxPendingSchedules: number;
   maxDurationSeconds: number;
   maxAttempts: number;
   providerTimeoutMs: number;
@@ -83,7 +84,11 @@ export function loadConfig(env = process.env): Config {
       tokens.has(a.token)
     )
       throw new Error("Invalid Runner authentication configuration");
-    for (const limit of [a.max_concurrency, a.max_pending_jobs]) {
+    for (const limit of [
+      a.max_concurrency,
+      a.max_pending_jobs,
+      a.max_pending_schedules,
+    ]) {
       if (
         limit !== undefined &&
         (!Number.isInteger(limit) || limit < 1 || limit > 100000)
@@ -161,6 +166,7 @@ export function loadConfig(env = process.env): Config {
     maxGlobalConcurrency: number(env, "MAX_GLOBAL_CONCURRENCY", 2, 1, 1024),
     maxOwnerConcurrency: number(env, "MAX_OWNER_CONCURRENCY", 1, 1, 1024),
     maxPendingJobs: number(env, "MAX_PENDING_JOBS", 100, 1, 100000),
+    maxPendingSchedules: number(env, "MAX_PENDING_SCHEDULES", 100, 1, 100000),
     maxDurationSeconds: number(env, "MAX_DURATION_SECONDS", 3600, 1, 86400),
     maxAttempts: number(env, "MAX_ATTEMPTS", 3, 1, 10),
     providerTimeoutMs: number(env, "PROVIDER_TIMEOUT_MS", 5000, 10, 300000),

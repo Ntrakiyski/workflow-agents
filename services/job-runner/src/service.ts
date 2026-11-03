@@ -133,6 +133,7 @@ export class Service {
   }
   assertPolicy(principal: Principal, body: JobSubmission) {
     authorize(principal, "job:submit");
+    if (body.idle_stop_after_seconds) authorize(principal, "schedule:write");
     const profile = this.config.profiles.workloads[body.workload.profile];
     if (
       !profile ||
@@ -272,7 +273,15 @@ export class Service {
       [p.owner_id, operation, key, fingerprint(body), jobId],
     );
     await this.audit(sql, j, "job.submitted", status);
-    await queue(sql, "job_tick", jobId, due, body.priority);
+    const wake = new Date(
+      Math.min(
+        due.getTime(),
+        body.limits.deadline_at
+          ? new Date(body.limits.deadline_at).getTime()
+          : Infinity,
+      ),
+    );
+    await queue(sql, "job_tick", jobId, wake, body.priority);
     return j;
   }
   async submit(
@@ -367,20 +376,56 @@ export class Service {
     validate("runner", "ScheduleSubmission", body);
     if (body.job) {
       this.assertPolicy(p, body.job);
-      await this.assertReuse(p, body.job, correlation);
     }
+    const replayId = await this.replay(
+      this.pool,
+      p.owner_id,
+      "schedule",
+      key,
+      body,
+    );
+    if (replayId) return this.schedule(this.pool, p.owner_id, replayId);
+    if (body.job) await this.assertReuse(p, body.job, correlation);
     if (body.job_id) {
       authorize(p, "job:cancel");
       await this.job(this.pool, p.owner_id, body.job_id);
     }
-    if (body.sandbox_id)
-      await this.provider.sandbox(p.owner_id, correlation, body.sandbox_id);
+    if (body.sandbox_id) {
+      const box = await this.provider.sandbox(
+        p.owner_id,
+        correlation,
+        body.sandbox_id,
+      );
+      if (!p.sandbox_profiles.includes(box.profile))
+        throw new ApiError(
+          403,
+          "forbidden",
+          "Sandbox profile is not permitted",
+        );
+    }
     return transaction(this.pool, async (c) => {
       await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
         "runner:owner:" + p.owner_id,
       ]);
       const previous = await this.replay(c, p.owner_id, "schedule", key, body);
       if (previous) return this.schedule(c, p.owner_id, previous);
+      const pending = Number(
+        (
+          await c.query(
+            "SELECT count(*) FROM runner.schedules WHERE owner_id=$1 AND status='pending'",
+            [p.owner_id],
+          )
+        ).rows[0].count,
+      );
+      if (
+        pending >= (p.max_pending_schedules ?? this.config.maxPendingSchedules)
+      )
+        throw new ApiError(
+          429,
+          "quota_exceeded",
+          "Pending schedule quota exceeded",
+          true,
+        );
       const s = (
         await c.query<ScheduleRow>(
           "INSERT INTO runner.schedules(schedule_id,owner_id,actor_id,correlation_id,action,payload,status,run_at,job_id,sandbox_id) VALUES($1,$2,$3,$4,$5,$6,'pending',$7,$8,$9) RETURNING *",
@@ -430,7 +475,7 @@ export class Service {
       s.schedule_id,
     );
   }
-  async cancelSchedule(p: Principal, scheduleId: string) {
+  async cancelSchedule(p: Principal, scheduleId: string, correlation?: string) {
     authorize(p, "schedule:write");
     return transaction(this.pool, async (c) => {
       await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
@@ -454,7 +499,16 @@ export class Service {
           [scheduleId],
         )
       ).rows[0]!;
-      await this.auditSchedule(c, changed, "schedule.cancelled", "cancelled");
+      await this.auditSchedule(
+        c,
+        {
+          ...changed,
+          actor_id: p.actor_id,
+          correlation_id: correlation ?? changed.correlation_id,
+        },
+        "schedule.cancelled",
+        "cancelled",
+      );
       return changed;
     });
   }

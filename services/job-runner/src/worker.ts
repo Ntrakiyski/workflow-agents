@@ -77,7 +77,20 @@ export class Worker {
           )
         ).rows;
         for (const j of jobs) {
-          await queue(c, "job_tick", j.job_id, j.due_at, j.payload.priority);
+          await queue(
+            c,
+            "job_tick",
+            j.job_id,
+            new Date(
+              Math.min(
+                j.due_at.getTime(),
+                j.payload.limits.deadline_at
+                  ? new Date(j.payload.limits.deadline_at).getTime()
+                  : Infinity,
+              ),
+            ),
+            j.payload.priority,
+          );
           await this.service.audit(c, j, "job.recovered", j.status, {
             attempt: j.attempt_count,
           });
@@ -548,7 +561,20 @@ export class Worker {
           return;
         }
         if (j.due_at.getTime() > Date.now()) {
-          await queue(c, "job_tick", j.job_id, j.due_at, j.payload.priority);
+          await queue(
+            c,
+            "job_tick",
+            j.job_id,
+            new Date(
+              Math.min(
+                j.due_at.getTime(),
+                j.payload.limits.deadline_at
+                  ? new Date(j.payload.limits.deadline_at).getTime()
+                  : Infinity,
+              ),
+            ),
+            j.payload.priority,
+          );
           return;
         }
         const p = this.service.principal(j.owner_id, j.actor_id);
@@ -690,6 +716,12 @@ export class Worker {
               s.correlation_id,
               s.sandbox_id!,
             );
+            if (!principal.sandbox_profiles.includes(box.profile))
+              throw new ApiError(
+                403,
+                "forbidden",
+                "Sandbox profile is not permitted",
+              );
             if (box.active_run_id) {
               outcome = "skipped";
               reason = "sandbox_busy";

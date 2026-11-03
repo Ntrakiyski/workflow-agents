@@ -299,6 +299,19 @@ test(
           const j = await submit(body);
           assert.equal((await terminal(j.job_id)).status, "timed_out");
           assert.equal(provider.stats.executions, before);
+          const scheduled = submission();
+          (scheduled as any).run_at = new Date(
+            Date.now() + 60000,
+          ).toISOString();
+          (scheduled.limits as any).deadline_at = new Date(
+            Date.now() + 350,
+          ).toISOString();
+          const future = await submit(scheduled);
+          await worker.stop();
+          worker = new Worker(service);
+          await worker.start();
+          assert.equal((await terminal(future.job_id)).status, "timed_out");
+          assert.equal(provider.stats.executions, before);
           provider.stats.holdRuns = true;
           const short = submission();
           short.limits.max_duration_seconds = 1;
@@ -368,6 +381,33 @@ test(
           );
           assert.equal(schedule.statusCode, 201, schedule.body);
           const sid = schedule.json().schedule_id;
+          cfg.auth.push({
+            ...cfg.auth[0]!,
+            token: "fixture-canceller-token-0123456789",
+            actor_id: "fixture-canceller",
+            permissions: ["schedule:write"],
+          });
+          const cancelledByOtherActor = await send(
+            "DELETE",
+            "/v1/schedules/" + sid,
+            undefined,
+            {
+              ...headers,
+              authorization: "Bearer fixture-canceller-token-0123456789",
+              "x-correlation-id": "corr_cancel_actual",
+            },
+          );
+          assert.equal(cancelledByOtherActor.statusCode, 200);
+          const auditActor = (
+            await pool.query(
+              "SELECT actor_id,correlation_id FROM runner.audit_events WHERE target_id=$1 AND type='schedule.cancelled'",
+              [sid],
+            )
+          ).rows[0];
+          assert.equal(auditActor.actor_id, "fixture-canceller");
+          assert.equal(auditActor.correlation_id, "corr_cancel_actual");
+          cfg.auth.pop();
+
           assert.equal(
             (await send("DELETE", "/v1/schedules/" + sid)).json().status,
             "cancelled",
@@ -377,6 +417,43 @@ test(
             (await send("GET", "/v1/schedules/" + sid)).json().status,
             "cancelled",
           );
+          cfg.auth[0]!.max_pending_schedules = 1;
+          const quotaBody = {
+            run_at: new Date(Date.now() + 30000).toISOString(),
+            action: "submit_job",
+            job: submission(),
+          };
+          const quotaKey = randomUUID();
+          const queuedSchedule = await send(
+            "POST",
+            "/v1/schedules",
+            quotaBody,
+            { ...headers, "idempotency-key": quotaKey },
+          );
+          assert.equal(queuedSchedule.statusCode, 201);
+          assert.equal(
+            (
+              await send("POST", "/v1/schedules", quotaBody, {
+                ...headers,
+                "idempotency-key": quotaKey,
+              })
+            ).statusCode,
+            201,
+          );
+          assert.equal(
+            (
+              await send("POST", "/v1/schedules", quotaBody, {
+                ...headers,
+                "idempotency-key": randomUUID(),
+              })
+            ).statusCode,
+            429,
+          );
+          await send(
+            "DELETE",
+            "/v1/schedules/" + queuedSchedule.json().schedule_id,
+          );
+          delete cfg.auth[0]!.max_pending_schedules;
           const second = await send(
             "POST",
             "/v1/schedules",
