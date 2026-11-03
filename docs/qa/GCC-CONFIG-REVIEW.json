@@ -1,0 +1,58 @@
+{
+  "observed_at_utc": "2026-11-03 12:53:47 UTC",
+  "method": "Independent read-only Coolify MCP get_application/get_database; default credential masking; not a runtime test",
+  "project": "ptombcqslsfcmfufdui4vk1z",
+  "environment": "tiiebld0vegfeegaapo3cdt3",
+  "resources": [
+    {
+      "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+      "name": "job-runner",
+      "status": "running:healthy",
+      "git_commit_sha": "161da85a647448df2dea8249f5bdd32c7ed5b527",
+      "fqdn": null,
+      "ports_mappings": null,
+      "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=128",
+      "health_check_path": "/health/ready",
+      "limits_cpus": "0.5",
+      "limits_memory": "384m"
+    },
+    {
+      "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+      "name": "sandbox-provider",
+      "status": "running:healthy",
+      "git_commit_sha": "161da85a647448df2dea8249f5bdd32c7ed5b527",
+      "fqdn": null,
+      "ports_mappings": null,
+      "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --device=/dev/kvm:/dev/kvm:rw",
+      "health_check_path": "/health/live",
+      "limits_cpus": "1.5",
+      "limits_memory": "2048m"
+    },
+    {
+      "uuid": "5alfx46nkf9d1vfzdivdybqh",
+      "name": "job-runner-db",
+      "status": "running:healthy",
+      "postgres_user": "job_runner",
+      "postgres_db": "job_runner",
+      "is_public": false,
+      "public_port": null,
+      "image": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
+      "limits_cpus": "0.25",
+      "limits_memory": "256m"
+    },
+    {
+      "uuid": "vv6xrcopkfiry4naqltlvlfg",
+      "name": "sandbox-provider-db",
+      "status": "running:healthy",
+      "postgres_user": "sandbox_provider",
+      "postgres_db": "sandbox_provider",
+      "is_public": false,
+      "public_port": null,
+      "image": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
+      "limits_cpus": "0.25",
+      "limits_memory": "256m"
+    }
+  ],
+  "runtime_qualification": "failed at create_a; do not infer real runtime from health statuses",
+  "remote_mutations_by_qa": false
+}

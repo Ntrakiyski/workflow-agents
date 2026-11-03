@@ -1,0 +1,29 @@
+# Independent GCC migration review
+
+Reviewer: independent QA agent, 2026-11-03. Remote mutations are performed by the lead; this reviewer uses read-only Coolify calls, source review and local isolated fixtures. This report does not count service self-reported readiness as proof of a functioning microVM.
+
+## Infrastructure inspected independently
+
+GCC project `workflow-agents-phase1` (`ptombcqslsfcmfufdui4vk1z`), staging `tiiebld0vegfeegaapo3cdt3`, has two separate Dockerfile applications and two PostgreSQL resources. Snapshot: [GCC-CONFIG-REVIEW.json](GCC-CONFIG-REVIEW.json). At the snapshot both applications and databases were `running:healthy`, pinned to `161da85a647448df2dea8249f5bdd32c7ed5b527`. Apps have no public FQDN or host port mapping; both databases have no public port and use separate database/user names. The shared Coolify Docker network is private from the public internet but is not a dedicated four-resource network isolation boundary.
+
+Provider options are `--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --device=/dev/kvm:/dev/kvm:rw`. Runner has cap-drop/no-new-privileges and a128-process limit. Provider health monitoring uses liveness. The lead reported that native diagnostics independently show UID10001, groups993/10001, KVM access, zero effective capabilities and enabled seccomp/no-new-privileges; QA has read the retained diagnostic output but has not independently executed those native commands.
+
+Read-only storage inspection found Provider named volume `b4safsmcuzzqdmgn7jqt7m8d-workflow-phase1-boxlite`, storage UUID `kle6n9haj4u7hurihsbu3ub8`, mounted at `/var/lib/sandbox-provider`, with no file/bind storage. Configuration alone does not prove retained writable disks or recoverability.
+
+The old Worfklow project `6nshux1lmrsmsfeqar9wess9` staging was independently inspected and contained exactly Runner `hpuishi3ewj80863sqj7wucd`, Provider `v3kixl4u4st8khfpmx2xne7e`, Runner DB `cbru9p9dh6sucbea2adudwco` and Provider DB `b2d87fuzrb1cpw6noy0kpo48`. Its automatically created production environment was empty. These observations establish a narrow deletion allowlist, not authorization to touch other projects. This reviewer has not deleted infrastructure.
+
+## Actual runtime result inspected
+
+The lead-captured GCC native qualification is retained at `docs/phase1/gcc-evidence/runtime-first.json`. It used SDK0.11.0 and failed during `create_a` after10270ms, classification `runtime_operation_failed`. Its only successful check was explicit destruction/cleanup; no boxes remained. This is a genuine failed real-runtime attempt. It proves neither successful creation, command execution, isolation nor filesystem retention. A successful readiness response remains insufficient for acceptance.
+
+Independent review of runtime engineer commit `899be46` confirms its diagnostic extension is explicit operator opt-in, bounds exception text, redacts configured auth/DB/workload values and fixture arguments, and saves the private traceback through a mode600 temporary file in a private session directory. It changes no API response, host virtualization setting or runtime privilege. Running the diagnostic and reviewing its actual cause is the next runtime gate.
+
+## Independent HTTP client and local verification
+
+QA commits `6f2f70f` and `1e027dd` add the HTTP-only prepare/verify/explicit-cleanup probe and protect one-off task replay. Exact scope, commands and executed local checks are in [GCC-PROBE.md](GCC-PROBE.md). Syntax checks passed. An actually unavailable fake runtime was rejected before workload allocation. An explicitly healthy-labelled local test double exercised nine positive client protocol groups, concurrent invocation serialization, exact-record cleanup and owner-reference rejection. Verify correctly rejected the absence of a real recovery audit. None of those positive local fixture results is real BoxLite evidence.
+
+## Migration data and incomplete gates
+
+The lead's source archive manifests report authenticated decryption and deterministic row-digest integrity for11 Runner tables and6 Provider tables. QA inspected these manifests as attributed evidence; they contain rows/sequence-state metadata only and explicitly exclude schema definitions and VM disks. An archive manifest is not destination restoration proof. Exact restored-row verification, source quiescence and coordinated disk handling must precede destructive source removal.
+
+**Acceptance remains incomplete** pending actual GCC creation/execution, non-destructive stop/start and two-box filesystem isolation; published-API prepare; independently observed application replacements and retained-record verify; destination archive restoration evidence; and narrow source deletion confirmation. Active-run/service-restart recovery, resource enforcement, artifact export and off-host registry-plus-disk recovery remain separate gates. Shared-host reboot is deliberately unverified without explicit authorization. No Phase2 consumption approval is given by this interim review.
