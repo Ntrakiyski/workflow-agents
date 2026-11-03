@@ -1,3 +1,6 @@
+import { spawn } from "node:child_process";
+import { once } from "node:events";
+import { createServer } from "node:net";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -429,6 +432,98 @@ test(
             "fired",
           );
           provider.stats.stopDelayMs = 0;
+        },
+      );
+      await t.test(
+        "SIGKILL recovery reattaches to the same external run through real Runner HTTP",
+        async () => {
+          await worker.stop();
+          const portServer = createServer();
+          portServer.listen(0, "127.0.0.1");
+          await once(portServer, "listening");
+          const port = (portServer.address() as { port: number }).port;
+          await new Promise<void>((resolve) =>
+            portServer.close(() => resolve()),
+          );
+          const env = {
+            ...process.env,
+            DATABASE_URL: url!,
+            RUNNER_AUTH_JSON: JSON.stringify(cfg.auth),
+            RUNNER_PROFILES_JSON: JSON.stringify(cfg.profiles),
+            SANDBOX_PROVIDER_URL: provider.url,
+            SANDBOX_PROVIDER_TOKEN: cfg.providerToken,
+            HOST: "127.0.0.1",
+            PORT: String(port),
+            QUEUE_CONCURRENCY: "2",
+            POLL_INTERVAL_MS: "30",
+            PROVIDER_TIMEOUT_MS: "120",
+            LOG_LEVEL: "info",
+          };
+          async function startProcess() {
+            const child = spawn(
+              process.execPath,
+              ["--import", "tsx", "src/main.ts"],
+              { env, stdio: ["ignore", "pipe", "pipe"] },
+            );
+            let output = "";
+            child.stdout.on("data", (chunk) => {
+              output += chunk.toString();
+            });
+            child.stderr.on("data", () => {});
+            try {
+              await until(
+                async () => output.includes('"action":"service.started"'),
+                Boolean,
+                10000,
+              );
+            } catch (e) {
+              child.kill("SIGKILL");
+              throw e;
+            }
+            return child;
+          }
+          let child = await startProcess();
+          const previousDelay = provider.stats.delayMs;
+          provider.stats.delayMs = 1200;
+          const before = provider.stats.executions;
+          try {
+            const response = await fetch(`http://127.0.0.1:${port}/v1/jobs`, {
+              method: "POST",
+              headers: {
+                ...headers,
+                "content-type": "application/json",
+                "idempotency-key": randomUUID(),
+              },
+              body: JSON.stringify(submission()),
+            });
+            assert.equal(response.status, 202);
+            const j = (await response.json()) as { job_id: string };
+            await until(
+              () => job(j.job_id),
+              (value) => value.status === "running",
+            );
+            child.kill("SIGKILL");
+            await once(child, "exit");
+            child = await startProcess();
+            const done = await terminal(j.job_id);
+            assert.equal(done.status, "completed");
+            assert.equal(done.attempt_count, 1);
+            assert.equal(provider.stats.executions, before + 1);
+            const events = (
+              await send("GET", `/v1/jobs/${j.job_id}/events`)
+            ).json();
+            assert.ok(
+              events.events.some(
+                (event: any) => event.type === "job.recovered",
+              ),
+            );
+          } finally {
+            child.kill("SIGTERM");
+            await once(child, "exit");
+            provider.stats.delayMs = previousDelay;
+            worker = new Worker(service);
+            await worker.start();
+          }
         },
       );
       await t.test(
