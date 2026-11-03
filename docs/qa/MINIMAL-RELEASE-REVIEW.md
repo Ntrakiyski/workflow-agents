@@ -5,6 +5,7 @@ The reviewed candidate is suitable for continued isolated qualification. This re
 ## Reviewed sources
 
 - Provider scoped-transfer/completion implementation: `ff71f43`, integrated as `a2540e9`; cancellation follow-up: `a1ba19177b0d1a04a768eb31f79837d9200bcb61`.
+- Final fragmented hosted transfer and eventual deletion follow-up: `909980b`.
 - Application: `8bf1928`, followed by OfficeCLI OPC compatibility fix `27eb5f2`.
 - Pi/OfficeCLI workload: `023fce7`.
 - Logical off-host restore tooling and evidence present in the integration checkout: `1592711` and `docs/release/offhost-restore.json`.
@@ -17,6 +18,7 @@ These are reviewed source identities, not claims about the GCC deployment. The i
 | --- | --- | --- |
 | Provider regression before cancellation follow-up | 69 passed; 1 deselected | New PostgreSQL 16 container, fake runtime/actual SDK loopback. `independent-provider-2026-11-03/provider-tests.txt` |
 | Provider regression including cancellation follow-up | 72 passed; 1 deselected | A second new PostgreSQL 16 container, removed after execution. `independent-provider-2026-11-03/provider-cancellation-tests.txt` |
+| Final Provider transport/deletion regression | 75 passed; 1 deselected | A third new PostgreSQL 16 container, removed after execution; exact source `909980b`. `independent-provider-2026-11-03/provider-final-tests.txt` |
 | Versioned contracts | 6 passed; regeneration clean | `contracts/tests/test_contracts.py`, then generator and clean `contracts/v1` diff. `independent-provider-2026-11-03/contract-tests.txt` |
 | Controller DOCX adversarial checks | 11 of 11 passed | One valid package accepted; ten malformed/unsafe packages rejected. `independent-provider-2026-11-03/docx-validation.json`; repeatable script alongside it |
 | Real OfficeCLI compatibility | Passed after correction | Actual pinned OfficeCLI 1.0.160 created a fresh synthetic document, saved a paragraph, and returned schema success with zero errors; application controller independently accepted its bytes. `independent-provider-2026-11-03/officecli-compatibility.json` |
@@ -40,11 +42,11 @@ A fresh document from the exact pinned OfficeCLI binary was schema-valid but rej
 
 Commit `27eb5f2` accepts one-leading-slash internal package references while retaining authority/URI/traversal restrictions, and calculates the effective main content type from `Override` precedence or a matching `Default`. Duplicate content-type declarations fail. Independent repeat checks accepted the actual 5,202-byte OfficeCLI document and kept all adversarial checks passing. The final validator SHA256 is recorded in both JSON evidence files.
 
-### P1 — killing only the execution leader did not establish descendant termination: source/test correction verified; hosted proof separately required
+### P1 — killing only the execution leader did not establish descendant termination: resolved in source/tests and implementation-agent hosted evidence
 
 The Cloud wrapper launches workload subprocesses; Pi launches in a separate session. The pinned SDK's leader-kill behavior did not establish termination of those descendants. Reporting terminal cancellation and releasing the active slot after that signal could permit continued side effects.
 
-Commit `a1ba191` carries the exact retained Cloud runtime reference into the execution handle, makes same-box confirmed stop authoritative after best-effort leader kill, and records the sandbox stopped before publishing terminal cancellation/timeout. Stop failure retains active ownership for recovery. Source review confirms stop polls the same server identity until a nonrunning state; the independent 72-test run includes the new cancellation checks. A hosted delayed-descendant sentinel test after stop/start is being performed by the Provider implementation agent; final hosted evidence must be recorded before treating this runtime-specific concern as fully qualified.
+Commit `a1ba191` carries the exact retained Cloud runtime reference into the execution handle, makes same-box confirmed stop authoritative after best-effort leader kill, and records the sandbox stopped before publishing terminal cancellation/timeout. Stop failure retains active ownership for recovery. Source review confirms stop polls the same server identity until a nonrunning state; the independent regression runs include the new cancellation checks. The Provider implementation agent's `docs/release/cloud-cancellation-descendant.json` demonstrates the ready marker before cancellation, terminal cancellation/stopped registry, same-box restart plus ten seconds, no delayed descendant marker, and empty cleanup remainder. Independent QA inspected that record; it did not personally drive that hosted execution. Final deployed evidence remains separate.
 
 ## Source review observations
 
@@ -57,7 +59,7 @@ Commit `a1ba191` carries the exact retained Cloud runtime reference into the exe
 
 ## Integration evidence and remaining limits
 
-The lead's `docs/release/cloud-failure-journey.json` records actual BoxLite Cloud with isolated real PostgreSQL and real local service processes: duplicate delivery, transient failure before effect, lost acknowledgement after effect, Runner process SIGKILL, Provider process SIGKILL and cancellation race. The reviewed six-case record has one admitted execution and one durable effect in every case; Provider crash is truthfully failed rather than blindly replayed. This is lead-executed evidence and does not prove the GCC deployment is running the reviewed commits. Cancellation must also be rerun against its corrected implementation with the delayed descendant sentinel.
+The lead's `docs/release/cloud-failure-journey.json` records actual BoxLite Cloud with isolated real PostgreSQL and real local service processes: duplicate delivery, transient failure before effect, lost acknowledgement after effect, Runner process SIGKILL, Provider process SIGKILL and cancellation race. The reviewed six-case record has one admitted execution and one durable effect in every case; Provider crash is truthfully failed rather than blindly replayed. This is lead-executed evidence and does not prove the GCC deployment is running the reviewed commits. The corrected cancellation implementation has the separate delayed-descendant proof described above.
 
 The lead's `docs/release/offhost-restore.json` records two isolated logical database restores, matching table digests/audit identities and idempotent replay. Its source is deployed commit `04b7dc4`; all retained runtime entries are destroyed tombstones or have no runtime. It explicitly does not exercise guest restoration or application object restoration. A self-hosted object service on the GCC host is application storage, not by itself an off-host backup.
 
@@ -73,3 +75,7 @@ This review has not independently executed or approved the complete deployed bro
 - The external dummy interface was down, the IPv4 route table empty, and TCP connections to both fixed public IPv4 endpoints returned ENETUNREACH. This qualifies those probes for the network-denied profile; it does not qualify the Pi allowed-host policy or universal network isolation.
 
 These bounded results improve resource evidence but do not close sustained load, broad isolation/escape, host restart or vendor-host recovery gates.
+
+## Final Provider transport review
+
+Source `909980b` fragments a public 1 MiB transfer into bounded hosted transport operations without changing the public contract or durable operation fence. Internal upload fragments retain exact offset/checksum replay. Internal reads reuse the first full-file checksum only while device, inode, size, mtime and ctime match; the internal stamp is stripped from the public response. Explicit destroy polls the same retained identity for eventual absence and retains a retryable pending result if confirmation times out. Source review found no actionable defect in those changes, and an independent fresh-database regression passed all 75 tests. The Provider implementation agent is separately rerunning its hosted transfer journey against that exact committed source; no GCC deployment proof is inferred from this regression.
