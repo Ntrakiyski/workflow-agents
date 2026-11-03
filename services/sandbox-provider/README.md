@@ -213,7 +213,7 @@ Rollback this candidate by redeploying its prior immutable image/commit with unc
 
 ## Backup and restore qualification
 
-A named volume is not a backup. A coordinated backup must retain PostgreSQL registry/audits/idempotency/fences **and the complete BOX_ROOT**:
+A named volume is not a backup. In local mode, a coordinated backup must retain PostgreSQL registry/audits/idempotency/fences **and the complete BOX_ROOT**:
 
 1. Deny new submissions, cancel/reconcile active runs and stop all sandboxes through the API. Verify no active run remains.
 2. Stop only this Provider application, then dump only its database with PostgreSQL 16 `pg_dump --format=custom` using a protected credential mechanism.
@@ -222,6 +222,30 @@ A named volume is not a backup. A coordinated backup must retain PostgreSQL regi
 5. Start Provider against the restored pair. Confirm the same sandbox identities, marker files, events and deduplication/fences. Explicitly destroy only disposable drill sandboxes.
 
 These are required operational steps, not a claim that full VM backup/restore or host reboot was tested here. A real stopped-disk backup/restore drill and safe host-restart proof remain incomplete without qualified host access. Database-only restore proof cannot stand in for retained disk proof. No host-reboot test is part of the ordinary test command.
+
+In Cloud mode, use an explicit file checkpoint for required data under the scoped
+transfer root. The application owns the selected-file manifest and storage:
+
+1. Finish/fence workload writes, then export each selected file while the same
+   sandbox is running and has no active execution. Verify stable full size/hash
+   on every public chunk and independently hash the complete exported bytes.
+2. Store bytes plus owner, source sandbox ID, relative path, size, SHA256 and
+   workload/version manifest in application-owned durable storage. Stop the
+   source only after export and independent storage verification succeed.
+3. Restore into a newly authorized sandbox using new upload reservations and
+   original exact bytes/checksums. Re-download and independently verify each
+   file before dispatch. The new sandbox ID is intentional; record the mapping
+   rather than modifying old registry/runtime identities.
+4. Restore the registry dump separately into an isolated PostgreSQL instance
+   without starting a second Provider against existing Cloud bindings. Compare
+   row identities, fingerprints, audit history and fences. A forensic database
+   restore does not itself restore guests or authorize live execution.
+
+`tests/qa/cloud_transfer_journey.py` executed these file export/reupload and
+forensic checks against actual Cloud with disposable resources. Its checkpoint
+was private local storage, not a recurring off-host backup. This strategy does
+not preserve RAM, process state, arbitrary guest paths or a complete VM disk;
+application consistency and off-host backup scheduling require separate proof.
 
 ## Tests and evidence
 
