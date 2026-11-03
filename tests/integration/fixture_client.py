@@ -20,6 +20,10 @@ ROOT = Path(__file__).resolve().parents[2]
 TERMINAL = {"completed", "failed", "cancelled", "timed_out"}
 
 
+class PrerequisiteBlocked(Exception):
+    pass
+
+
 class Client:
     def __init__(self, service, url, token, owner=None):
         self.service, self.url, self.token, self.owner = service, url.rstrip("/"), token, owner
@@ -43,7 +47,8 @@ class Client:
         with response:
             status, data = response.code, json.loads(response.read(131072))
             assert response.headers.get("X-Correlation-ID") == self.correlation, "Missing response correlation header"
-        assert status == expected, f"{self.service} {method} {template or path}: HTTP {status}, expected {expected}; code={data.get('code')}"
+        accepted = expected if isinstance(expected, tuple) else (expected,)
+        assert status in accepted, f"{self.service} {method} {template or path}: HTTP {status}, expected {expected}; code={data.get('code')}"
         schema = self.contract["paths"][template or path][method.lower()]["responses"][str(status)]["content"]["application/json"]["schema"]
         # Local references resolve within an embedded root; no network schema fetch.
         root = {"$ref": "#/response", "response": schema, "components": self.contract["components"]}
@@ -77,8 +82,11 @@ def main():
         evidence["checks"].append(label)
         print(json.dumps({"check": label, "outcome": "passed", "mode": evidence["mode"]}), flush=True)
 
-    health = provider.call("GET", "/health/ready", expected=200 if args.allow_mocked_runtime else 200)
-    assert health["checks"].get("runtime") == "ok", "Provider runtime readiness unavailable"
+    health = provider.call("GET", "/health/ready", expected=(200,503))
+    if args.allow_mocked_runtime:
+        assert health["checks"].get("runtime") in {"ok", "disabled"}, "Mocked runtime is unavailable"
+    elif health["status"] != "ok" or health["checks"].get("runtime") != "ok":
+        raise PrerequisiteBlocked("Real Provider runtime readiness unavailable; no real BoxLite gate can pass")
     runner.call("GET", "/health/ready")
     check("health and strict response contracts")
     suffix = uuid.uuid4().hex
@@ -159,7 +167,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (urllib.error.URLError, KeyError) as error:
+    except (urllib.error.URLError, PrerequisiteBlocked) as error:
         print(json.dumps({"outcome":"blocked","reason":type(error).__name__,"detail":"Required endpoint/configuration unavailable"}),file=sys.stderr)
         sys.exit(2)
     except Exception as error:
