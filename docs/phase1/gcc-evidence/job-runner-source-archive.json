@@ -1,0 +1,78 @@
+{
+  "service": "job-runner",
+  "source_origin": "https://worfklow.org",
+  "task_uuid": "6l9bzpr6zcyto0sqpae1ydoc",
+  "execution_uuid": "3dly6ukmma7qkgeflgiskfwv",
+  "authenticated_decryption": "passed",
+  "table_integrity": "passed",
+  "tables": [
+    {
+      "schema": "graphile_worker",
+      "name": "_private_job_queues",
+      "rows": 0,
+      "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "graphile_worker",
+      "name": "_private_jobs",
+      "rows": 0,
+      "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "graphile_worker",
+      "name": "_private_known_crontabs",
+      "rows": 0,
+      "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "graphile_worker",
+      "name": "_private_tasks",
+      "rows": 2,
+      "rows_sha256": "12712f51b8461734db3dea11eac1259d61bb7e153b5696b07006ba82b3172178"
+    },
+    {
+      "schema": "graphile_worker",
+      "name": "migrations",
+      "rows": 20,
+      "rows_sha256": "971941d8bef98972d852767b1a108e1f0d0cdf0d530c2bd7e0420ed2cde47c2c"
+    },
+    {
+      "schema": "runner",
+      "name": "attempts",
+      "rows": 0,
+      "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "runner",
+      "name": "audit_events",
+      "rows": 9,
+      "rows_sha256": "72cb696af903a4ef5f52c28985d2b449c47ba9044ecba33dd51c6beff8bae0b4"
+    },
+    {
+      "schema": "runner",
+      "name": "idempotency",
+      "rows": 3,
+      "rows_sha256": "4edc4ae5ce0736785afb768d063918164e0919c5d5193938202bbc0305609d12"
+    },
+    {
+      "schema": "runner",
+      "name": "jobs",
+      "rows": 2,
+      "rows_sha256": "3f4a82b27fb5fab20f113242c9e62333a2f299325135a7523fc74515535ce240"
+    },
+    {
+      "schema": "runner",
+      "name": "schedules",
+      "rows": 1,
+      "rows_sha256": "afe32c36b6f4c878e23e84e88acb7a50a164f0c47dd5a82992696c4ea4bcabd5"
+    },
+    {
+      "schema": "runner",
+      "name": "schema_migrations",
+      "rows": 1,
+      "rows_sha256": "a1265e4306eede333854b7ce80985a37788682ccb8beaae9675c4e1294327189"
+    }
+  ],
+  "sequence_count": 4,
+  "scope": "logical database rows and sequence state only; no VM disks or schema definitions"
+}

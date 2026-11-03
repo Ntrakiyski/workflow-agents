@@ -1,0 +1,74 @@
+name: Phase 1 reusable services
+on:
+  push:
+    branches: [main, 'phase1/**']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r contracts/requirements-test.txt
+      - run: python contracts/tests/test_contracts.py
+      - run: python contracts/build_contracts.py && git diff --exit-code -- contracts/v1
+  job-runner:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
+        env:
+          POSTGRES_USER: runner_test
+          POSTGRES_PASSWORD: ci-disposable-only
+          POSTGRES_DB: runner_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U runner_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: services/job-runner
+    env:
+      TEST_DATABASE_URL: postgresql://runner_test:ci-disposable-only@localhost:5432/runner_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: services/job-runner/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+  sandbox-provider:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
+        env:
+          POSTGRES_USER: provider_test
+          POSTGRES_PASSWORD: ci-disposable-only
+          POSTGRES_DB: provider_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U provider_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: services/sandbox-provider
+    env:
+      TEST_DATABASE_URL: postgresql://provider_test:ci-disposable-only@localhost:5432/provider_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-dev.lock
+      - run: python -m pytest -m 'not real_runtime'
+  # Real BoxLite and host-restart qualification deliberately run only on a
+  # separately approved KVM execution host. CI passing does not satisfy those gates.

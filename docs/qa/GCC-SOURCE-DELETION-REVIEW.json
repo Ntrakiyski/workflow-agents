@@ -1,0 +1,39 @@
+{
+  "observed_at_utc": "2026-11-03 13:06:41 UTC",
+  "method": "Independent read-only Coolify exact resource GETs, environment GET and project GET",
+  "origin": "https://worfklow.org",
+  "project_uuid": "6nshux1lmrsmsfeqar9wess9",
+  "resource_results": [
+    {
+      "uuid": "hpuishi3ewj80863sqj7wucd",
+      "not_found": true
+    },
+    {
+      "uuid": "v3kixl4u4st8khfpmx2xne7e",
+      "not_found": true
+    },
+    {
+      "uuid": "cbru9p9dh6sucbea2adudwco",
+      "not_found": true
+    },
+    {
+      "uuid": "b2d87fuzrb1cpw6noy0kpo48",
+      "not_found": true
+    }
+  ],
+  "staging_after_resource_removal": {
+    "uuid": "vulhjgp8rvlruf3rlwchwc6v",
+    "arrays": {
+      "applications": [],
+      "mariadbs": [],
+      "mongodbs": [],
+      "mysqls": [],
+      "postgresqls": [],
+      "redis": [],
+      "services": []
+    }
+  },
+  "project_get_after_lead_removal": "Project not found",
+  "physical_volume_removal": "API removal requested by lead; no independent Docker volume enumeration by QA",
+  "unrelated_resources": "No QA mutations. Exact deleted project membership was independently verified before deletion; no broad Docker/network cleanup requested by lead."
+}

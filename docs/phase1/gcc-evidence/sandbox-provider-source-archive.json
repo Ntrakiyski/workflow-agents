@@ -1,0 +1,48 @@
+{
+  "service": "sandbox-provider",
+  "source_origin": "https://worfklow.org",
+  "task_uuid": "xlpmtzjcpzotnsqms9hbgk6q",
+  "execution_uuid": "nfkdrfrordvyoeslt9rdhmrp",
+  "authenticated_decryption": "passed",
+  "table_integrity": "passed",
+  "tables": [
+    {
+      "schema": "public",
+      "name": "audit_events",
+      "rows": 4,
+      "rows_sha256": "3252cb4681c2b9ae234c2758b2728096d8b93774c7ed2b7afec96612fb06514a"
+    },
+    {
+      "schema": "public",
+      "name": "cancellation_fences",
+      "rows": 0,
+      "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "idempotency",
+      "rows": 1,
+      "rows_sha256": "c497ff2eb0fdab21e1a69b976c9fe9e2b16006ea7431b14354fee45551b561b8"
+    },
+    {
+      "schema": "public",
+      "name": "runs",
+      "rows": 0,
+      "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "sandboxes",
+      "rows": 1,
+      "rows_sha256": "178c2f7faf7a0dc7d3e0950a1044f3f54852093d67cae936373b1ede3b9a7e31"
+    },
+    {
+      "schema": "public",
+      "name": "schema_migrations",
+      "rows": 2,
+      "rows_sha256": "51e69825a7b1da66ee823f113c48da1e75251e91d0de4981de0ffb8c9a3a5156"
+    }
+  ],
+  "sequence_count": 1,
+  "scope": "logical database rows and sequence state only; no VM disks or schema definitions"
+}

@@ -1,0 +1,3 @@
+# Keep exported diagrams out of the default review diff and language totals.
+docs/phase1/visuals/*.html linguist-generated=true
+docs/phase1/visuals/vectors/*.svg linguist-generated=true

@@ -1,0 +1,36 @@
+{
+  "observed_at_utc": "2026-11-03 13:01:46 UTC",
+  "method": "Independent read-only Coolify scheduled_tasks list_executions while task existed",
+  "task_uuid": "upzdgnufvnjlmwscca31wnx3",
+  "execution_uuid": "cbuubgp29i3rrtrcr8a6vswp",
+  "status": "success",
+  "started_at": "2026-11-03T13:01:02.000000Z",
+  "finished_at": "2026-11-03T13:01:04.000000Z",
+  "session": "9b5b67c04a724235bf558a797f632483",
+  "scope": "Read-only operator SDK logs; no runtime/API/database operation.",
+  "sdk_log_file": "boxlite.log.2026-11-03",
+  "prefix_truncated": true,
+  "selected_native_log_lines": [
+    "2026-11-03T12:58:13.883858Z ERROR boxlite::jailer::sandbox::bwrap: Sandbox preflight failed: bwrap cannot create user namespaces.",
+    "bwrap --unshare-user failed (bundled bwrap at /home/provider/.local/share/boxlite/runtimes/v0.11.0-24cef46-359aba63c545/bwrap)",
+    "clone(CLONE_NEWUSER) errno: 1 (Operation not permitted (os error 1))",
+    "Cause: AppArmor restricts user namespaces (kernel.apparmor_restrict_unprivileged_userns=1).",
+    "Bundled bwrap has no AppArmor profile.",
+    "2026-11-03T12:58:13.883879Z ERROR boxlite::litebox::init::tasks: Task failed: configuration error: The sandbox could not be initialized on this host. box_id=vKispOuMy5go task=vmm_spawn",
+    "2026-11-03T12:58:13.901585Z  INFO boxlite::runtime::rt_impl: Removed box box_id=vKispOuMy5go"
+  ],
+  "qualified_microvm": false,
+  "conclusion": "Image/rootfs/COW preparation occurred, then vmm_spawn failed at bundled bubblewrap user-namespace preflight. Logs report AppArmor policy as cause. No privileged/unconfined/sysctl/host-policy change was performed by QA.",
+  "old_source_apps_independently_observed": [
+    {
+      "uuid": "hpuishi3ewj80863sqj7wucd",
+      "status": "exited:unhealthy",
+      "container_present": false
+    },
+    {
+      "uuid": "v3kixl4u4st8khfpmx2xne7e",
+      "status": "exited:unhealthy",
+      "container_present": false
+    }
+  ]
+}

@@ -14,3 +14,9 @@ description: Develop or modify the reusable Graphile Worker Job Runner service a
 7. Confirm correlation IDs, structured logs and persistent audit events; redact tokens and sensitive payloads.
 8. Run actual project lint/typecheck/test/migration commands from README/package scripts. Record what ran, what passed, what failed/skipped.
 9. Report any API change as backward-compatible v1 addition or separately proposed major version; do not patch infrastructure just to satisfy one consuming application.
+
+## Verified implementation commands (1.0.0-rc.1)
+
+From `services/job-runner`: `npm ci`, `npm run typecheck`, `npm run format:check`, `npm run test:unit`, `TEST_DATABASE_URL=<disposable PostgreSQL> npm run test:integration`, `npm run build`. The integration command **drops the runner and graphile_worker schemas**; never target retained staging/production state. It uses actual PostgreSQL and Graphile with a Provider HTTP mock. See `VERIFICATION.md` for limits.
+
+Service-local `openapi.json`, `provider.openapi.json`, and `config/profiles.schema.json` must match the reviewed root contracts. The Provider cancellation-by-reference fence prevents a cancellation reconciliation from launching a previously absent run. Persist an attempt's exact execute request timeout/key/reference before HTTP; never recompute the payload on replay. A proven terminal retry creates a new attempt; transport retries preserve the existing one.

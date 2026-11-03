@@ -1,0 +1,1 @@
+{"service":"job-runner","version":"1.0.0-rc.1","api_version":"v1","contract_version":"1.0.0-rc.1","release_ready":false,"compatibility":"Additive v1 changes only. Breaking changes require a new major API; see ../../docs/contracts/v1.md."}

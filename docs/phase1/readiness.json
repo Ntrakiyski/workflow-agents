@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-11-03",
+  "phase": 1,
+  "decision": "incomplete",
+  "ready_for_phase2": false,
+  "release_version": "1.0.0-rc.1",
+  "stable_release": false,
+  "repository": "https://github.com/Ntrakiyski/workflow-agents",
+  "integration_branch": "phase1/integration",
+  "deployed_service_commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+  "api_version": "v1",
+  "contracts": [
+    "contracts/v1/runner-v1.openapi.json",
+    "contracts/v1/provider-v1.openapi.json"
+  ],
+  "coolify": {
+    "url": "https://hosting.gccssofia.com",
+    "project_name": "workflow-agents-phase1",
+    "project_uuid": "ptombcqslsfcmfufdui4vk1z",
+    "environment": "staging",
+    "environment_uuid": "tiiebld0vegfeegaapo3cdt3",
+    "resource_ids": "deploy/staging-resources.json",
+    "latest_deployments": {
+      "job-runner": "xoirtvdhn7kofdlkekgdegry",
+      "sandbox-provider": "byna6ecrish0jprg0dbywo37"
+    },
+    "resource_statuses": [
+      {
+        "kind": "applications",
+        "name": "job-runner",
+        "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+        "status": "running:healthy",
+        "fqdn": null,
+        "ports_mappings": null,
+        "is_public": false,
+        "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+        "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=128"
+      },
+      {
+        "kind": "applications",
+        "name": "sandbox-provider",
+        "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+        "status": "running:healthy",
+        "fqdn": null,
+        "ports_mappings": null,
+        "is_public": false,
+        "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+        "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256"
+      },
+      {
+        "kind": "databases",
+        "name": "job-runner-db",
+        "uuid": "5alfx46nkf9d1vfzdivdybqh",
+        "status": "running:healthy",
+        "fqdn": null,
+        "ports_mappings": null,
+        "is_public": false,
+        "commit": null
+      },
+      {
+        "kind": "databases",
+        "name": "sandbox-provider-db",
+        "uuid": "vv6xrcopkfiry4naqltlvlfg",
+        "status": "running:healthy",
+        "fqdn": null,
+        "ports_mappings": null,
+        "is_public": false,
+        "commit": null
+      }
+    ],
+    "health": {
+      "job-runner": {
+        "database": "ok",
+        "queue": "ok",
+        "readiness_http": 200
+      },
+      "sandbox-provider": {
+        "liveness": "ok",
+        "database": "ok",
+        "readiness_http": 200,
+        "reported_runtime": "ok",
+        "readiness_scope": "authenticated hosted Cloud read; separate actual HTTP workload qualification passed",
+        "actual_runtime_qualification": "passed_cloud_generic_fixture_journey",
+        "local_runtime_qualification": "historical_namespace_preflight_blocked"
+      }
+    }
+  },
+  "gates": [
+    {
+      "id": "contracts",
+      "outcome": "passed",
+      "evidence": "docs/qa/REPORT.md"
+    },
+    {
+      "id": "runner_real_database_mock_provider",
+      "outcome": "passed",
+      "tap_passes": 21,
+      "evidence": "services/job-runner/VERIFICATION.md"
+    },
+    {
+      "id": "provider_real_database_fake_runtime",
+      "outcome": "passed",
+      "pytest_passes": 52,
+      "hardware_conditional_negative_skips": 2,
+      "real_runtime_deselected": 1,
+      "evidence": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41647734872",
+      "scope": "Actual PostgreSQL; fake runtime and actual SDK against loopback HTTP stub, no hosted guest from CI"
+    },
+    {
+      "id": "independent_boundary_security",
+      "outcome": "passed",
+      "qa_boundary_tests": 6,
+      "sdk_boundary_tests": 3,
+      "evidence": "docs/qa/REPORT.md"
+    },
+    {
+      "id": "deployed_private_http_unavailable_runtime",
+      "outcome": "passed",
+      "groups_passed": 8,
+      "evidence": "docs/phase1/DEPLOYED-QA-EVIDENCE.json",
+      "historical_deployment_origin": "https://worfklow.org"
+    },
+    {
+      "id": "independent_correlated_log_review",
+      "outcome": "passed",
+      "runner_records": 60,
+      "provider_records": 15,
+      "evidence": "docs/qa/DEPLOYED-LOG-REVIEW.json",
+      "historical_deployment_origin": "https://worfklow.org"
+    },
+    {
+      "id": "container_replacement_registry_job_and_application_volume_retention",
+      "outcome": "passed",
+      "evidence": "docs/phase1/DEPLOYED-RETENTION-EVIDENCE.json",
+      "historical_deployment_origin": "https://worfklow.org"
+    },
+    {
+      "id": "cross_database_credential_denial",
+      "outcome": "passed",
+      "evidence": "docs/phase1/DEPLOYED-RETENTION-EVIDENCE.json"
+    },
+    {
+      "id": "local_logical_database_restore",
+      "outcome": "passed",
+      "tables": {
+        "runner": 11,
+        "provider": 6
+      },
+      "comparison": "row counts and deterministic content digests",
+      "scope": "disposable local databases; no VM disks"
+    },
+    {
+      "id": "real_boxlite_execution_stop_start_disk_retention",
+      "outcome": "passed",
+      "backend": "boxlite-cloud",
+      "evidence": "docs/phase1/cloud-evidence/http-prepare.json",
+      "scope": "Approved generic rootfs marker, same public and external identity; historical local-mode blocker unchanged"
+    },
+    {
+      "id": "real_microvm_isolation_and_resource_enforcement",
+      "outcome": "partial",
+      "backend": "boxlite-cloud",
+      "evidence": [
+        "docs/phase1/cloud-evidence/http-prepare.json",
+        "docs/phase1/cloud-evidence/policy-before.json"
+      ],
+      "passed": [
+        "second real sandbox missing first marker",
+        "guest capacity observations",
+        "two fixed external TCP probes ENETUNREACH",
+        "both networking directions disabled in returned metadata"
+      ],
+      "incomplete": [
+        "stress quota enforcement",
+        "comprehensive escape and network boundary qualification"
+      ]
+    },
+    {
+      "id": "real_boxlite_provider_restart_reattachment",
+      "outcome": "passed",
+      "backend": "boxlite-cloud",
+      "evidence": [
+        "docs/phase1/cloud-evidence/http-recovery.json",
+        "docs/phase1/cloud-evidence/identity-comparison.json"
+      ],
+      "scope": "Stopped boxes and original disk markers retained through independent Provider and Runner replacements; excludes active-command recovery"
+    },
+    {
+      "id": "host_restart_persistence",
+      "outcome": "unverified",
+      "reason": "No shared GCC reboot authorized/performed; vendor Cloud physical-host restart outside this test control"
+    },
+    {
+      "id": "scoped_artifact_transfer_export",
+      "outcome": "incomplete",
+      "reason": "no scoped transfer adapter implemented; nonempty artifact_output_ref returns 422"
+    },
+    {
+      "id": "off_host_backup",
+      "outcome": "incomplete",
+      "reason": "local daily database backup schedules configured; off-host destination not configured"
+    },
+    {
+      "id": "coordinated_registry_vm_volume_restore",
+      "outcome": "blocked",
+      "reason": "Cloud disks are external; observed capabilities disable export/snapshot/import/clone. Approved remote data export/backup procedure and isolated restore proof missing.",
+      "evidence": "docs/contracts/boxlite-cloud-capabilities.md"
+    },
+    {
+      "id": "gcc_logical_database_migration",
+      "outcome": "passed",
+      "tables": {
+        "runner": 11,
+        "provider": 6
+      },
+      "sequences": {
+        "runner": 4,
+        "provider": 1
+      },
+      "comparison": "exact row counts and SHA256 content digests; sequence setval completed",
+      "evidence": [
+        "docs/phase1/gcc-evidence/job-runner-restore.json",
+        "docs/phase1/gcc-evidence/sandbox-provider-restore.json"
+      ]
+    },
+    {
+      "id": "gcc_historical_private_http_after_both_app_replacements",
+      "outcome": "passed",
+      "evidence": "docs/phase1/gcc-evidence/post-replacement-http.json",
+      "scope": "historical jobs, sandbox creation intent and audits; excludes VM disk retention"
+    },
+    {
+      "id": "gcc_provider_readiness_accuracy",
+      "outcome": "passed_for_cloud_control_connectivity",
+      "evidence": [
+        "docs/phase1/cloud-evidence/http-prepare.json",
+        "docs/phase1/cloud-evidence/http-recovery.json"
+      ],
+      "scope": "Cloud readiness authenticates bounded SDK read, no local KVM dependence; guest execution qualified separately; local-mode namespace readiness limitation unchanged"
+    },
+    {
+      "id": "worfklow_scoped_source_removal",
+      "outcome": "passed",
+      "evidence": "docs/phase1/gcc-evidence/source-deletion.json",
+      "physical_volume_enumeration": "not_performed; Coolify deletion requested with delete_volumes=true"
+    },
+    {
+      "id": "gcc_independent_readonly_http_security_after_migration",
+      "outcome": "passed",
+      "groups": 9,
+      "cross_db_denied": true,
+      "evidence": "docs/phase1/gcc-evidence/independent-migration-http.json",
+      "scope": "published HTTP schemas, auth/metrics, schema/profile negatives, owner isolation, historical jobs/audits, denied cross-DB login; no VM"
+    },
+    {
+      "id": "gcc_independent_structured_log_sample",
+      "outcome": "passed",
+      "runner_records": 17,
+      "provider_records": 12,
+      "evidence": "docs/qa/GCC-MIGRATION-HTTP-REVIEW.json",
+      "scope": "bounded correlated API log sample; not an exhaustive logging guarantee"
+    },
+    {
+      "id": "cloud_active_command_and_complete_output_recovery",
+      "outcome": "incomplete",
+      "reason": "Active attach fails closed ambiguous_execution; SDK may lose fresh-stream output with exit0/error_message=None. No generic complete-output or transport-recovery proof.",
+      "evidence": "docs/qa/CLOUD-REVIEW.md"
+    },
+    {
+      "id": "cloud_exact_fixture_explicit_destruction",
+      "outcome": "passed",
+      "evidence": [
+        "docs/phase1/cloud-evidence/http-cleanup.json",
+        "docs/qa/GCC-CLOUD-POLICY-RECOVERY-REVIEW.json"
+      ],
+      "scope": "Only recorded two fixtures; tombstones and durable destruction audits retained"
+    },
+    {
+      "id": "cloud_independent_structured_log_and_audit_review",
+      "outcome": "passed",
+      "evidence": [
+        "docs/qa/GCC-CLOUD-HTTP-REVIEW.json",
+        "docs/qa/GCC-CLOUD-POLICY-RECOVERY-REVIEW.json"
+      ],
+      "prepare_records": {
+        "provider": 59,
+        "runner": 66
+      },
+      "verify_records": {
+        "provider": 27,
+        "runner": 22
+      },
+      "scope": "Bounded correlated samples and original durable audit-ID retention, not exhaustive secret detection"
+    },
+    {
+      "id": "cloud_temporary_resource_cleanup",
+      "outcome": "passed",
+      "evidence": [
+        "docs/phase1/cloud-evidence/temporary-resource-cleanup.json",
+        "docs/phase1/cloud-evidence/cloud-cleanup-enumeration.json"
+      ],
+      "scope": "No own Cloud fixtures or temporary Coolify tasks/QA envs remain"
+    },
+    {
+      "id": "unrelated_cloud_account_box_continuity",
+      "outcome": "unverified",
+      "reason": "Original unrelated ID/name no longer visible; one different unrelated box visible. No unrelated mutations performed; cause not established.",
+      "evidence": "docs/phase1/cloud-evidence/cloud-cleanup-enumeration.json"
+    },
+    {
+      "id": "cloud_real_transient_retry_timeout_active_worker_recovery",
+      "outcome": "incomplete",
+      "reason": "Deployed write used one attempt; transient failure/retry/provider timeout/active worker crash duplicate-prevention journeys have mocked regression coverage but no hosted failure-injection evidence.",
+      "evidence": "docs/qa/CLOUD-REVIEW.md"
+    }
+  ],
+  "evidence_report": "docs/phase1/CLOUD-VALIDATION.md",
+  "independent_qa": "docs/qa/CLOUD-REVIEW.md",
+  "migration": {
+    "decision": "complete",
+    "source_origin": "https://worfklow.org",
+    "target_origin": "https://hosting.gccssofia.com",
+    "source_project_deleted": true,
+    "source_4_resources_and_project_verified_http": 404,
+    "source_filesystem_volume_copied": false,
+    "evidence": "docs/phase1/gcc-evidence/source-deletion.json",
+    "report": "docs/phase1/GCC-MIGRATION-REPORT.md"
+  },
+  "ci": {
+    "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+    "run": 41647734872,
+    "outcome": "passed",
+    "contracts": 5,
+    "runner_tap_passes": 21,
+    "provider_passes": 52,
+    "provider_skips": 2,
+    "real_runtime_deselected": 1
+  },
+  "runtime_backend": "boxlite-cloud"
+}

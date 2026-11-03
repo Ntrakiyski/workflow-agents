@@ -1,0 +1,65 @@
+# Independent GCC migration review
+
+**Final migration decision: the authorized move and scoped source removal are verified. Phase1 remains unapproved for Phase2 consumption.** Real BoxLite creation is blocked by user-namespace preflight under the current security restrictions; readiness200 is not an execution pass.
+
+Reviewer: independent QA agent, 2026-11-03. Remote mutations are performed by the lead; this reviewer uses read-only Coolify calls, source review and local isolated fixtures. This report does not count service self-reported readiness as proof of a functioning microVM.
+
+## Infrastructure inspected independently
+
+GCC project `workflow-agents-phase1` (`ptombcqslsfcmfufdui4vk1z`), staging `tiiebld0vegfeegaapo3cdt3`, has two separate Dockerfile applications and two PostgreSQL resources. Snapshot: [GCC-CONFIG-REVIEW.json](GCC-CONFIG-REVIEW.json). At the snapshot both applications and databases were `running:healthy`, pinned to `161da85a647448df2dea8249f5bdd32c7ed5b527`. Apps have no public FQDN or host port mapping; both databases have no public port and use separate database/user names. The shared Coolify Docker network is private from the public internet but is not a dedicated four-resource network isolation boundary.
+
+Provider options are `--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --device=/dev/kvm:/dev/kvm:rw`. Runner has cap-drop/no-new-privileges and a128-process limit. Provider health monitoring uses liveness. The lead reported that native diagnostics independently show UID10001, groups993/10001, KVM access, zero effective capabilities and enabled seccomp/no-new-privileges; QA has read the retained diagnostic output but has not independently executed those native commands.
+
+Read-only storage inspection found Provider named volume `b4safsmcuzzqdmgn7jqt7m8d-workflow-phase1-boxlite`, storage UUID `kle6n9haj4u7hurihsbu3ub8`, mounted at `/var/lib/sandbox-provider`, with no file/bind storage. Configuration alone does not prove retained writable disks or recoverability.
+
+The old Worfklow project `6nshux1lmrsmsfeqar9wess9` staging was independently inspected and contained exactly Runner `hpuishi3ewj80863sqj7wucd`, Provider `v3kixl4u4st8khfpmx2xne7e`, Runner DB `cbru9p9dh6sucbea2adudwco` and Provider DB `b2d87fuzrb1cpw6noy0kpo48`. Its automatically created production environment was empty. These observations establish a narrow deletion allowlist, not authorization to touch other projects. This reviewer has not deleted infrastructure.
+
+## Actual runtime result inspected
+
+The lead-captured GCC native qualification is retained at `docs/phase1/gcc-evidence/runtime-first.json`. It used SDK0.11.0 and failed during `create_a` after10270ms, classification `runtime_operation_failed`. Its only successful check was explicit destruction/cleanup; no boxes remained. This is a genuine failed real-runtime attempt. It proves neither successful creation, command execution, isolation nor filesystem retention. A successful readiness response remains insufficient for acceptance.
+
+Independent review of runtime engineer commit `899be46` confirms its diagnostic extension is explicit operator opt-in, bounds exception text, redacts configured auth/DB/workload values and fixture arguments, and saves the private traceback through a mode600 temporary file in a private session directory. It changes no API response, host virtualization setting or runtime privilege. Running the diagnostic and reviewing its actual cause is the next runtime gate.
+
+QA independently executed `PYTHONDONTWRITEBYTECODE=1 /tmp/workflow-provider-qa-venv/bin/python -m pytest -q -p no:cacheprovider tests/test_qualification.py` from that commit's Provider directory: **9 passed in0.27s**. These verify replay, exact-identity cleanup, fail-closed unsafe names/paths, opt-in mode600 diagnostic redaction and the local missing-KVM negative. They use isolated fake runtime state or a negative prerequisite check; no database, remote mutation or real VM is involved.
+
+## Independent HTTP client and local verification
+
+QA commits `6f2f70f` and `1e027dd` add the HTTP-only prepare/verify/explicit-cleanup probe and protect one-off task replay. Exact scope, commands and executed local checks are in [GCC-PROBE.md](GCC-PROBE.md). Syntax checks passed. An actually unavailable fake runtime was rejected before workload allocation. An explicitly healthy-labelled local test double exercised nine positive client protocol groups, concurrent invocation serialization, exact-record cleanup and owner-reference rejection. Verify correctly rejected the absence of a real recovery audit. None of those positive local fixture results is real BoxLite evidence.
+
+## Migration data and incomplete gates
+
+The lead's source archive manifests report authenticated decryption and deterministic row-digest integrity for11 Runner tables and6 Provider tables. QA inspected these manifests as attributed evidence; they contain rows/sequence-state metadata only and explicitly exclude schema definitions and VM disks.
+
+QA reviewed restore code `5cf1eca`: authenticated unseal precedes restoration, source active work is rejected, destination schema/column/sequence-name sets must match, tables are serializably locked, insertion respects foreign keys and preserves audit triggers, and all final row digests must match. Bootstrap timestamp reconciliation is limited to semantically identical migration metadata; conflicting rows fail. PostgreSQL sequence `setval` is not transactional, explicitly documented. QA executed Node syntax and Python AST checks successfully; local DB roundtrip tests were performed by the migration engineer, not this reviewer.
+
+Lead-captured GCC restore executions `kwy7rvf0ol1di80zp7x3knwz` (Runner) and `hnr7lhdip443tq0sdlea523f` (Provider) are both successful in `docs/phase1/gcc-evidence/*-restore.json`. QA independently ran a Python comparison against source manifests: exact table-name sets, all row counts and every row SHA256 match for11 and6 tables respectively. Reported sequence counts also match4 and1; those counts alone are not a separate read-back of each sequence value. Both task records were removed before QA's history read, so execution-output capture is attributed to the lead.
+
+Lead-captured restored HTTP evidence reports the same two historical jobs, original Provider creation-intent record and audits, and wrong-owner404. Provider's historical sandbox remains `creating` with `runtime_unavailable`, not a VM. An early cross-database-credential result was automatically redacted; the independently observed final probe below supersedes that limitation with a safe explicit boolean.
+
+QA then independently observed both old application resources `exited:unhealthy`, `container_present:false`, after the lead quiesced them. No source deletion was performed by this reviewer.
+
+## Independently observed native blocker
+
+QA read the live read-only diagnostic task history directly before task deletion: task `upzdgnufvnjlmwscca31wnx3`, execution `cbuubgp29i3rrtrcr8a6vswp`, `2026-11-03T13:01:02Z`–`13:01:04Z`. Selected log evidence is in [GCC-NATIVE-LOG-REVIEW.json](GCC-NATIVE-LOG-REVIEW.json). OCI image pull, rootfs preparation and a persistent COW disk creation occurred. The VM subprocess stage then failed because bundled `bwrap` could not create a user namespace: `clone(CLONE_NEWUSER) errno:1 (Operation not permitted)`. SDK preflight reports `kernel.apparmor_restrict_unprivileged_userns=1` and missing AppArmor profile for bundled `bwrap`. The failed box was removed.
+
+This establishes a concrete container/host security-policy blocker despite available KVM device permissions. It is not proof that the hardware cannot virtualize. The SDK infers AppArmor's contribution from its sysctl check; inherited Docker seccomp can also deny namespace calls, and their separate contributions have not been isolated with audit/trace evidence. Any narrowly scoped AppArmor or container seccomp solution still needs design, explicit authorization where required, and exact-runtime testing; the log's suggestions to disable sandbox security or change host-wide sysctls are not accepted procedures. QA changed no privilege, policy, host setting or runtime.
+
+## Final deployed inspection and scoped source removal
+
+The lead ran the QA-authored `migration_readonly.mjs` at immutable source `01e0729` inside the actual GCC Runner using only installed production dependencies. QA independently read live task history before removal: task `htolczromxdssyujn164fwgs`, execution `z0md5oxhwtjtunwzbxdvispb`, `2026-11-03T13:07:01Z`–`13:07:04Z`, success in3.38seconds. **Nine grouped checks passed**, stage complete, error null. Evidence: [GCC-MIGRATION-HTTP-REVIEW.json](GCC-MIGRATION-HTTP-REVIEW.json); full safe result is retained by the lead at `docs/phase1/gcc-evidence/independent-migration-http.json`.
+
+The probe verifies frozen response schemas, protected metrics, anonymous/invalid-auth rejection, strict schema/profile negatives and owner spoof denial; the historical cancelled and timed-out jobs with zero attempts and seven total durable event IDs; the original Provider creation-intent record with four durable events including original audit ID `evt_8323624f06f74af98912574c4f8029e1`; and cross-owner404s for both resources/events. Runner credentials were rejected by the other database with SQLSTATE28P01 or28000, producing unredacted `cross_db_denied:true`. Only a login was attempted; no SQL statement, SDK call, accepted resource mutation or VM workload was requested. The negative POST handlers were independently reviewed to reject schema/profile violations before storage/runtime operations.
+
+Both health responses returned200. Runner reported database/queue `ok`. Provider reported database/runtime `ok`, but the probe explicitly records `microvm_qualified:false`. This reproduces the known readiness defect while still validating the response contract; it gives no real-runtime acceptance.
+
+QA independently retrieved bounded140line log samples from each GCC app for correlation `qa_migration_65bdbba7af1b439f922e3f1d56dd5ef4`: **17Runner and12Provider JSON records** matched. Every matched record has timestamp, service, correlation, action, duration and outcome. They show authentication401, schema422, denied profile403 and other-owner404 outcomes with the expected actor/owner identities. Sampled records contain no credential/header/payload/arguments/stdout/stderr fields or workload output. Only sanitized counts/status distributions are committed, not raw logs. This bounded sample is not a guarantee about every possible logging path.
+
+Latest independent GCC configuration read confirms both apps healthy and pinned to `60a49dbc52121126e8e214c1a774ae627d8ed5f4`, with the same restrictive options and no public app endpoints. Subsequent helper/evidence commits are not silently represented as deployed service builds.
+
+Immediately before removal QA independently verified exact old project membership and an empty production environment. After the lead's scoped deletion, all four original resource UUIDs independently returned not found, staging resource arrays were empty, and a subsequent exact project GET returned Project not found. See [GCC-SOURCE-DELETION-REVIEW.json](GCC-SOURCE-DELETION-REVIEW.json). Lead deletion requests set `delete_volumes:true`, `docker_cleanup:false` and `delete_connected_networks:false`; there was no broad shared-image/network cleanup request. Physical Docker volume removal was not directly enumerated by QA.
+
+The lead reports source Provider `runtime_id:null`, no runs, and absent KVM; source review confirms runtime initialization rejects missing KVM before SDK storage initialization. No working source VM disk is evidenced. The old volume's deployment fixture marker was not copied, and its contents were not directly enumerated before removal. Logical archives preserve database records, not that volume. These limitations are disclosed; no lost working microVM or filesystem recovery claim is invented.
+
+QA reviewed the lead's final `GCC-MIGRATION-REPORT.md` and `readiness.json`: they correctly distinguish completed migration from blocked Phase1 acceptance, identify the readiness defect and unisolated security-policy contributions, preserve the actual deployed source pin, attribute real versus fake tests, disclose the source-volume limitation and leave off-host/VM recovery gates incomplete.
+
+**Phase1 acceptance remains incomplete** pending actual GCC creation/execution, non-destructive stop/start and two-box filesystem isolation; published-API prepare; independently observed runtime-bearing application replacements and retained-record verify. Logical destination restoration and scoped source removal are verified above. Active-run/service-restart recovery, resource enforcement, artifact export and off-host registry-plus-disk recovery remain separate gates. Shared-host reboot is deliberately unverified without explicit authorization. No Phase2 consumption approval is given by this final migration review.

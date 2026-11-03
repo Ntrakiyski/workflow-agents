@@ -1,0 +1,31 @@
+{
+  "name": "workflow-phase1-cloud-9840222f79144c58953d87a6c8561135",
+  "stage": "stop",
+  "existing_count": 1,
+  "created_box_id": "Fksp9YwtUrHb",
+  "checks": [
+    "create_start",
+    "write_marker",
+    "non_destructive_stop",
+    "fresh_client_same_id_marker_retained"
+  ],
+  "started_at": 1793712775.3317378,
+  "outcome": "passed",
+  "runtime_info": {
+    "cpus": 1,
+    "memory_mib": 1024,
+    "state": "{\n  \"exit_code\": null,\n  \"pid\": null,\n  \"running\": true,\n  \"status\": \"running\"\n}"
+  },
+  "explicit_cleanup_verified": true,
+  "finished_at": 1793712785.2308211,
+  "probe": "direct-boxlite-cloud-sdk-preflight",
+  "sdk": "0.11.0",
+  "origin": "https://api.boxlite.ai",
+  "requested_resources": {
+    "cpus": 1,
+    "memory_mib": 256,
+    "disk_gib": 1
+  },
+  "interpretation": "Real Cloud execution/persistence passed, but Cloud rounded memory to1024MiB; approved Cloud profiles must declare that allocation. No API/DB integration proof.",
+  "existing_account_resources_modified": false
+}

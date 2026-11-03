@@ -1,0 +1,11 @@
+{
+  "probe": "cloud-post-cleanup-readonly-enumeration",
+  "recorded_at": "2026-11-03T13:54:17.789237+00:00",
+  "outcome": "passed_for_owned_fixture_cleanup",
+  "preexisting_count": 1,
+  "preexisting_ids_and_names_unchanged": false,
+  "preexisting_continuity": "unverified: original ID/name no longer visible; cause not established; no unrelated mutation performed",
+  "owned_fixture_boxes_remaining": 0,
+  "total_visible_boxes": 1,
+  "scope": "Authenticated read-only SDK list; exact original IDs/names compared privately. No account-wide mutation."
+}

@@ -1,0 +1,118 @@
+{
+  "correlation_id": "qa_staging_3e90547fbb284ee8b93779fb069e18e1",
+  "deployed_commit": "df7cc68e6a1d58fc35586b67a3e9cb75cdefe5a8",
+  "review_method": "Independent read-only Coolify MCP logs, 250-line bounded sample per application",
+  "services": {
+    "runner": {
+      "correlated_records": 60,
+      "required_structured_fields_present": true,
+      "forbidden_payload_credential_output_keys": [],
+      "actions": [
+        "http.request",
+        "job.submitted",
+        "job.cancellation_requested",
+        "job.cancelled",
+        "schedule.created",
+        "schedule.cancelled",
+        "job.dispatched",
+        "job.reconcile",
+        "job.timed_out"
+      ],
+      "operational_samples": [
+        {
+          "timestamp": "2026-11-03T11:53:08.357Z",
+          "service": "job-runner",
+          "level": "info",
+          "duration_ms": 0,
+          "outcome": "cancelled",
+          "action": "schedule.cancelled",
+          "actor_id": "staging-client",
+          "owner_id": "staging-fixture",
+          "correlation_id": "qa_staging_3e90547fbb284ee8b93779fb069e18e1",
+          "job_id": null,
+          "sandbox_id": null,
+          "run_id": null
+        },
+        {
+          "timestamp": "2026-11-03T11:53:14.640Z",
+          "service": "job-runner",
+          "level": "info",
+          "duration_ms": 0,
+          "outcome": "timed_out",
+          "action": "job.timed_out",
+          "actor_id": "staging-client",
+          "owner_id": "staging-fixture",
+          "correlation_id": "qa_staging_3e90547fbb284ee8b93779fb069e18e1",
+          "job_id": "job_ac20bb3c-ef6d-4b59-90ec-1831cd64a8a4",
+          "sandbox_id": null,
+          "run_id": null,
+          "attempt": 0,
+          "error_classification": "deadline_exceeded"
+        }
+      ]
+    },
+    "provider": {
+      "correlated_records": 15,
+      "required_structured_fields_present": true,
+      "forbidden_payload_credential_output_keys": [],
+      "actions": [
+        "http.request",
+        "sandbox.creation_requested",
+        "sandbox.failed"
+      ],
+      "operational_samples": [
+        {
+          "timestamp": "2026-11-03T11:53:08.488387+00:00",
+          "service": "sandbox-provider",
+          "correlation_id": "qa_staging_3e90547fbb284ee8b93779fb069e18e1",
+          "actor_id": "job-runner",
+          "owner_id": "staging-fixture",
+          "action": "sandbox.creation_requested",
+          "duration_ms": 0,
+          "outcome": "creating",
+          "sandbox_id": "sbx_5cc5addda69042bb8fcb3de81f1f4b62",
+          "run_id": null
+        },
+        {
+          "timestamp": "2026-11-03T11:53:08.516460+00:00",
+          "service": "sandbox-provider",
+          "correlation_id": "qa_staging_3e90547fbb284ee8b93779fb069e18e1",
+          "actor_id": "job-runner",
+          "owner_id": "staging-fixture",
+          "action": "sandbox.failed",
+          "duration_ms": 0,
+          "outcome": "creating",
+          "sandbox_id": "sbx_5cc5addda69042bb8fcb3de81f1f4b62",
+          "run_id": null,
+          "error_classification": "runtime_unavailable"
+        },
+        {
+          "timestamp": "2026-11-03T11:53:10.562584+00:00",
+          "service": "sandbox-provider",
+          "correlation_id": "qa_staging_3e90547fbb284ee8b93779fb069e18e1",
+          "actor_id": "job-runner",
+          "owner_id": "staging-fixture",
+          "action": "sandbox.failed",
+          "duration_ms": 0,
+          "outcome": "creating",
+          "sandbox_id": "sbx_5cc5addda69042bb8fcb3de81f1f4b62",
+          "run_id": null,
+          "error_classification": "runtime_unavailable"
+        },
+        {
+          "timestamp": "2026-11-03T11:53:12.602355+00:00",
+          "service": "sandbox-provider",
+          "correlation_id": "qa_staging_3e90547fbb284ee8b93779fb069e18e1",
+          "actor_id": "job-runner",
+          "owner_id": "staging-fixture",
+          "action": "sandbox.failed",
+          "duration_ms": 0,
+          "outcome": "creating",
+          "sandbox_id": "sbx_5cc5addda69042bb8fcb3de81f1f4b62",
+          "run_id": null,
+          "error_classification": "runtime_unavailable"
+        }
+      ]
+    }
+  }
+}

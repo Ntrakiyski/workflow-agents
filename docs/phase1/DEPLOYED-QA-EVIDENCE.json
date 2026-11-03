@@ -1,0 +1,78 @@
+{
+  "probe": "independent-private-http-v1",
+  "correlation_id": "qa_staging_3e90547fbb284ee8b93779fb069e18e1",
+  "stage": "complete",
+  "runtime_kind": "unavailable",
+  "checks": [
+    {
+      "check": "runner.health_contract",
+      "outcome": "pass",
+      "readiness_http": 200,
+      "checks": {
+        "database": "ok",
+        "queue": "ok"
+      }
+    },
+    {
+      "check": "runner.authentication_and_metrics",
+      "outcome": "pass"
+    },
+    {
+      "check": "provider.health_contract",
+      "outcome": "pass",
+      "readiness_http": 503,
+      "checks": {
+        "database": "ok",
+        "runtime": "unavailable"
+      }
+    },
+    {
+      "check": "provider.authentication_and_metrics",
+      "outcome": "pass"
+    },
+    {
+      "check": "strict_schemas_denied_profiles_and_owner_spoof",
+      "outcome": "pass"
+    },
+    {
+      "check": "future_job_idempotency_owner_isolation_cancel_audit",
+      "outcome": "pass",
+      "event_types": [
+        "job.submitted",
+        "job.cancellation_requested",
+        "job.cancelled"
+      ]
+    },
+    {
+      "check": "future_schedule_and_cancellation",
+      "outcome": "pass"
+    },
+    {
+      "check": "unavailable_runtime_bounded_failure",
+      "outcome": "pass",
+      "status": "timed_out",
+      "attempts": 0,
+      "error_code": "deadline_exceeded",
+      "event_types": [
+        "job.submitted",
+        "job.dispatched",
+        "job.cancellation_requested",
+        "job.timed_out"
+      ]
+    },
+    {
+      "check": "real_boxlite_marker_stop_start_isolation_recovery",
+      "outcome": "blocked",
+      "reason": "Provider reports runtime unavailable; no mock workload is substituted"
+    }
+  ],
+  "resources": {
+    "delayed_job_id": "job_2558588a-727a-4cd1-a325-ae83ad98fbb8",
+    "schedule_id": "sch_87777931-5065-4b28-99f7-8ebcb8bc5b72",
+    "runtime_job_id": "job_ac20bb3c-ef6d-4b59-90ec-1831cd64a8a4"
+  },
+  "error": null,
+  "deployed_commit": "df7cc68e6a1d58fc35586b67a3e9cb75cdefe5a8",
+  "execution_task_uuid": "xhmf4uebnfbixqfk4eprhadg",
+  "provider_failed_sandbox_id": "sbx_5cc5addda69042bb8fcb3de81f1f4b62"
+}

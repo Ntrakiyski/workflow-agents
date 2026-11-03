@@ -1,0 +1,27 @@
+{
+  "coolify_url": "https://hosting.gccssofia.com",
+  "project_uuid": "ptombcqslsfcmfufdui4vk1z",
+  "environment_uuid": "tiiebld0vegfeegaapo3cdt3",
+  "environment": "staging",
+  "server_uuid": "jg8gsskgw44okokksco0k84c",
+  "destination_uuid": "jgkwk80w0ko08gog0k4sc0w0",
+  "applications": {
+    "job-runner": "yf0aaiivjr9k3qqaiawnlz8d",
+    "sandbox-provider": "b4safsmcuzzqdmgn7jqt7m8d"
+  },
+  "databases": {
+    "job-runner-db": "5alfx46nkf9d1vfzdivdybqh",
+    "sandbox-provider-db": "vv6xrcopkfiry4naqltlvlfg"
+  },
+  "backups": {
+    "job-runner-db": "87mercash2kltyvea5rq2kdp",
+    "sandbox-provider-db": "roocdjayxvxzbtwcxoltfdye"
+  },
+  "storage": {
+    "sandbox-provider": {
+      "uuid": "kle6n9haj4u7hurihsbu3ub8",
+      "name": "b4safsmcuzzqdmgn7jqt7m8d-workflow-phase1-boxlite",
+      "mount_path": "/var/lib/sandbox-provider"
+    }
+  }
+}

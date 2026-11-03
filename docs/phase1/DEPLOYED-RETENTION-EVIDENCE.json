@@ -1,0 +1,95 @@
+{
+  "recorded_date": "2026-11-03",
+  "service_commit": "df7cc68e6a1d58fc35586b67a3e9cb75cdefe5a8",
+  "probe_source_commit": "243eaae5ad45ad8a7fba31dd257127da592b6f7b",
+  "provider_container_replacement": {
+    "deployment_uuid": "vvvwvav3pd3bs6amd7quwsl0",
+    "status": "finished",
+    "removed_old_container": true,
+    "started_new_container": true
+  },
+  "before": {
+    "task_uuid": "pn7scjbpt3ooqgt0ytlsxfyp",
+    "status": "success",
+    "result": {
+      "probe": "provider-registry-and-volume",
+      "arch": "aarch64",
+      "logical_cpus": 8,
+      "uid": 10001,
+      "sdk_version": "0.11.0",
+      "kvm_access": false,
+      "persistent_volume_marker": "retained",
+      "volume_free_bytes": 73424658432,
+      "host_memory_bytes": {
+        "MemTotal": 16333647872,
+        "MemAvailable": 9873055744
+      },
+      "registry_sandboxes": 1,
+      "durable_audit_rows": 4,
+      "first_audit_id": "evt_8323624f06f74af98912574c4f8029e1",
+      "vm_disk_retention": "blocked-unverified"
+    }
+  },
+  "after": {
+    "task_uuid": "wvcpgchgl5aq0pxp5ubol7i7",
+    "status": "success",
+    "result": {
+      "probe": "provider-registry-and-volume",
+      "arch": "aarch64",
+      "logical_cpus": 8,
+      "uid": 10001,
+      "sdk_version": "0.11.0",
+      "kvm_access": false,
+      "persistent_volume_marker": "retained",
+      "volume_free_bytes": 73424441344,
+      "host_memory_bytes": {
+        "MemTotal": 16333647872,
+        "MemAvailable": 9784791040
+      },
+      "registry_sandboxes": 1,
+      "durable_audit_rows": 4,
+      "first_audit_id": "evt_8323624f06f74af98912574c4f8029e1",
+      "vm_disk_retention": "blocked-unverified"
+    }
+  },
+  "scope": "Actual private staging Provider application volume and registry retention across container replacement. Not proof of a real VM, retained VM filesystem, execution reattachment or host restart.",
+  "initial_runner_probe": {
+    "task_uuid": "p74q88rtthiyrrdhfmwze6ht",
+    "outcome": "failed-probe-assertion",
+    "expected_status": "failed",
+    "observed_status": "creating",
+    "cause": "The probe expected a terminal state, but transient unavailable create intentionally retains creating intent and a safe error for same-identity retry; independently reviewed, no service change required."
+  },
+  "runner_container_replacement": {
+    "deployment_uuid": "zvzmx90vgdxvcz6nvc9at0hk",
+    "status": "finished",
+    "removed_old_container": true,
+    "started_new_container": true
+  },
+  "corrected_probe_source_commit": "cc04079e78e24efd79460b30f3cb2125a394d3ba",
+  "corrected_runner_probe": {
+    "task_uuid": "zr5fsxdasute5iasg2rkirsm",
+    "status": "success",
+    "result": {
+      "probe": "staging-retention-and-database-isolation",
+      "outcome": "passed",
+      "runner_jobs_retained": [
+        "job_2558588a-727a-4cd1-a325-ae83ad98fbb8",
+        "job_ac20bb3c-ef6d-4b59-90ec-1831cd64a8a4"
+      ],
+      "runner_audit_events": 4,
+      "provider_sandbox_retained": "sbx_5cc5addda69042bb8fcb3de81f1f4b62",
+      "provider_status": "creating",
+      "provider_error": "runtime_unavailable",
+      "provider_audit_events": 4,
+      "first_provider_audit_id": "evt_8323624f06f74af98912574c4f8029e1",
+      "provider_wrong_owner_http": 404,
+      "cross_database_credentials": "<REDACTED>",
+      "vm_disk_retention": "blocked-unverified"
+    }
+  },
+  "cross_database_assertion": {
+    "outcome": "passed",
+    "meaning": "Runner credential connection to Provider PostgreSQL was rejected with authentication/authorization code 28P01 or 28000; the source asserts this before exit zero. The connector masks the safe string field named cross_database_credentials."
+  }
+}

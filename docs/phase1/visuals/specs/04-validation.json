@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "What passed. What remains open.",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1380,
+      590
+    ]
+  },
+  "components": [
+    {
+      "id": "http",
+      "type": "backend",
+      "label": "9 HTTP check groups",
+      "sublabel": "Real execution, dedupe and API boundaries",
+      "pos": [
+        60,
+        90
+      ],
+      "size": [
+        340,
+        100
+      ],
+      "tag": "REAL CLOUD"
+    },
+    {
+      "id": "recovery",
+      "type": "cloud",
+      "label": "5 recovery check groups",
+      "sublabel": "Same box, file, jobs and original audit IDs",
+      "pos": [
+        540,
+        90
+      ],
+      "size": [
+        350,
+        100
+      ],
+      "tag": "REAL REDEPLOYMENT"
+    },
+    {
+      "id": "cleanup",
+      "type": "security",
+      "label": "3 cleanup check groups",
+      "sublabel": "Only two recorded fixtures destroyed",
+      "pos": [
+        1030,
+        90
+      ],
+      "size": [
+        335,
+        100
+      ],
+      "tag": "EXPLICIT CLEANUP"
+    },
+    {
+      "id": "ci",
+      "type": "database",
+      "label": "CI: 21 / 52 / 5 passed",
+      "sublabel": "Runner / Provider / contracts",
+      "pos": [
+        60,
+        375
+      ],
+      "size": [
+        340,
+        100
+      ],
+      "tag": "DATABASES REAL; RUNTIMES MOCKED"
+    },
+    {
+      "id": "review",
+      "type": "backend",
+      "label": "Independent QA evidence",
+      "sublabel": "Task history, Cloud IDs and structured logs",
+      "pos": [
+        540,
+        375
+      ],
+      "size": [
+        350,
+        100
+      ],
+      "tag": "REVIEWED"
+    },
+    {
+      "id": "release",
+      "type": "security",
+      "label": "Release candidate",
+      "sublabel": "Phase 1 acceptance is incomplete",
+      "pos": [
+        1030,
+        375
+      ],
+      "size": [
+        335,
+        100
+      ],
+      "tag": "PHASE 2 NOT READY"
+    }
+  ],
+  "connections": [
+    {
+      "id": "http-recovery",
+      "from": "http",
+      "to": "recovery",
+      "variant": "emphasis",
+      "label": "Retain"
+    },
+    {
+      "id": "recovery-cleanup",
+      "from": "recovery",
+      "to": "cleanup",
+      "variant": "emphasis",
+      "label": "Clean up"
+    },
+    {
+      "id": "ci-review",
+      "from": "ci",
+      "to": "review",
+      "variant": "default",
+      "label": "Regression evidence"
+    },
+    {
+      "id": "review-release",
+      "from": "review",
+      "to": "release",
+      "variant": "security",
+      "label": "Gate decision"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Observed in real Cloud",
+      "items": [
+        "File retention, second-box file separation and durable audits.",
+        "Guest capacity measured; two outbound TCP routes denied."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Required before full acceptance",
+      "items": [
+        "Artifact transfer; off-host and Cloud backup/restore.",
+        "Active-output recovery; hosted failure/retry/crash tests.",
+        "Host recovery and broader resource/security qualification."
+      ]
+    }
+  ]
+}

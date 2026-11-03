@@ -1,0 +1,115 @@
+{
+  "recorded_at": "2026-11-03T13:52:43.978Z",
+  "resources": [
+    {
+      "kind": "applications",
+      "name": "job-runner",
+      "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+      "status": "running:healthy",
+      "fqdn": null,
+      "ports_mappings": null,
+      "is_public": false,
+      "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+      "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=128"
+    },
+    {
+      "kind": "applications",
+      "name": "sandbox-provider",
+      "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+      "status": "running:healthy",
+      "fqdn": null,
+      "ports_mappings": null,
+      "is_public": false,
+      "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+      "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256"
+    },
+    {
+      "kind": "databases",
+      "name": "job-runner-db",
+      "uuid": "5alfx46nkf9d1vfzdivdybqh",
+      "status": "running:healthy",
+      "fqdn": null,
+      "ports_mappings": null,
+      "is_public": false,
+      "commit": null
+    },
+    {
+      "kind": "databases",
+      "name": "sandbox-provider-db",
+      "uuid": "vv6xrcopkfiry4naqltlvlfg",
+      "status": "running:healthy",
+      "fqdn": null,
+      "ports_mappings": null,
+      "is_public": false,
+      "commit": null
+    }
+  ],
+  "deployments": [
+    {
+      "uuid": "byna6ecrish0jprg0dbywo37",
+      "status": "finished",
+      "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+      "created_at": "2026-11-03T13:49:05.000000Z",
+      "updated_at": "2026-11-03T13:49:18.000000Z",
+      "replacement_lines": [
+        {
+          "timestamp": "2026-11-03T13:49:13.154364Z",
+          "output": "Building docker image started."
+        },
+        {
+          "timestamp": "2026-11-03T13:49:14.905160Z",
+          "output": "Consistent container name feature enabled, rolling update is not supported."
+        },
+        {
+          "timestamp": "2026-11-03T13:49:14.909399Z",
+          "output": "Custom internal name is set, rolling update is not supported."
+        },
+        {
+          "timestamp": "2026-11-03T13:49:14.913291Z",
+          "output": "Removing old containers."
+        },
+        {
+          "timestamp": "2026-11-03T13:49:17.426778Z",
+          "output": "Container workflow-phase1-sandbox-provider Started"
+        },
+        {
+          "timestamp": "2026-11-03T13:49:17.445425Z",
+          "output": "New container started."
+        }
+      ]
+    },
+    {
+      "uuid": "xoirtvdhn7kofdlkekgdegry",
+      "status": "finished",
+      "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+      "created_at": "2026-11-03T13:51:23.000000Z",
+      "updated_at": "2026-11-03T13:51:36.000000Z",
+      "replacement_lines": [
+        {
+          "timestamp": "2026-11-03T13:51:31.284640Z",
+          "output": "Building docker image started."
+        },
+        {
+          "timestamp": "2026-11-03T13:51:33.133270Z",
+          "output": "Consistent container name feature enabled, rolling update is not supported."
+        },
+        {
+          "timestamp": "2026-11-03T13:51:33.137035Z",
+          "output": "Custom internal name is set, rolling update is not supported."
+        },
+        {
+          "timestamp": "2026-11-03T13:51:33.140856Z",
+          "output": "Removing old containers."
+        },
+        {
+          "timestamp": "2026-11-03T13:51:35.511867Z",
+          "output": "Container workflow-phase1-job-runner Started"
+        },
+        {
+          "timestamp": "2026-11-03T13:51:35.555770Z",
+          "output": "New container started."
+        }
+      ]
+    }
+  ]
+}

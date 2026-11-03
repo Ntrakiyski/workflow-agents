@@ -1,0 +1,53 @@
+{
+  "outcome": "passed",
+  "source": "job_runner_integration",
+  "tables": {
+    "graphile_worker._private_job_queues": {
+      "rows": 0,
+      "row_content_equal": true
+    },
+    "graphile_worker._private_jobs": {
+      "rows": 0,
+      "row_content_equal": true
+    },
+    "graphile_worker._private_known_crontabs": {
+      "rows": 0,
+      "row_content_equal": true
+    },
+    "graphile_worker._private_tasks": {
+      "rows": 2,
+      "row_content_equal": true
+    },
+    "graphile_worker.migrations": {
+      "rows": 20,
+      "row_content_equal": true
+    },
+    "runner.attempts": {
+      "rows": 4,
+      "row_content_equal": true
+    },
+    "runner.audit_events": {
+      "rows": 14,
+      "row_content_equal": true
+    },
+    "runner.idempotency": {
+      "rows": 5,
+      "row_content_equal": true
+    },
+    "runner.jobs": {
+      "rows": 4,
+      "row_content_equal": true
+    },
+    "runner.schedules": {
+      "rows": 1,
+      "row_content_equal": true
+    },
+    "runner.schema_migrations": {
+      "rows": 1,
+      "row_content_equal": true
+    }
+  },
+  "scope": "local PostgreSQL logical backup/restore only; BoxLite disks excluded"
+}
+
+exit=0

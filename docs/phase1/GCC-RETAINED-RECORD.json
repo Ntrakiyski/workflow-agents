@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "run_id": "gccqa_4bdff4604a494b87adc569fa4ca398f0",
+  "owner_id": "staging-fixture",
+  "prepared_correlation_id": "qa_gcc_a0335a65bb554d0fbb04ea03af2f52d0",
+  "owner_ref_a": "gcc-qa:gccqa_4bdff4604a494b87adc569fa4ca398f0:a",
+  "owner_ref_b": "gcc-qa:gccqa_4bdff4604a494b87adc569fa4ca398f0:b",
+  "marker_sha256": "99bb5ef5349d4478bb34fdecdc500eb6e3640c8305c8ed9e8b13452ccd8b33bb",
+  "cancelled_job_id": "job_4b45fcb5-9b10-4d61-bb70-724dd77402f7",
+  "cancelled_schedule_id": "sch_6ff40ff4-5d9e-40ca-a6fb-39141b910922",
+  "write_job_id": "job_ae6aff57-b116-4027-848d-3a35b7a6a0cc",
+  "sandbox_a": "sbx_fde66cf57d634a6882b58b1c166beda3",
+  "read_job_id": "job_e389ac80-ea4c-43ea-87de-7a791bc72434",
+  "isolation_job_id": "job_8eb13434-1486-4e1c-a0c3-4f997ef6973c",
+  "sandbox_b": "sbx_fbb119b5a8204556bfcd638cdaecad57",
+  "write_event_ids": [
+    "evt_0f385da3-e0b2-4d59-a52f-77c564e3006b",
+    "evt_79688af3-a31e-4575-a5c4-96c2a79733c4",
+    "evt_f8d34232-4ec1-4fb3-84a9-f503f2cdd8a3"
+  ],
+  "sandbox_a_event_ids": [
+    "evt_3559241a8c244a0891e2bbe557b611c0",
+    "evt_4073af631e0441ec93164ba2c3e57467",
+    "evt_1c2ee4e83d104026a3eb65d1c11bebe6",
+    "evt_34240ddf19cf4cdc89e3c1091f1d79ab",
+    "evt_ddace2cc2e0946a485c11af8e36bfb9e",
+    "evt_6c5e96da20a34ca5a62646cae82d2867",
+    "evt_684186747fa241d79dd0fdb92eac263f",
+    "evt_050fabf7345c4284a76af84eb911239a",
+    "evt_3fcd50dddf814d578084abac3d7917ed",
+    "evt_39bc63074de248db911d8054ea1205d4",
+    "evt_f50c4781f8714f08a9b14181e6e84d1f"
+  ],
+  "sandbox_b_event_ids": [
+    "evt_c6a0ee0491914b8aad7e5446e2a26b89",
+    "evt_b459ccfbc0ac41c28e0e2ee38a36d282",
+    "evt_e21f0a69012b4f81a3642657dc36ae71",
+    "evt_55aba2e3dfc34e1fa5934ad3c0a0c2e8",
+    "evt_24579c4d8fb043e295d012f0f6b05301",
+    "evt_ebe0b1b663524d3ca575f9066bd245d3",
+    "evt_3eaeb45806bf4c48b4184d5faa8e562a"
+  ]
+}

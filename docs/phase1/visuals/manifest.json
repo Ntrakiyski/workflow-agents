@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "evidence_date": "2026-11-03",
+  "deployed_commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+  "source_report": "../CLOUD-VALIDATION.md",
+  "full_phase1_acceptance_complete": false,
+  "curation": "Copied frozen specifications, interactive diagrams and final PNGs unchanged. Removed SVG trailing whitespace and replaced gallery archive link with evidence link. Raw raster inputs, composition script, duplicate ZIP and browser-review captures remain local scratch assets.",
+  "original_handoff_sha256": "232101db50c2470ee7e4f59e837ff49226d362e3bbc99920045603750e760c2a",
+  "recorded_generation_review": [
+    {
+      "diagram": "01-architecture",
+      "validation": "9/9 showcase, 0 errors, 0 warnings",
+      "visual_review": "passed",
+      "visual_review_basis": "Inspected actual light/dark browser captures and final presentation images; this annotation is separate from automated containment receipts.",
+      "specification_sha256": "718b7987dcec94153dee3c3e594780449acd403ef6b8d154c89369f122c779ca",
+      "interactive_sha256": "0fa50d6932b2adc38b4b6515c3e66bc370430c5e649b079964b8bdd7012b63d2",
+      "presentation_sha256": "582eb1d65342032292177f48a62ffbf57dd53f7aa6d4eb7fb2da99160d9cad1a"
+    },
+    {
+      "diagram": "02-job-flow",
+      "validation": "9/9 showcase, 0 errors, 0 warnings",
+      "visual_review": "passed",
+      "visual_review_basis": "Inspected actual light/dark browser captures and final presentation images; this annotation is separate from automated containment receipts.",
+      "specification_sha256": "4a15acf410954ac15a7a31e057f3f44577638285cf31a148dd06bfa3e84d9cd4",
+      "interactive_sha256": "5f149cb21cc59fbe48fb02a491932fb409d81ee47846c6deb6c467e56813fa19",
+      "presentation_sha256": "92974aa3fb8a5f8b5a2bb1ba726d029301ff75d4c6c66abd3a1e94b58926ae95"
+    },
+    {
+      "diagram": "03-retention-proof",
+      "validation": "9/9 showcase, 0 errors, 0 warnings",
+      "visual_review": "passed",
+      "visual_review_basis": "Inspected actual light/dark browser captures and final presentation images; this annotation is separate from automated containment receipts.",
+      "specification_sha256": "5d6878739a2a509aba6765e80174e5de996546c803d7a9c9b3b7282e41a4b682",
+      "interactive_sha256": "6743ae776f8aac20f966efbf1f216da70d4aae32fc7d97f2369c9cfbcd5ec991",
+      "presentation_sha256": "8aa527c68d91c55cd9751d99b2ea00546f2e9814d410e868c1a30da496a16324"
+    },
+    {
+      "diagram": "04-validation",
+      "validation": "9/9 showcase, 0 errors, 0 warnings",
+      "visual_review": "passed",
+      "visual_review_basis": "Inspected actual light/dark browser captures and final presentation images; this annotation is separate from automated containment receipts.",
+      "specification_sha256": "d34217c63e9f545475993fbd805bf6bc64ee504009fa71740b9b31c972c0165c",
+      "interactive_sha256": "bab9e2f5b881cbe1323731d2c5c8f5de49dc948c626b98859d3122b40ceff19a",
+      "presentation_sha256": "76b5b0a0d5ccf67c6151944bb4b1a0a3aa010a6593d3e7bbba1839ff35372765"
+    }
+  ],
+  "files": [
+    {
+      "path": "01-architecture.html",
+      "bytes": 636942,
+      "sha256": "0fa50d6932b2adc38b4b6515c3e66bc370430c5e649b079964b8bdd7012b63d2"
+    },
+    {
+      "path": "01-architecture.light.png",
+      "bytes": 318143,
+      "sha256": "2ed085aef7bdbc2882b5f7e1e0b9fa29b1aa2991c7c03c30978ca79ee41d89f7"
+    },
+    {
+      "path": "01-architecture.png",
+      "bytes": 326170,
+      "sha256": "582eb1d65342032292177f48a62ffbf57dd53f7aa6d4eb7fb2da99160d9cad1a"
+    },
+    {
+      "path": "02-job-flow.html",
+      "bytes": 635439,
+      "sha256": "5f149cb21cc59fbe48fb02a491932fb409d81ee47846c6deb6c467e56813fa19"
+    },
+    {
+      "path": "02-job-flow.light.png",
+      "bytes": 308588,
+      "sha256": "c6df454ca1b32a532eaf5b03dae823a3b0add296067d355843aa083fac66f545"
+    },
+    {
+      "path": "02-job-flow.png",
+      "bytes": 315601,
+      "sha256": "92974aa3fb8a5f8b5a2bb1ba726d029301ff75d4c6c66abd3a1e94b58926ae95"
+    },
+    {
+      "path": "03-retention-proof.html",
+      "bytes": 634335,
+      "sha256": "6743ae776f8aac20f966efbf1f216da70d4aae32fc7d97f2369c9cfbcd5ec991"
+    },
+    {
+      "path": "03-retention-proof.light.png",
+      "bytes": 316366,
+      "sha256": "aad3f4df9fb12b9c090eb0089d24e886ba5f9c00005f6115eabb496a80bba07c"
+    },
+    {
+      "path": "03-retention-proof.png",
+      "bytes": 321945,
+      "sha256": "8aa527c68d91c55cd9751d99b2ea00546f2e9814d410e868c1a30da496a16324"
+    },
+    {
+      "path": "04-validation.html",
+      "bytes": 635116,
+      "sha256": "bab9e2f5b881cbe1323731d2c5c8f5de49dc948c626b98859d3122b40ceff19a"
+    },
+    {
+      "path": "04-validation.light.png",
+      "bytes": 349041,
+      "sha256": "2c76fa8c845d322d2c3c3d9e2c9974391eb2c9514649428e5d0163a951cbf71d"
+    },
+    {
+      "path": "04-validation.png",
+      "bytes": 355920,
+      "sha256": "76b5b0a0d5ccf67c6151944bb4b1a0a3aa010a6593d3e7bbba1839ff35372765"
+    },
+    {
+      "path": "index.html",
+      "bytes": 3387,
+      "sha256": "60f3d97d470b3797b56e6cb2dacf2ac798dc79105e2f7b5f7111f53f8495a8b0"
+    },
+    {
+      "path": "preview.light.png",
+      "bytes": 367721,
+      "sha256": "936c42563dad94b240bf6fcee1fa78ebb8ab0924f4e162ff499da96861bf9602"
+    },
+    {
+      "path": "preview.png",
+      "bytes": 402336,
+      "sha256": "e327fb2f4a52cd777300916eeccceba40415aa5468800467ba10b561f7707b9a"
+    },
+    {
+      "path": "specs/01-architecture.json",
+      "bytes": 3609,
+      "sha256": "718b7987dcec94153dee3c3e594780449acd403ef6b8d154c89369f122c779ca"
+    },
+    {
+      "path": "specs/02-job-flow.json",
+      "bytes": 2984,
+      "sha256": "4a15acf410954ac15a7a31e057f3f44577638285cf31a148dd06bfa3e84d9cd4"
+    },
+    {
+      "path": "specs/03-retention-proof.json",
+      "bytes": 3106,
+      "sha256": "5d6878739a2a509aba6765e80174e5de996546c803d7a9c9b3b7282e41a4b682"
+    },
+    {
+      "path": "specs/04-validation.json",
+      "bytes": 3150,
+      "sha256": "d34217c63e9f545475993fbd805bf6bc64ee504009fa71740b9b31c972c0165c"
+    },
+    {
+      "path": "vectors/01-architecture.svg",
+      "bytes": 52808,
+      "sha256": "d20510e13b91170c331a7290b0b1a73af24de380ed7588ec5e4042dd4403bb1d"
+    },
+    {
+      "path": "vectors/02-job-flow.svg",
+      "bytes": 51271,
+      "sha256": "10df99063d7c5c7ab4337886b737725f88b90bc713a7f2e3bd83c05b2c26c1b7"
+    },
+    {
+      "path": "vectors/03-retention-proof.svg",
+      "bytes": 50276,
+      "sha256": "a10863e89b69c15a9396a6db93ce6d524cb767cb9030a82a61f66dfe33272ec0"
+    },
+    {
+      "path": "vectors/04-validation.svg",
+      "bytes": 50861,
+      "sha256": "026b325d220b1f3d50bc8bbef3de7c35cbda924c220c23c3d98360fab457dc11"
+    }
+  ]
+}

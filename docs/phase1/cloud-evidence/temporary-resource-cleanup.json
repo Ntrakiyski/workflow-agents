@@ -1,0 +1,20 @@
+{
+  "outcome": "passed",
+  "resources": [
+    {
+      "application_uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+      "scheduled_tasks": [],
+      "temporary_env_keys": [],
+      "cloud_secret_present": false,
+      "kvm_build_keys": []
+    },
+    {
+      "application_uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+      "scheduled_tasks": [],
+      "temporary_env_keys": [],
+      "cloud_secret_present": true,
+      "kvm_build_keys": []
+    }
+  ],
+  "scope": "Exact owned applications; no environment values returned in this report."
+}
