@@ -1,0 +1,15 @@
+{
+  "outcome": "passed",
+  "source": "sandbox_provider_integration",
+  "tables": {
+    "public.audit_events": 28,
+    "public.cancellation_fences": 0,
+    "public.idempotency": 8,
+    "public.runs": 5,
+    "public.sandboxes": 3,
+    "public.schema_migrations": 2
+  },
+  "scope": "local PostgreSQL logical backup/restore only; BoxLite disks excluded"
+}
+
+exit=0

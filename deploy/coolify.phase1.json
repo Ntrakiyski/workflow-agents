@@ -22,7 +22,10 @@
       "health_check_port": 8080,
       "limits_cpus": "0.5",
       "limits_memory": "384m",
-      "redact_all_env_values_in_logs": false
+      "redact_all_env_values_in_logs": false,
+      "is_consistent_container_name_enabled": true,
+      "custom_internal_name": "workflow-phase1-job-runner",
+      "stop_grace_period": 30
     },
     "sandbox-provider": {
       "base_directory": "/services/sandbox-provider",

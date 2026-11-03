@@ -1,0 +1,27 @@
+Executed lead external generic HTTP fixture with real PostgreSQL and explicitly mocked runtime. This is not BoxLite persistence/isolation evidence.
+
+{"check": "health and strict response contracts", "outcome": "passed", "mode": "mocked-runtime"}
+{"check": "duplicate submission and changed-payload conflict", "outcome": "passed", "mode": "mocked-runtime"}
+{"check": "Runner queued generic workload through Provider HTTP", "outcome": "passed", "mode": "mocked-runtime"}
+{"check": "non-destructive delayed stop, same sandbox restart and retained marker", "outcome": "passed", "mode": "mocked-runtime"}
+{"check": "unauthorized credential and denied workload", "outcome": "passed", "mode": "mocked-runtime"}
+{"check": "two sandbox filesystem isolation and explicit destruction", "outcome": "passed", "mode": "mocked-runtime"}
+{"check": "durable actor and owner audit events through published APIs", "outcome": "passed", "mode": "mocked-runtime"}
+{
+  "mode": "mocked-runtime",
+  "correlation_id": "fixture-06ba3aeefc4e4f1dae7e2b0e1190fa83",
+  "checks": [
+    "health and strict response contracts",
+    "duplicate submission and changed-payload conflict",
+    "Runner queued generic workload through Provider HTTP",
+    "non-destructive delayed stop, same sandbox restart and retained marker",
+    "unauthorized credential and denied workload",
+    "two sandbox filesystem isolation and explicit destruction",
+    "durable actor and owner audit events through published APIs"
+  ],
+  "outcome": "passed",
+  "runner_http_calls": 24,
+  "provider_http_calls": 12
+}
+
+exit=0

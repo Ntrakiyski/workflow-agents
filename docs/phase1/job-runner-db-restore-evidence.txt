@@ -1,0 +1,20 @@
+{
+  "outcome": "passed",
+  "source": "job_runner_integration",
+  "tables": {
+    "graphile_worker._private_job_queues": 0,
+    "graphile_worker._private_jobs": 0,
+    "graphile_worker._private_known_crontabs": 0,
+    "graphile_worker._private_tasks": 2,
+    "graphile_worker.migrations": 20,
+    "runner.attempts": 4,
+    "runner.audit_events": 14,
+    "runner.idempotency": 5,
+    "runner.jobs": 4,
+    "runner.schedules": 1,
+    "runner.schema_migrations": 1
+  },
+  "scope": "local PostgreSQL logical backup/restore only; BoxLite disks excluded"
+}
+
+exit=0

@@ -19,6 +19,7 @@ if not container.startswith("workflow-phase1-test-"):
 url = urlsplit(config["database_url"])
 database = url.path.lstrip("/")
 user = url.username
+admin = config.get("admin_user", user)
 restored = "restore_drill_" + uuid.uuid4().hex[:12]
 base = ["docker", "exec", "-i", container]
 
@@ -28,7 +29,7 @@ def psql(sql, db=database):
 
 dump = subprocess.run(base + ["pg_dump", "-U", user, "-d", database, "-Fc", "--no-owner", "--no-acl"],
                       capture_output=True, check=True).stdout
-subprocess.run(base + ["createdb", "-U", user, "-O", user, restored], capture_output=True, check=True)
+subprocess.run(base + ["createdb", "-U", admin, "-O", user, restored], capture_output=True, check=True)
 try:
     subprocess.run(base + ["pg_restore", "-U", user, "-d", restored, "--no-owner", "--no-acl", "--exit-on-error"],
                    input=dump, capture_output=True, check=True)
@@ -45,4 +46,4 @@ try:
     print(json.dumps({"outcome":"passed", "source":database, "tables":counts,
                       "scope":"local PostgreSQL logical backup/restore only; BoxLite disks excluded"}, indent=2))
 finally:
-    subprocess.run(base + ["dropdb", "-U", user, restored], capture_output=True, check=True)
+    subprocess.run(base + ["dropdb", "-U", admin, restored], capture_output=True, check=True)
