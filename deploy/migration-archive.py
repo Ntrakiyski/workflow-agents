@@ -24,7 +24,7 @@ import json
 import os
 import subprocess
 import sys
-from base64 import b64encode
+from base64 import b64encode, b64decode
 
 import psycopg
 from psycopg import sql
@@ -75,6 +75,138 @@ def seal(snapshot, password):
     return envelope
 
 
+def unseal(envelope, password):
+    if (envelope.get("archive") != "workflow-agents-database-archive" or
+            envelope.get("version") != 1 or envelope.get("service") != SERVICE or
+            envelope.get("cipher") != "aes-256-cbc+hmac-sha256" or
+            envelope.get("kdf") != "pbkdf2-hmac-sha256" or
+            envelope.get("iterations") != ITERATIONS):
+        raise ValueError("archive_envelope_invalid")
+    salt = b64decode(envelope["salt_b64"], validate=True)
+    mac_salt = b64decode(envelope["mac_salt_b64"], validate=True)
+    ciphertext = b64decode(envelope["ciphertext_b64"], validate=True)
+    if len(salt) != 8 or len(mac_salt) != 16 or not ciphertext or len(ciphertext) % 16 or len(ciphertext) > 64 * 1024 * 1024:
+        raise ValueError("archive_envelope_invalid")
+    mac_key = hashlib.pbkdf2_hmac("sha256", password.encode(), mac_salt, ITERATIONS, 32)
+    expected = hmac.new(mac_key, mac_input(envelope), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected, envelope.get("hmac_sha256", "")):
+        raise ValueError("archive_authentication_failed")
+    # Pinned Debian Bookworm OpenSSL uses the8-byte salt format. Newer external
+    # envelopes must be decrypted/resealed offline to this supported format.
+    result = subprocess.run(
+        ["openssl", "enc", "-d", "-aes-256-cbc", "-pbkdf2", "-iter", str(ITERATIONS),
+         "-md", "sha256", "-S", salt.hex(), "-pass", "env:PHASE1_ARCHIVE_PASSWORD"],
+        input=ciphertext, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        env=dict(os.environ, PHASE1_ARCHIVE_PASSWORD=password), timeout=30, check=True,
+    ).stdout
+    snapshot = json.loads(result)
+    if snapshot.get("service") != SERVICE:
+        raise ValueError("archive_service_mismatch")
+    return snapshot
+
+
+def row_digest(rows):
+    return hashlib.sha256("\n".join(rows).encode()).hexdigest()
+
+
+def normalized_row(raw, ignored):
+    value = json.loads(raw)
+    for field in ignored:
+        value.pop(field, None)
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def restore(connection, snapshot, *, allow_bootstrap_metadata=False, allow_retained_runtime_records=False):
+    if (snapshot.get("format") != "workflow-agents-logical-snapshot" or snapshot.get("version") != 1 or
+            snapshot.get("service") != SERVICE or snapshot.get("schemas") != ["public"] or
+            not isinstance(snapshot.get("tables"), list) or not isinstance(snapshot.get("sequences"), list)):
+        raise ValueError("archive_snapshot_invalid")
+    by_name = {table["schema"] + "." + table["name"]: table for table in snapshot["tables"]}
+    if len(by_name) != len(snapshot["tables"]):
+        raise ValueError("archive_snapshot_invalid")
+    for table in snapshot["tables"]:
+        if (table["schema"] != "public" or not isinstance(table.get("rows"), list) or
+                table.get("row_count") != len(table["rows"]) or row_digest(table["rows"]) != table.get("rows_sha256")):
+            raise ValueError("archive_snapshot_invalid")
+        if table["name"] == "runs" and any(json.loads(row)["status"] in {"queued", "running", "cancelling"} for row in table["rows"]):
+            raise ValueError("archive_source_not_quiescent")
+        if table["name"] == "sandboxes" and not allow_retained_runtime_records and any(json.loads(row).get("runtime_id") for row in table["rows"]):
+            raise ValueError("archive_requires_coordinated_runtime_volume")
+    with connection.transaction():
+        connection.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+        connection.execute("SET LOCAL TIME ZONE 'UTC'")
+        connection.execute("SET LOCAL extra_float_digits=3")
+        connection.execute("SET LOCAL lock_timeout='15s'")
+        connection.execute("SELECT pg_advisory_xact_lock(hashtextextended('workflow-agents-migration-restore:sandbox-provider',0))")
+        targets = connection.execute("SELECT n.nspname AS schema,c.relname AS name,c.oid::text AS oid FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p') AND NOT c.relispartition ORDER BY c.relname").fetchall()
+        if [table["schema"] + "." + table["name"] for table in targets] != sorted(by_name):
+            raise ValueError("archive_destination_schema_mismatch")
+        connection.execute(sql.SQL("LOCK TABLE {} IN ACCESS EXCLUSIVE MODE").format(sql.SQL(",").join(sql.Identifier(table["schema"], table["name"]) for table in targets)))
+        destination_sequences = connection.execute("SELECT n.nspname AS schema,c.relname AS name FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='S' ORDER BY c.relname").fetchall()
+        if destination_sequences != [{key: value[key] for key in ("schema", "name")} for value in snapshot["sequences"]]:
+            raise ValueError("archive_destination_sequence_mismatch")
+        reconciled = 0
+        for target in targets:
+            table = by_name[target["schema"] + "." + target["name"]]
+            columns = connection.execute("SELECT a.attname AS name,format_type(a.atttypid,a.atttypmod) AS type,a.attnotnull AS not_null,a.attidentity AS identity,a.attgenerated AS generated FROM pg_attribute a WHERE a.attrelid=%s::oid AND a.attnum>0 AND NOT a.attisdropped ORDER BY a.attnum", (target["oid"],)).fetchall()
+            fields = ("name", "type", "not_null", "identity", "generated")
+            if columns != [{key: value[key] for key in fields} for value in table["columns"]]:
+                raise ValueError("archive_destination_schema_mismatch")
+            target_rows = [row["row_json"] for row in connection.execute(sql.SQL('SELECT to_jsonb(t)::text AS row_json FROM {} t ORDER BY to_jsonb(t)::text COLLATE "C"').format(sql.Identifier(target["schema"], target["name"]))).fetchall()]
+            source_set = set(table["rows"])
+            mismatches = [row for row in target_rows if row not in source_set]
+            if mismatches:
+                if not allow_bootstrap_metadata or target["name"] != "schema_migrations":
+                    raise ValueError("archive_destination_rows_conflict")
+                ignored = ["applied_at"]
+                if sorted(normalized_row(row, ignored) for row in target_rows) != sorted(normalized_row(row, ignored) for row in table["rows"]):
+                    raise ValueError("archive_bootstrap_semantics_mismatch")
+                primary = [row["name"] for row in connection.execute("SELECT a.attname AS name FROM pg_constraint k CROSS JOIN LATERAL unnest(k.conkey) WITH ORDINALITY p(attnum,ord) JOIN pg_attribute a ON a.attrelid=k.conrelid AND a.attnum=p.attnum WHERE k.conrelid=%s::oid AND k.contype='p' ORDER BY p.ord", (target["oid"],)).fetchall()]
+                if not primary:
+                    raise ValueError("archive_bootstrap_primary_key_missing")
+                statement = sql.SQL("UPDATE {} t SET {} FROM json_populate_record(NULL::{},%s::json) s WHERE {}").format(
+                    sql.Identifier(target["schema"], target["name"]),
+                    sql.SQL(",").join(sql.SQL("{}=s.{}").format(sql.Identifier(field), sql.Identifier(field)) for field in ignored),
+                    sql.Identifier(target["schema"], target["name"]),
+                    sql.SQL(" AND ").join(sql.SQL("t.{} IS NOT DISTINCT FROM s.{}").format(sql.Identifier(field), sql.Identifier(field)) for field in primary),
+                )
+                for row in table["rows"]:
+                    connection.execute(statement, (row,))
+                reconciled += len(mismatches)
+        remaining, ordered = dict(by_name), []
+        while remaining:
+            progress = False
+            for name, table in list(remaining.items()):
+                if all(foreign["referenced_schema"] + "." + foreign["referenced_table"] not in remaining or foreign["referenced_schema"] + "." + foreign["referenced_table"] == name for foreign in table.get("foreign_keys", [])):
+                    ordered.append(table)
+                    del remaining[name]
+                    progress = True
+            if not progress:
+                raise ValueError("archive_foreign_key_cycle")
+        for table in ordered:
+            columns = [column["name"] for column in table["columns"] if not column["generated"]]
+            column_sql = sql.SQL(",").join(sql.Identifier(column) for column in columns)
+            relation = sql.Identifier(table["schema"], table["name"])
+            statement = sql.SQL("INSERT INTO {}({}) OVERRIDING SYSTEM VALUE SELECT {} FROM json_populate_record(NULL::{},%s::json) ON CONFLICT DO NOTHING").format(relation, column_sql, column_sql, relation)
+            for row in table["rows"]:
+                connection.execute(statement, (row,))
+        results = []
+        for table in ordered:
+            rows = [row["row_json"] for row in connection.execute(sql.SQL('SELECT to_jsonb(t)::text AS row_json FROM {} t ORDER BY to_jsonb(t)::text COLLATE "C"').format(sql.Identifier(table["schema"], table["name"]))).fetchall()]
+            if len(rows) != table["row_count"] or row_digest(rows) != table["rows_sha256"]:
+                raise ValueError("archive_restored_rows_mismatch")
+            results.append({"table": table["schema"] + "." + table["name"], "rows": len(rows), "rows_sha256": table["rows_sha256"]})
+        # setval is not transactional. Keep destination quiescent until success;
+        # replay the same archive after any interrupted/failed restore.
+        for sequence in snapshot["sequences"]:
+            if not isinstance(sequence["last_value"], str) or not sequence["last_value"].isdigit() or not isinstance(sequence["is_called"], bool):
+                raise ValueError("archive_sequence_invalid")
+            connection.execute("SELECT setval(%s::regclass,%s::bigint,%s)", (sql.Identifier(sequence["schema"], sequence["name"]).as_string(connection), sequence["last_value"], sequence["is_called"]))
+    return {"operation": "logical-database-restore", "service": SERVICE, "outcome": "passed", "tables": results,
+            "sequences": len(snapshot["sequences"]), "bootstrap_timestamp_rows_reconciled": reconciled,
+            "scope": "logical rows only; no VM disk or host recovery proof"}
+
+
 def collect(connection):
     with connection.transaction():
         connection.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
@@ -120,12 +252,21 @@ def archive_password():
 def main():
     try:
         with psycopg.connect(os.environ["DATABASE_URL"], row_factory=dict_row, connect_timeout=10) as connection:
-            snapshot = collect(connection)
-        print(json.dumps(seal(snapshot, archive_password()), separators=(",", ":")))
+            if "--restore" in sys.argv:
+                raw = os.getenv("PHASE1_ARCHIVE_ENVELOPE") or sys.stdin.read(100 * 1024 * 1024 + 1)
+                if len(raw) > 100 * 1024 * 1024:
+                    raise ValueError("archive_envelope_invalid")
+                snapshot = unseal(json.loads(raw), archive_password())
+                result = restore(connection, snapshot, allow_bootstrap_metadata="--allow-bootstrap-metadata" in sys.argv,
+                                 allow_retained_runtime_records="--allow-retained-runtime-records" in sys.argv)
+            else:
+                result = seal(collect(connection), archive_password())
+        print(json.dumps(result, separators=(",", ":")))
         return 0
-    except Exception:
+    except Exception as error:
+        code = str(error) if isinstance(error, ValueError) and str(error).startswith("archive_") and all(character.islower() or character == "_" for character in str(error)) else "archive_operation_failed"
         print(json.dumps({"archive": "workflow-agents-database-archive", "service": SERVICE,
-                          "error": "Logical archive export failed; no plaintext data emitted"}))
+                          "error": code}))
         return 1
 
 
