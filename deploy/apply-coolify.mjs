@@ -33,12 +33,15 @@ for (const [name,uuid] of Object.entries(ids.applications)) {
   const current = await api('GET','/applications/'+uuid);
   if (current.environment_id !== environment.id || current.name !== name) throw new Error('Application scope mismatch');
   if (current.destination?.server?.uuid !== ids.server_uuid) throw new Error('Application execution server mismatch');
-  const {storage,qualification,autogenerate_domain,...settings} = manifest.applications[name];
+  const {storage,qualification,autogenerate_domain,build_environment,...settings} = manifest.applications[name];
   const body = {...settings,git_commit_sha:commit,git_branch:manifest.branch,is_auto_deploy_enabled:false,domains:''};
   if (process.argv.includes('--kvm-probe')) throw new Error('Set reviewed KVM access in the target manifest; legacy probe flag is disabled');
   if (process.argv.includes('--dry-run')) {
     console.log(JSON.stringify({name,uuid,commit,target:manifest.coolify_url,configuration:'verified-dry-run'}));
     continue;
+  }
+  if (build_environment) {
+    await api('PATCH','/applications/'+uuid+'/envs/bulk',{data:Object.entries(build_environment).map(([key,value])=>({key,value,is_buildtime:true,is_runtime:false,is_literal:true}))});
   }
   await api('PATCH','/applications/'+uuid,body);
   const actual = await api('GET','/applications/'+uuid);

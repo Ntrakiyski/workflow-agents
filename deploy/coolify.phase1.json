@@ -36,7 +36,7 @@
       "autogenerate_domain": false,
       "is_auto_deploy_enabled": false,
       "custom_network_aliases": "workflow-phase1-sandbox-provider",
-      "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --device=/dev/kvm:/dev/kvm:rw --group-add=993",
+      "custom_docker_run_options": "--cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --device=/dev/kvm:/dev/kvm:rw",
       "health_check_enabled": true,
       "health_check_path": "/health/live",
       "health_check_port": 8000,
@@ -51,7 +51,10 @@
       "custom_internal_name": "workflow-phase1-sandbox-provider",
       "stop_grace_period": 30,
       "max_restart_count": 3,
-      "redact_all_env_values_in_logs": false
+      "redact_all_env_values_in_logs": false,
+      "build_environment": {
+        "KVM_GID": "993"
+      }
     }
   },
   "databases": {
