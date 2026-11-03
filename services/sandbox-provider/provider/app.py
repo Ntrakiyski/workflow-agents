@@ -268,7 +268,7 @@ def main():
     handler.setFormatter(JsonFormatter())
     logging.basicConfig(level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO').upper(), logging.INFO), handlers=[handler], force=True)
     # Access logging is disabled: service middleware emits bounded JSON metadata.
-    uvicorn.run(create_app(), host='0.0.0.0', port=int(os.getenv('PORT', '8000')), access_log=False, log_config=None)
+    uvicorn.run(create_app(), host=os.getenv('HOST', '0.0.0.0'), port=int(os.getenv('PORT', '8000')), access_log=False, log_config=None)
 
 
 if __name__ == '__main__':

@@ -161,3 +161,22 @@ async def test_transfer_lost_ack_and_persisted_interruption_fence(env, tmp_path,
     await app.state.service.recover()
     assert (await client.get(base, headers=headers())).json()['status'] == 'stopped'
     assert (root / body['path']).read_bytes() == data and runtime.executes == 0
+
+
+@pytest.mark.integration
+async def test_runtime_cancellation_stop_is_reflected_before_terminal_status(env):
+    _, client, _, runtime = env
+    runtime.cancellation_stops_environment = True
+    original = runtime.cancel
+    async def cancel(execution):
+        await original(execution)
+        await runtime.stop(execution.name)
+    runtime.cancel = cancel
+    sid = await create(client)
+    rid = await execute(client, sid, 'cancel-stops-box', 'fixture-delay:v1', {'seconds': 3})
+    import asyncio
+    await asyncio.sleep(.1)
+    await client.post(f'/v1/sandboxes/{sid}/runs/{rid}/cancel', headers=headers(), json={})
+    assert (await wait_run(client,sid,rid))['status'] == 'cancelled'
+    box = (await client.get(f'/v1/sandboxes/{sid}', headers=headers())).json()
+    assert box['status'] == 'stopped' and box['active_run_id'] is None

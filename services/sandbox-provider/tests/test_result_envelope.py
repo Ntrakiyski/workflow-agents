@@ -66,3 +66,24 @@ async def test_tampered_result_and_native_error_are_not_success(tmp_path):
     for raw, error in ((json.dumps(value).encode(), None), (out, 'transport failed')):
         with pytest.raises(ServiceError, match='ambiguous_execution'):
             await runtime.collect(JournalExecution(Output(raw, error), 'nonce-for-unit-test'), 32768)
+
+
+@pytest.mark.parametrize('kill_fails', [False, True])
+async def test_cancellation_requires_confirmed_same_box_stop_even_if_leader_kill_fails(tmp_path, kill_fails):
+    runtime = configured_runtime(configured(tmp_path))
+    calls = []
+    class Leader:
+        async def kill(self):
+            calls.append('leader-kill')
+            if kill_fails:
+                raise ServiceError(503, 'runtime_unavailable', 'Injected transport failure.', True)
+    async def stop(reference):
+        calls.append(('same-box-stop', reference))
+    runtime.stop = stop
+    await runtime.cancel(JournalExecution(Leader(), 'nonce', 'exact-original-cloud-id'))
+    assert calls == ['leader-kill', ('same-box-stop', 'exact-original-cloud-id')]
+    async def unavailable_stop(reference):
+        raise ServiceError(503, 'runtime_unavailable', 'Stop unconfirmed.', True)
+    runtime.stop = unavailable_stop
+    with pytest.raises(ServiceError, match='runtime_unavailable'):
+        await runtime.cancel(JournalExecution(Leader(), 'nonce', 'exact-original-cloud-id'))

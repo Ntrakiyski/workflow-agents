@@ -419,12 +419,16 @@ class ProviderService:
                             current = await one(c, 'SELECT status FROM runs WHERE run_id=%s', (rid,))
                         if current['status'] == 'cancelling':
                             await self.runtime.cancel(execution)
+                            if getattr(self.runtime, 'cancellation_stops_environment', False):
+                                await self._set_stopped(c, sb)
                             collect.cancel()
                             await asyncio.gather(collect, return_exceptions=True)
                             await self.finish(c, run, sb, identity, 'cancelled')
                             return
                         if asyncio.get_running_loop().time() >= end:
                             await self.runtime.cancel(execution)
+                            if getattr(self.runtime, 'cancellation_stops_environment', False):
+                                await self._set_stopped(c, sb)
                             collect.cancel()
                             await asyncio.gather(collect, return_exceptions=True)
                             err = ServiceError(409, 'deadline_exceeded', 'Execution exceeded its permitted duration.')
