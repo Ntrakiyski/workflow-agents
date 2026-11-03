@@ -2,10 +2,11 @@
 (async () => {
   const { createRequire } = await import('node:module');
   const { createHash } = await import('node:crypto');
+  const { pathToFileURL } = await import('node:url');
   const require = createRequire(process.cwd() + '/package.json');
   const pg = require('pg');
-  const { configuration } = await import(process.cwd() + '/dist/config.js');
-  const { S3Objects } = await import(process.cwd() + '/dist/storage.js');
+  const { configuration } = await import(pathToFileURL(process.cwd() + '/dist/config.js'));
+  const { S3Objects } = await import(pathToFileURL(process.cwd() + '/dist/storage.js'));
   const config = configuration();
   const pool = new pg.Pool({ connectionString: config.databaseUrl, max: 1,
     statement_timeout: 15000, options: '-c default_transaction_read_only=on' });
