@@ -15,7 +15,7 @@ from . import VERSION
 from .audit import emit_log
 from .config import ID, Settings
 from .errors import ServiceError, unavailable
-from .runtime import BoxLiteRuntime
+from .runtime import configured_runtime
 from .service import ProviderService, sandbox_json, run_json
 
 OPENAPI = json.loads(Path(__file__).with_name('openapi.json').read_text())
@@ -32,7 +32,7 @@ def err_response(err, correlation):
 
 def create_app(settings=None, runtime=None, dispatcher=True):
     settings = settings or Settings.from_env()
-    runtime = runtime or BoxLiteRuntime(settings.box_root)
+    runtime = runtime or configured_runtime(settings)
     service = ProviderService(settings, runtime)
 
     @asynccontextmanager

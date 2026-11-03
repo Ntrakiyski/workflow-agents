@@ -41,6 +41,34 @@ class ProviderService:
         self.db = Database(settings.database_url)
         self.tasks, self.loop_task, self.stopping = {}, None, False
 
+    @property
+    def backend_id(self):
+        return getattr(self.runtime, 'backend_id', 'boxlite-local')
+
+    def runtime_reference(self, sandbox):
+        if sandbox['runtime_backend'] != self.backend_id:
+            raise ServiceError(409, 'runtime_backend_mismatch', 'Environment belongs to a different configured execution backend.')
+        return sandbox['runtime_id'] or sandbox['runtime_name']
+
+    async def verify_runtime(self, sandbox):
+        reference = self.runtime_reference(sandbox)
+        if getattr(self.runtime, 'requires_create_fence', False):
+            if not sandbox['runtime_id']:
+                raise ServiceError(409, 'ambiguous_creation', 'Environment creation requires operator reconciliation.')
+            await self.runtime.verify(reference, sandbox['profile_snapshot'])
+
+    async def inspect_registered(self, sandbox):
+        reference = self.runtime_reference(sandbox)
+        if not sandbox['runtime_id'] and getattr(self.runtime, 'requires_create_fence', False):
+            if not sandbox['runtime_create_attempted']:
+                return None
+            found = await self.runtime.find_creation(sandbox['runtime_name'])
+            return self.runtime._identity(found) if found else None
+        found = await self.runtime.inspect(reference)
+        if found is not None and sandbox['runtime_id'] and found.runtime_id != sandbox['runtime_id']:
+            raise ServiceError(409, 'runtime_identity_mismatch', 'Retained environment identity does not match its registry.')
+        return found
+
     async def open(self, dispatcher=True):
         await self.db.open()
         await self.recover()
@@ -86,6 +114,8 @@ class ProviderService:
 
     async def create(self, identity, key, body, correlation):
         profile = self.settings.sandbox_profile(identity, body['profile'])
+        if getattr(self.runtime, 'requires_create_fence', False):
+            self.runtime.validate_profile(profile)
         async with self.db.tx() as c:
             await c.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))', ('owner:' + identity.owner,))
             sid = await self.replay(c, identity, 'create', key, body)
@@ -100,19 +130,31 @@ class ProviderService:
                     if count['count'] >= self.settings.max_sandboxes:
                         raise ServiceError(429, 'quota_exceeded', 'Environment quota exceeded.')
                     sid = uid('sbx')
-                    await c.execute('''INSERT INTO sandboxes(sandbox_id,owner_id,owner_ref,profile,profile_snapshot,runtime_name,status)
-                                       VALUES(%s,%s,%s,%s,%s,%s,'creating')''',
-                                    (sid, identity.owner, body['owner_ref'], body['profile'], Jsonb(profile), sid))
+                    runtime_name = self.runtime.creation_name(sid) if getattr(self.runtime, 'requires_create_fence', False) else sid
+                    await c.execute('''INSERT INTO sandboxes(sandbox_id,owner_id,owner_ref,profile,profile_snapshot,runtime_name,status,runtime_backend)
+                                       VALUES(%s,%s,%s,%s,%s,%s,'creating',%s)''',
+                                    (sid, identity.owner, body['owner_ref'], body['profile'], Jsonb(profile), runtime_name, self.backend_id))
                     sb = await self.get_sandbox(c, identity, sid)
                     await event(c, sb, identity, correlation, 'sandbox.creation_requested', 'creating')
                 await self.remember(c, identity, 'create', key, body, sid)
         return await self.lifecycle(identity, sid, 'ensure', correlation)
 
     async def lifecycle(self, identity, sid, action, correlation):
+        allow_create = True
+        if action == 'ensure' and getattr(self.runtime, 'requires_create_fence', False):
+            # Commit dispatch authority before the external POST. After a lost
+            # response we may recover this exact name, but never create afresh.
+            async with self.db.tx() as c:
+                sb = await self.get_sandbox(c, identity, sid, lock=True)
+                self.runtime_reference(sb)
+                allow_create = not sb['runtime_create_attempted']
+                if sb['status'] == 'creating' and allow_create:
+                    await c.execute('UPDATE sandboxes SET runtime_create_attempted=true WHERE sandbox_id=%s', (sid,))
         if action == 'destroy':
             # Commit explicit destruction authority before irreversible runtime effects.
             async with self.db.tx() as c:
                 sb = await self.get_sandbox(c, identity, sid, lock=True)
+                self.runtime_reference(sb)
                 if sb['status'] == 'destroyed':
                     return sandbox_json(sb)
                 if sb['active_run_id']:
@@ -123,6 +165,7 @@ class ProviderService:
         failure = None
         async with self.db.tx() as c:
             sb = await self.get_sandbox(c, identity, sid, lock=True)
+            self.runtime_reference(sb)
             if action == 'ensure' and sb['status'] not in ('creating',):
                 return sandbox_json(sb)
             if action == 'start' and sb['status'] == 'running':
@@ -138,24 +181,26 @@ class ProviderService:
             old = sb['status']
             try:
                 if action == 'ensure':
-                    found = await self.runtime.ensure(sb['runtime_name'], sb['profile_snapshot'])
+                    options = {'allow_create': allow_create} if getattr(self.runtime, 'requires_create_fence', False) else {}
+                    found = await self.runtime.ensure(sb['runtime_name'], sb['profile_snapshot'], **options)
                     await c.execute("UPDATE sandboxes SET runtime_id=%s,disk_ref=%s,status='running',error=NULL,updated_at=now() WHERE sandbox_id=%s",
                                     (found.runtime_id, found.disk_ref, sid))
                     kind, state = 'sandbox.created', 'running'
                 elif action == 'start':
-                    await self.runtime.start(sb['runtime_name'])
+                    await self.verify_runtime(sb)
+                    await self.runtime.start(self.runtime_reference(sb))
                     await c.execute("UPDATE sandboxes SET status='running',error=NULL,updated_at=now() WHERE sandbox_id=%s", (sid,))
                     kind, state = 'sandbox.resumed' if old == 'stopped' else 'sandbox.started', 'running'
                 elif action == 'stop':
-                    await self.runtime.stop(sb['runtime_name'])
+                    await self.runtime.stop(self.runtime_reference(sb))
                     await c.execute("UPDATE sandboxes SET status='stopped',error=NULL,updated_at=now() WHERE sandbox_id=%s", (sid,))
                     kind, state = 'sandbox.stopped', 'stopped'
                 else:
                     # Only this explicit, separately-authorized operation calls remove.
-                    found = await self.runtime.inspect(sb['runtime_name'])
+                    found = await self.inspect_registered(sb)
                     if found is not None:
-                        await self.runtime.stop(sb['runtime_name'])
-                        await self.runtime.destroy(sb['runtime_name'])
+                        await self.runtime.stop(found.runtime_id)
+                        await self.runtime.destroy(found.runtime_id)
                     await c.execute("UPDATE sandboxes SET status='destroyed',error=NULL,updated_at=now() WHERE sandbox_id=%s", (sid,))
                     kind, state = 'sandbox.destroyed', 'destroyed'
                 await event(c, sb, identity, correlation, kind, state)
@@ -174,6 +219,7 @@ class ProviderService:
             raise ServiceError(422, 'unsupported_artifact_transfer', 'No scoped artifact transfer adapter is configured.')
         async with self.db.tx() as c:
             sb = await self.get_sandbox(c, identity, sid, lock=True)
+            self.runtime_reference(sb)
             p, argv = self.settings.workload(identity, body['profile'], sb['profile'], body['arguments'], body['timeout_seconds'])
             rid = await self.replay(c, identity, 'execute:' + sid, key, body)
             if not rid:
@@ -254,15 +300,15 @@ class ProviderService:
             for sb in rows:
                 identity = Identity('sandbox-provider-recovery', sb['owner_id'], {})
                 try:
-                    found = await self.runtime.inspect(sb['runtime_name'])
+                    found = await self.inspect_registered(sb)
                     if sb['status'] == 'destroying':
                         intent = await one(c, "SELECT actor_id,correlation_id FROM audit_events WHERE sandbox_id=%s AND type='sandbox.destruction_requested' ORDER BY sequence DESC LIMIT 1", (sb['sandbox_id'],))
                         if not intent:
                             continue  # No durable authority: never delete based on a state guess.
                         identity = Identity(intent['actor_id'], sb['owner_id'], {})
                         if found is not None:
-                            await self.runtime.stop(sb['runtime_name'])
-                            await self.runtime.destroy(sb['runtime_name'])
+                            await self.runtime.stop(found.runtime_id)
+                            await self.runtime.destroy(found.runtime_id)
                         await c.execute("UPDATE sandboxes SET status='destroyed',error=NULL,updated_at=now() WHERE sandbox_id=%s", (sb['sandbox_id'],))
                         await event(c, sb, identity, intent['correlation_id'], 'sandbox.destroyed', 'destroyed', detail={'recovered': True})
                         continue
@@ -271,6 +317,7 @@ class ProviderService:
                         await c.execute("UPDATE sandboxes SET status='failed',error=%s,updated_at=now() WHERE sandbox_id=%s", (Jsonb(error_value(err, 'provider-recovery')), sb['sandbox_id']))
                         await event(c, sb, identity, 'provider-recovery', 'sandbox.failed', 'failed', detail={'error_classification': err.code})
                     else:
+                        await self.verify_runtime(sb)
                         status = 'running' if found.running else 'stopped'
                         await c.execute('UPDATE sandboxes SET status=%s,updated_at=now() WHERE sandbox_id=%s', (status, sb['sandbox_id']))
                         await event(c, sb, identity, 'provider-recovery', 'sandbox.recovered', status)
@@ -321,6 +368,7 @@ class ProviderService:
                     if not run or run['status'] in TERMINAL:
                         return
                     sb = await one(c, 'SELECT * FROM sandboxes WHERE sandbox_id=%s FOR UPDATE', (run['sandbox_id'],))
+                    self.runtime_reference(sb)
                     run = await one(c, 'SELECT * FROM runs WHERE run_id=%s FOR UPDATE', (rid,))
                     identity = Identity(run['actor_id'], run['owner_id'], {})
                     fresh = run['status'] == 'queued'
@@ -330,17 +378,19 @@ class ProviderService:
                 execution = None
                 try:
                     if run['status'] == 'cancelling' and not run['runtime_execution_id']:
-                        await self.runtime.stop(sb['runtime_name'])
+                        await self.runtime.stop(self.runtime_reference(sb))
                         await self._set_stopped(c, sb)
                         await self.finish(c, run, sb, identity, 'cancelled')
                         return
                     if fresh:
                         p = run['profile_snapshot']
-                        execution = await self.runtime.execute(sb['runtime_name'], p['resolved_argv'], p, run['request']['timeout_seconds'])
+                        await self.verify_runtime(sb)
+                        execution = await self.runtime.execute(self.runtime_reference(sb), p['resolved_argv'], p, run['request']['timeout_seconds'])
                         async with c.transaction():
                             await c.execute('UPDATE runs SET runtime_execution_id=%s,updated_at=now() WHERE run_id=%s', (execution.id(), rid))
                     elif run['runtime_execution_id']:
-                        execution = await self.runtime.attach(sb['runtime_name'], run['runtime_execution_id'])
+                        await self.verify_runtime(sb)
+                        execution = await self.runtime.attach(self.runtime_reference(sb), run['runtime_execution_id'])
                         async with c.transaction():
                             await event(c, sb, identity, run['correlation_id'], 'run.recovered', run['status'], rid)
                     else:
@@ -380,7 +430,7 @@ class ProviderService:
                 except Exception as exc:
                     err = exc if isinstance(exc, ServiceError) else ServiceError(409, 'ambiguous_execution', 'Execution outcome is unknown. Environment requires recovery.')
                     try:
-                        await self.runtime.stop(sb['runtime_name'])
+                        await self.runtime.stop(self.runtime_reference(sb))
                         await self._set_stopped(c, sb)
                         await self.finish(c, run, sb, identity, 'failed', error=error_value(err, run['correlation_id']))
                     except Exception:

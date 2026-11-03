@@ -4,6 +4,7 @@ import re
 import secrets
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlsplit
 from jsonschema import Draft202012Validator
 from .errors import ServiceError
 
@@ -25,12 +26,34 @@ class Identity:
 class Settings:
     def __init__(self, database_url, auth, profiles, box_root='/var/lib/sandbox-provider/boxlite',
                  max_sandboxes=20, max_body=65536, max_output=32768, poll_seconds=.25,
-                 audit_retention_days=90, max_concurrent_runs=4):
+                 audit_retention_days=90, max_concurrent_runs=4, runtime_mode='local',
+                 boxlite_rest_url=None, boxlite_api_key=None, boxlite_account_scope=None,
+                 boxlite_rest_path_prefix=None, runtime_request_timeout=30):
         self.database_url, self.auth, self.profiles = database_url, auth, profiles
         self.box_root = Path(box_root)
         self.max_sandboxes, self.max_body, self.max_output = max_sandboxes, max_body, max_output
         self.poll_seconds, self.audit_retention_days = poll_seconds, audit_retention_days
         self.max_concurrent_runs = max_concurrent_runs
+        self.runtime_mode = runtime_mode
+        self.boxlite_rest_url, self.boxlite_api_key = boxlite_rest_url, boxlite_api_key
+        self.boxlite_account_scope, self.boxlite_rest_path_prefix = boxlite_account_scope, boxlite_rest_path_prefix
+        self.runtime_request_timeout = runtime_request_timeout
+        if runtime_mode not in ('local', 'cloud'):
+            raise ValueError('SANDBOX_RUNTIME_MODE must be local or cloud.')
+        if not isinstance(runtime_request_timeout, (float, int)) or not 1 <= runtime_request_timeout <= 120:
+            raise ValueError('RUNTIME_REQUEST_TIMEOUT_SECONDS must be between 1 and 120.')
+        if runtime_mode == 'cloud':
+            parsed = urlsplit(boxlite_rest_url or '')
+            if (parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password
+                    or parsed.query or parsed.fragment or parsed.path not in ('', '/')):
+                raise ValueError('BOXLITE_REST_URL must be an HTTPS origin without credentials or a path.')
+            self.boxlite_rest_url = boxlite_rest_url.rstrip('/')
+            if not isinstance(boxlite_api_key, str) or len(boxlite_api_key) < 24:
+                raise ValueError('BOXLITE_API_KEY must be configured through secret management.')
+            if not isinstance(boxlite_account_scope, str) or not ID.fullmatch(boxlite_account_scope):
+                raise ValueError('BOXLITE_ACCOUNT_SCOPE must be a stable configured account identity.')
+            if boxlite_rest_path_prefix and not re.fullmatch(r'[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*', boxlite_rest_path_prefix):
+                raise ValueError('BOXLITE_REST_PATH_PREFIX is invalid.')
         if not isinstance(max_concurrent_runs, int) or isinstance(max_concurrent_runs, bool) or not 1 <= max_concurrent_runs <= 4:
             raise ValueError('MAX_CONCURRENT_RUNS must be between 1 and 4 for the bounded connection pool.')
         Draft202012Validator(json.loads(Path(__file__).with_name('profiles.schema.json').read_text())).validate(profiles)
@@ -67,7 +90,10 @@ class Settings:
                    json.loads(os.environ['PROVIDER_PROFILES_JSON']), os.getenv('BOX_ROOT', '/var/lib/sandbox-provider/boxlite'),
                    int(os.getenv('MAX_SANDBOXES_PER_OWNER', '20')), int(os.getenv('MAX_BODY_BYTES', '65536')),
                    int(os.getenv('MAX_OUTPUT_BYTES', '32768')), float(os.getenv('RUN_POLL_SECONDS', '.25')),
-                   int(os.getenv('AUDIT_RETENTION_DAYS', '90')), int(os.getenv('MAX_CONCURRENT_RUNS', '4')))
+                   int(os.getenv('AUDIT_RETENTION_DAYS', '90')), int(os.getenv('MAX_CONCURRENT_RUNS', '4')),
+                   os.getenv('SANDBOX_RUNTIME_MODE', 'local'), os.getenv('BOXLITE_REST_URL'),
+                   os.getenv('BOXLITE_API_KEY'), os.getenv('BOXLITE_ACCOUNT_SCOPE'),
+                   os.getenv('BOXLITE_REST_PATH_PREFIX'), float(os.getenv('RUNTIME_REQUEST_TIMEOUT_SECONDS', '30')))
 
     def authenticate(self, authorization, delegated):
         token = authorization[7:] if authorization and authorization.startswith('Bearer ') else ''

@@ -30,6 +30,7 @@ class SandboxRuntime(Protocol):
 
 class BoxLiteRuntime:
     kind = 'boxlite'
+    backend_id = 'boxlite-local'
 
     def __init__(self, root):
         self.root, self.runtime = root, None
@@ -71,12 +72,14 @@ class BoxLiteRuntime:
             return None
         return RuntimeIdentity(info.id, info.id, info.state.running)
 
-    async def ensure(self, name, profile):
+    async def ensure(self, name, profile, *, allow_create=True):
         import boxlite
         runtime = await self._runtime()
         found = await self.inspect(name)
         if found:
             return await self.start(name) if not found.running else found
+        if not allow_create:
+            raise ServiceError(409, 'ambiguous_creation', 'Environment creation requires operator reconciliation.')
         outbound = boxlite.OutboundNetworkSpec(mode='disabled' if profile['network'] == 'denied' else 'enabled',
                                               allow_net=profile.get('allowed_hosts', []))
         options = boxlite.BoxOptions(image=profile['image'], cpus=profile['cpus'], memory_mib=profile['memory_mib'],
@@ -141,3 +144,10 @@ class BoxLiteRuntime:
             # Detached boxes survive SDK handle close; normal API shutdown does not remove disks.
             self.runtime.close()
             self.runtime = None
+
+
+def configured_runtime(settings):
+    if settings.runtime_mode == 'cloud':
+        from .cloud_runtime import BoxLiteCloudRuntime
+        return BoxLiteCloudRuntime(settings)
+    return BoxLiteRuntime(settings.box_root)

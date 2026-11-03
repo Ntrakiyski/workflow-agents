@@ -77,7 +77,7 @@ class Qualification:
         require(bool(re.fullmatch('[a-f0-9]{32}', session)), 'invalid_session')
         self.settings, self.session, self.runtime_factory = settings, session, runtime_factory
         self.diagnostics_enabled = diagnostics_enabled
-        self.sensitive_values = [p['token'] for p in settings.auth] + [settings.database_url]
+        self.sensitive_values = [p['token'] for p in settings.auth] + [settings.database_url, settings.boxlite_api_key]
         password = urlsplit(settings.database_url).password
         if password:
             self.sensitive_values.extend((password, unquote(password)))
