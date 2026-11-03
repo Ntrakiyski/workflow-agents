@@ -1,5 +1,8 @@
 # Project Documentation Assistant — Three-Service Implementation Handoff
 
+> **Superseded implementation sequence (2026-11-03).** This original handoff describes parallel development of all three services. The agreed plan now has **two gated phases**: first build and independently validate the generic Runner and Sandbox Provider, then build the Document Assistant application and its Pi/OfficeCLI workload. Use [Phase 1 — Reusable Services](./PHASE-1-REUSABLE-SERVICES.md) and [Phase 2 — Document Assistant](./PHASE-2-DOCUMENT-ASSISTANT.md) as the active implementation instructions. This file is retained for historical context only.
+
+
 **Status:** Proposed technical implementation contract — ready for three parallel development sessions, not implemented or tested  
 **Date:** 2026-11-03  
 **Repository:** [Ntrakiyski/workflow-agents](https://github.com/Ntrakiyski/workflow-agents)  
