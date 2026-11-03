@@ -16,8 +16,12 @@
         authorization: 'Bearer ' + (service === 'runner' ? config.runnerToken : config.providerToken),
         'x-correlation-id': correlation } });
     if (!response.ok) throw Error('dependency_http_' + response.status);
-    const raw = await response.text(); if (Buffer.byteLength(raw) > 1024 * 1024) throw Error('response_bound');
-    return JSON.parse(raw);
+    if (!response.body) throw Error('response_body');
+    const chunks = []; let size = 0; const reader = response.body.getReader();
+    for (;;) { const next = await reader.read(); if (next.done) break;
+      size += next.value.length; if (size > 1024 * 1024) { await reader.cancel(); throw Error('response_bound'); }
+      chunks.push(next.value); }
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
   }
   async function events(service, path, correlation) {
     let cursor = null; const result = [];
@@ -40,12 +44,12 @@
     const requests = [];
     for (const row of rows.rows) {
       const audit = await pool.query(`SELECT event_id::text,action,correlation_id,actor_id FROM application.audit WHERE request_id=$1 ORDER BY event_id`, [row.id]);
-      const files = await pool.query(`SELECT id,kind,size_bytes,sha256,object_key FROM application.files WHERE request_id=$1 ORDER BY id`, [row.id]);
+      const files = await pool.query(`SELECT id,kind,size_bytes,sha256,object_key, CASE WHEN kind='checkpoint' AND name='request.json' THEN 'request_manifest' WHEN kind='checkpoint' AND name='result.json' THEN 'result_manifest' WHEN kind='checkpoint' AND media_type='application/x-ndjson' THEN 'session' ELSE kind END AS role FROM application.files WHERE request_id=$1 ORDER BY id`, [row.id]);
       const checked = [];
       for (const file of files.rows) {
         const bytes = await objects.get(file.object_key, 50 * 1024 * 1024);
         if (bytes.length !== file.size_bytes || createHash('sha256').update(bytes).digest('hex') !== file.sha256) throw Error('object_integrity');
-        checked.push({id:file.id,kind:file.kind,bytes:file.size_bytes,sha256:file.sha256,verified:true});
+        checked.push({id:file.id,kind:file.kind,role:file.role,bytes:file.size_bytes,sha256:file.sha256,verified:true});
       }
       const record = {...row, audit:audit.rows, files:checked};
       if (row.job_id) {
@@ -60,9 +64,16 @@
         record.provider = {sandbox_id:sandbox.sandbox_id,status:sandbox.status,
           events:await events('provider','/v1/sandboxes/'+encodeURIComponent(row.sandbox_id)+'/events',row.id)};
       }
+      if (row.status === 'completed') {
+        if (!row.export_complete || !row.sandbox_stopped || !row.job_id || !row.sandbox_id ||
+          record.runner?.status !== 'completed' || record.provider?.status !== 'stopped' ||
+          !['request_manifest','result_manifest','session'].every(role => checked.some(file => file.role === role)) ||
+          !audit.rows.some(event => event.action === 'request.completed')) throw Error('completed_checkpoint_incomplete');
+        record.completed_checkpoint_verified = true;
+      }
       requests.push(record);
     }
     console.log(JSON.stringify({version:1,operation:'read-only-application-checkpoint-inspection',outcome:'passed',
       requests,scope:'Owning application database and immutable objects; published Runner/Provider APIs only. No workload replay or service database access.'}));
   } finally { objects.close(); await pool.end(); }
-})().catch(error => { console.log(JSON.stringify({operation:'read-only-application-checkpoint-inspection',outcome:'failed',error_classification:/^[a-z_0-9]+$/.test(error.message) ? error.message : error.name})); process.exitCode = 1; });
+})().catch(error => { console.log(JSON.stringify({operation:'read-only-application-checkpoint-inspection',outcome:'failed',error_classification:/^[a-z_0-9]+$/.test(error.message) ? error.message : error.name, error_code:/^[A-Z_0-9]+$/.test(error.code??'') ? error.code : undefined})); process.exitCode = 1; });
