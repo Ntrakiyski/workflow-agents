@@ -1,0 +1,14 @@
+{
+  "name": "@workflow-agents/pi-document-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/officecli-tool.test.mjs && python3 -m unittest discover -s tests -p 'test_*.py'"
+  },
+  "engines": { "node": ">=24.22.2" },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "1.5.0",
+    "typebox": "1.3.27"
+  }
+}
