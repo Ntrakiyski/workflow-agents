@@ -60,7 +60,7 @@ def create_app(settings=None, runtime=None, dispatcher=True):
                 for name, value in request.path_params.items():
                     if not ID.fullmatch(value):
                         raise ServiceError(400, 'invalid_request', 'Resource identifier is invalid.')
-                if request.url.path.startswith('/v1/') or request.url.path == '/metrics':
+                if request.scope['path'].startswith('/v1/') or request.scope['path'] == '/metrics':
                     request.state.identity = settings.authenticate(request.headers.get('authorization'), request.headers.get('x-owner-id'))
                 if request.headers.get('content-length'):
                     try:
