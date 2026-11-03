@@ -7,6 +7,7 @@ unless the explicit offline forensic mode is selected. That mode preserves recor
 for comparison only and never permits starting a Provider or operational cutover.
 """
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -18,6 +19,7 @@ import time
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
+MAX_ENVELOPE_BYTES = 64 * 1024 * 1024
 
 
 class RestoreError(RuntimeError):
@@ -49,12 +51,15 @@ def selected_archives(manifest, infrastructure_only):
         identity = archive.get('application_uuid')
         commit = archive.get('deployed_commit')
         deployment = archive.get('source_deployment_uuid')
+        digest = archive.get('sha256')
         if (not isinstance(identity, str) or not re.fullmatch(r'[a-z0-9]{24}', identity) or
                 identity in identities or not isinstance(commit, str) or
                 not re.fullmatch(r'[0-9a-f]{40}', commit) or
                 (deployment is not None and (not isinstance(deployment, str) or
                  not re.fullmatch(r'[a-z0-9]{24}', deployment) or deployment in deployments))):
             raise RestoreError('restore_manifest_identity_invalid')
+        if not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
+            raise RestoreError('restore_manifest_digest_invalid')
         identities.add(identity)
         if deployment is not None:
             deployments.add(deployment)
@@ -95,6 +100,22 @@ def main():
         evidence['source_session'] = manifest['session']
         evidence['excluded_services'] = [archive['service'] for archive in manifest['archives'] if archive not in archives]
         credentials = json.loads(args.credentials.read_text())
+        envelopes = {}
+        evidence['source_envelopes'] = []
+        # Bind every source envelope before creating either disposable database.
+        # Reuse these exact checked bytes rather than reopening a mutable path.
+        for archive in archives:
+            name = archive['service']
+            with (args.archive / (name + '.encrypted.json')).open('rb') as stream:
+                raw = stream.read(MAX_ENVELOPE_BYTES + 1)
+            if not raw or len(raw) > MAX_ENVELOPE_BYTES:
+                raise RestoreError('restore_envelope_size_limit')
+            digest = hashlib.sha256(raw).hexdigest()
+            if digest != archive['sha256']:
+                raise RestoreError('restore_envelope_checksum_mismatch')
+            envelopes[name] = raw.decode('utf-8')
+            evidence['source_envelopes'].append({'service': name, 'sha256': digest,
+                                                 'bytes': len(raw), 'manifest_bound': True})
         migration_trees = {}
         for archive in archives:
             name, commit = archive['service'], archive['deployed_commit']
@@ -144,7 +165,7 @@ def main():
                 executable = [args.python, str(ROOT / 'deploy/migration-archive.py')]
             else:
                 raise RestoreError('unexpected_archive_service')
-            env['PHASE1_ARCHIVE_ENVELOPE'] = (args.archive / (name + '.encrypted.json')).read_text()
+            env['PHASE1_ARCHIVE_ENVELOPE'] = envelopes[name]
             results = []
             restore_flags = ['--restore', '--allow-bootstrap-metadata']
             if name == 'sandbox-provider' and args.forensic_registry_only:

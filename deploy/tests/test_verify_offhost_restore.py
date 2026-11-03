@@ -1,5 +1,6 @@
 """Offline verifier guard tests; subprocesses and Docker are never started."""
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
@@ -21,9 +22,9 @@ def manifest():
     return {'outcome': 'passed', 'source_origin': 'https://hosting.gccssofia.com',
             'session': 'offline-review', 'archives': [
                 {'service': 'job-runner', 'application_uuid': 'a' * 24,
-                 'deployed_commit': 'a' * 40},
+                 'deployed_commit': 'a' * 40, 'sha256': hashlib.sha256(b'{}').hexdigest()},
                 {'service': 'sandbox-provider', 'application_uuid': 'b' * 24,
-                 'deployed_commit': 'b' * 40},
+                 'deployed_commit': 'b' * 40, 'sha256': hashlib.sha256(b'{}').hexdigest()},
             ]}
 
 
@@ -62,6 +63,7 @@ class VerifierGuards(unittest.TestCase):
             value['archives'] = archives
             cases.append(value)
         for field, invalid in [('deployed_commit', 'HEAD'), ('deployed_commit', 'a' * 39),
+                               ('sha256', None), ('sha256', 'not-a-digest'),
                                ('application_uuid', '../retained-db'),
                                ('source_deployment_uuid', 'bad-deployment')]:
             value = manifest()
@@ -89,6 +91,23 @@ class VerifierGuards(unittest.TestCase):
                 self.assertEqual(calls, [])
                 self.assertEqual(evidence['services'], [])
                 self.assertNotIn('local-test-only', output)
+
+    def test_stale_envelope_and_oversize_fail_before_commands(self):
+        source = manifest()
+        source['archives'][1]['sha256'] = '0' * 64
+        for limit, value, classification in [
+                (VERIFIER.MAX_ENVELOPE_BYTES, source, 'restore_envelope_checksum_mismatch'),
+                (1, manifest(), 'restore_envelope_size_limit')]:
+            with self.subTest(classification=classification), \
+                    patch.object(VERIFIER, 'MAX_ENVELOPE_BYTES', limit):
+                code, evidence, calls, output = self.invoke(
+                    value, lambda *_: self.fail('unexpected command'),
+                    lambda *_args, **_kwargs: self.fail('unexpected subprocess'))
+            self.assertEqual(code, 1)
+            self.assertEqual(evidence['error_classification'], classification)
+            self.assertEqual(calls, [])
+            self.assertEqual(evidence['services'], [])
+            self.assertNotIn('local-test-only', output)
 
     def test_applied_runner_tree_mismatch_fails_before_docker(self):
         def command(args, _env, cwd):
