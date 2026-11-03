@@ -3,7 +3,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { readFile, stat, writeFile } from 'node:fs/promises';
-import { isAbsolute } from 'node:path';
+import { isAbsolute, dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { restore, s3Objects, unseal } from '../apps/application/scripts/application-backup.mjs';
 
@@ -68,6 +68,18 @@ export async function verifyApplicationRestore(options) {
       evidence.source_manifest_sha256 = sha(rawManifest);
       evidence.deployed_commit_from_manifest = entries[0].deployed_commit;
       evidence.checks.supplied_manifest_archive_hash = true;
+      if (manifest.profile_inventory) {
+        if (manifest.profile_inventory.relative_path !== 'profiles.public.json') fail('profile_inventory_path');
+        const profiles = await boundedFile(join(dirname(options.manifest), 'profiles.public.json'), 1024 * 1024);
+        if (sha(profiles) !== manifest.profile_inventory.sha256) fail('profile_inventory_checksum');
+        const catalog = JSON.parse(profiles.toString('utf8'));
+        if (catalog.version !== 1 || !Object.values(catalog.workloads ?? {}).some(profile =>
+          profile.argv?.includes(snapshot.excluded_runtime?.sha256))) fail('profile_inventory_runtime_mismatch');
+        evidence.profile_inventory_sha256 = sha(profiles);
+        evidence.checks.approved_profile_inventory = true;
+      }
+      if (options.runtimeCache && manifest.runtime_cache?.sha256 !== snapshot.excluded_runtime?.sha256 && manifest.runtime_cache)
+        fail('manifest_runtime_mismatch');
     }
     const config = JSON.parse((await boundedFile(options.storageConfig, 1024 * 1024, true)).toString('utf8'));
     const local = localConfig(config);
@@ -91,6 +103,28 @@ export async function verifyApplicationRestore(options) {
     await storage.send(new sdk.CreateBucketCommand({ Bucket: bucketName }), { abortSignal: AbortSignal.timeout(30000) });
     createdBucket = true;
     const objects = s3Objects(sdk, storage, bucketName);
+    if (options.runtimeCache) {
+      const runtime = snapshot.excluded_runtime;
+      if (!runtime || !/^[a-f0-9]{64}$/.test(runtime.sha256 ?? '') ||
+        typeof runtime.object_key !== 'string' || !runtime.object_key.length ||
+        snapshot.objects.some(object => object.object_key === runtime.object_key)) fail('runtime_descriptor_invalid');
+      const bytes = await boundedFile(options.runtimeCache, 256 * 1024 * 1024);
+      if (!bytes.length || sha(bytes) !== runtime.sha256) fail('runtime_cache_checksum');
+      await storage.send(new sdk.PutObjectCommand({ Bucket: bucketName, Key: runtime.object_key,
+        Body: bytes, ContentLength: bytes.length, ContentType: 'application/gzip', IfNoneMatch: '*',
+        Metadata: { sha256: runtime.sha256 } }), { abortSignal: AbortSignal.timeout(60000) });
+      const downloaded = await storage.send(new sdk.GetObjectCommand({ Bucket: bucketName, Key: runtime.object_key }),
+        { abortSignal: AbortSignal.timeout(60000) });
+      let size = 0; const hash = createHash('sha256');
+      for await (const chunk of downloaded.Body) {
+        size += chunk.length; if (size > bytes.length) { downloaded.Body.destroy(); fail('runtime_restored_size'); }
+        hash.update(chunk);
+      }
+      if (size !== bytes.length || hash.digest('hex') !== runtime.sha256) fail('runtime_restored_checksum');
+      evidence.runtime = { sha256: runtime.sha256, bytes: size, source: 'independent host public runtime cache',
+        isolated_object_reconstruction: true, download_verified: true };
+      evidence.checks.cached_runtime_reconstructed = true;
+    }
     const restoreOptions = { bucket: bucketName, isolatedDestination: true };
     const first = await restore(target, objects, snapshot, restoreOptions);
     const second = await restore(target, objects, snapshot, restoreOptions);
@@ -138,7 +172,7 @@ export async function verifyApplicationRestore(options) {
 }
 
 function argumentsFrom(argv) {
-  const map = new Map(), allowed = new Set(['--archive', '--credentials', '--storage-config', '--evidence', '--manifest']);
+  const map = new Map(), allowed = new Set(['--archive', '--credentials', '--storage-config', '--evidence', '--manifest', '--runtime-cache']);
   for (let index = 0; index < argv.length; index += 2) {
     const name = argv[index], value = argv[index + 1];
     if (!allowed.has(name) || map.has(name) || !value || !isAbsolute(value)) fail('arguments_invalid');
@@ -146,7 +180,7 @@ function argumentsFrom(argv) {
   }
   for (const name of ['--archive', '--credentials', '--storage-config', '--evidence']) if (!map.has(name)) fail('arguments_invalid');
   return { archive: map.get('--archive'), credentials: map.get('--credentials'),
-    storageConfig: map.get('--storage-config'), evidence: map.get('--evidence'), manifest: map.get('--manifest') };
+    storageConfig: map.get('--storage-config'), evidence: map.get('--evidence'), manifest: map.get('--manifest'), runtimeCache: map.get('--runtime-cache') };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -464,15 +464,16 @@
     "report": "docs/phase1/GCC-MIGRATION-REPORT.md"
   },
   "ci": {
-    "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
-    "run": 41647734872,
+    "commit": "2ee0d4d07827292b0fd2664e4f9a3c51413755ba",
+    "run": 41700438863,
+    "url": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41700438863",
     "outcome": "passed",
-    "contracts": 5,
+    "contracts": 6,
     "runner_tap_passes": 21,
-    "provider_passes": 52,
-    "provider_skips": 2,
+    "provider_passes": 75,
+    "provider_hardware_conditional_skips": 2,
     "real_runtime_deselected": 1,
-    "scope": "Historical rc1 CI at the recorded source; later local and hosted evidence does not replace or extend this CI result."
+    "scope": "Actual GitHub Actions PostgreSQL; Provider fake runtimes/actual SDK loopback; no hosted Cloud claim. Local Provider run passed77 without those conditional skips. Application CI is separate."
   },
   "runtime_backend": "boxlite-cloud",
   "recorded_at_utc": "2026-11-03T19:03:19Z",
@@ -515,5 +516,16 @@
     "runtime_bundle_sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
     "runtime_bundle_bytes": 95977914,
     "hosted_qualified": false
+  },
+  "historical_rc1_ci": {
+    "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+    "run": 41647734872,
+    "outcome": "passed",
+    "contracts": 5,
+    "runner_tap_passes": 21,
+    "provider_passes": 52,
+    "provider_skips": 2,
+    "real_runtime_deselected": 1,
+    "scope": "Historical rc1 CI at the recorded source; later local and hosted evidence does not replace or extend this CI result."
   }
 }

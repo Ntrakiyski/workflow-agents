@@ -9,6 +9,7 @@ import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { unseal } from './migration-archive.mjs';
+import { cacheApprovedRuntime } from './cache-approved-runtime.mjs';
 import { unseal as unsealApplication } from '../apps/application/scripts/application-backup.mjs';
 
 const origin = 'https://hosting.gccssofia.com';
@@ -45,7 +46,7 @@ const session = new Date().toISOString().replaceAll(/[-:.]/g, '') + '-' + random
 const destination = join(directory, session);
 await mkdir(destination, { mode: 0o700 });
 const manifest = { version: 1, session, source_origin: origin, destination_host: hostname(),
-  source_commit: commit, scope: 'service logical rows, sequences and audits; application referenced immutable input/result/session objects; excludes schema DDL and Cloud guest disks',
+  source_commit: commit, scope: 'service logical rows, sequences and audits; application referenced immutable input/result/session objects; includes separate approved public runtime cache/profile inventory; excludes schema DDL and Cloud guest disks',
   included_services: resources.map(resource => resource.service ?? resource.name),
   outcome: 'incomplete', archives: [] };
 
@@ -101,6 +102,24 @@ try {
       // Check authentication and service identity before declaring this a backup.
       const snapshot = resource.service === 'application' ? unsealApplication(envelope, resource.password)
         : unseal(envelope, resource.password, resource.name);
+      if (resource.service === 'application' && snapshot.excluded_runtime) {
+        manifest.runtime_cache = { ...await cacheApprovedRuntime({ cacheDirectory: directory,
+          sha256: snapshot.excluded_runtime.sha256 }), relative_to: 'parent of this session directory',
+          contents: 'approved already-public runtime only; no user documents, sessions or secrets' };
+        const catalog = JSON.parse(await readFile(new URL('./profiles.document.staging.json', import.meta.url), 'utf8'));
+        const selected = Object.entries(catalog.workloads).filter(([, profile]) =>
+          profile.argv.includes(snapshot.excluded_runtime.sha256));
+        if (selected.length !== 1) throw Error('backup_runtime_profile_mismatch');
+        const sandboxNames = selected[0][1].sandbox_profiles;
+        const inventory = { version: 1, workloads: Object.fromEntries(selected),
+          sandboxes: Object.fromEntries(sandboxNames.map(name => [name, catalog.sandboxes[name]])) };
+        if (Object.values(inventory.sandboxes).some(value => !value)) throw Error('backup_sandbox_profile_missing');
+        const publicProfiles = JSON.stringify(inventory, null, 2) + '\n';
+        await writeFile(join(destination, 'profiles.public.json'), publicProfiles, { mode: 0o600, flag: 'wx' });
+        manifest.profile_inventory = { relative_path: 'profiles.public.json',
+          sha256: createHash('sha256').update(publicProfiles).digest('hex'), operator_source_commit: commit,
+          contents: 'approved public profiles and secret reference names; no secret values' };
+      }
       // Configuration pins can change before a replacement completes. Require
       // an unchanged healthy finished deployment across the entire capture.
       const afterApp = await api('GET', '/applications/' + resource.uuid);

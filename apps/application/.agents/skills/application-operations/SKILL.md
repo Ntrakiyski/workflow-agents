@@ -13,3 +13,7 @@ description: Deploy and recover the minimal request application while preserving
 8. Back up application PostgreSQL and every referenced S3 object plus approved runtime/configuration as one recovery set, encrypt and copy off-host. Verify object SHA256, audit/event identities, migration versions and request/job/sandbox references in isolated resources. A DB dump without files is incomplete.
 9. Quiesce admissions/workers during coordinated capture/cutover and inspect active external executions before starting a restore. Do not replay old in-flight rows into fresh sandboxes. Preserve originals and previously delivered files.
 10. Verify actual browser flow, protected downloads, persistence and audit after deployment. Report exact commit, URL, real/mocked/blocked checks and readiness separately.
+
+Production Node slim has no curl. Use the checked-in Node health probe as a Coolify `cmd` check (`node /app/dist/healthcheck.js`); HTTP/curl probes can leave an otherwise functioning app unhealthy and excluded from HTTPS routing.
+
+Use the pinned root `deploy/inspect-application-checkpoints.mjs` for read-only own-DB/object and published API evidence. Completed rows require export/stop flags, completed Runner, stopped Provider, request/result manifests, a saved session, checksummed objects and a completed audit. No service database is queried. The independent backup set also retains the already-public checksum-pinned runtime outside the encrypted private checkpoint; verify isolated reconstruction with `--runtime-cache`.
