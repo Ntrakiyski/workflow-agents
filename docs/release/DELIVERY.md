@@ -6,13 +6,13 @@ The initial release contains instructions/attachments, an authorized persistent 
 
 ## Deployed components
 
-All three services currently run `8387b5da2084e062e7409b1af5ce81ae57b45dfd` in GCC project `workflow-agents-phase1`, environment `staging`.
+Provider and Runner run `8387b5da2084e062e7409b1af5ce81ae57b45dfd`; the application runs `1d21e27a571388484774e401cc5d5a5a3cec0973`. All are healthy in GCC project `workflow-agents-phase1`, environment `staging`.
 
 | Component | Candidate | Finished deployment |
 | --- | --- | --- |
 | Sandbox Provider | contract `1.0.0-rc.2`, BoxLite SDK `0.11.0` | `qmdjylvn3d3zou4r6mawp8al` |
 | Job Runner | contract `1.0.0-rc.2`, Graphile Worker `0.18` | `wuvkf6x1owxobcarqjtd7wbk` |
-| Request application | `0.1.0-rc.1` | `v7mt8odnad40fnxbgfdxnojy` |
+| Request application | `0.1.0-rc.1` | `y0mgz7i3yndf7o1cmvutoopf` |
 
 Application: <https://workflow-agents.68.210.88.115.sslip.io>. Trusted TLS, anonymous401 and primary authenticated200 were checked after replacement. Credentials remain in the private operator file, never this document. Infrastructure APIs, all databases and RustFS remain private without published host ports.
 
@@ -32,9 +32,10 @@ Document profiles are `pi-document-cloud:v2` and `pi-document-agent:v2`. The upl
 | Local actual document | Full Pi→LiteLLM→OfficeCLI→controller preflight passed in the exact slim image, including a Unicode edit, original preservation and session checksums. [Workload verification](../../workloads/pi-document-agent/VERIFICATION.md). No rendered page layout or semantic accuracy claim. |
 | Published runtime bootstrap | [Actual RustFS and GitHub asset](storage-initialize-rc2.json): new bucket, checksum and idempotent second initialization passed. |
 | First hosted browser admission | [Failure evidence](hosted-application-attempt-1.json) and [ownership review](hosted-application-failure-review.json) passed bounded admission/authentication/list/original preservation checks. Old invalid hostname:port failed before Cloud dispatch. [Exact absent-runtime admission cleanup](failed-document-admission-cleanup.json) preserved the failed application row/audits. |
-| Fresh rc2 hosted browser journey | In progress; request `598c30fa-e0d0-4d36-96d7-16d75bd675e7`. No completed result claimed yet. |
-| Local application | [Verification](../../apps/application/VERIFICATION.md):10backend passes,2desktop/mobile browser passes with real PostgreSQL/RustFS and mocked execution; build/typecheck/format passed. Encrypted checkpoint tests additionally passed2real DB/storage cases with negative subchecks. |
-| Provider/contracts | Local77Provider tests passed,1local-KVM test deselected. [GitHub CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41700438863) passed6contract checks,21Runner tests and75Provider tests, with2hardware-conditional skips and1KVM deselection. Actual PostgreSQL; fake runtimes or actual SDK loopback, without Cloud execution. |
+| Hosted execution and export recovery | Request `598c30fa-e0d0-4d36-96d7-16d75bd675e7` completed actual Pi/OfficeCLI on Runner attempt1. The old application rejected canonical session media_type; [fixed-target export-only recovery](hosted-completed-export-recovery.json) retained the same execution and failure audits without replay. [Independent protected browser download](hosted-application-recovered-journey.json) verified DOCX structure, exact marker and unchanged original; [same-source application replacement](hosted-application-replacement.json) retained exact request/output IDs and checksum. |
+| Fresh automatic rc2 journey | Request `6f3085e0-7d6f-4b9e-8ad5-7ba76f587189` is admitted to the corrected source and uploading. Uninterrupted completion is still pending. |
+| Local application | [Verification](../../apps/application/VERIFICATION.md):11backend passes,2desktop/mobile browser passes with real PostgreSQL/RustFS and mocked execution; build/typecheck/format passed. Encrypted checkpoint tests additionally passed2real DB/storage cases with negative subchecks. [Exact application-source CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41703356921) passed those checks plus5runtime-cache and2browser cases. |
+| Provider/contracts | Local77Provider tests passed,1local-KVM test deselected. [GitHub CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41703357570) passed6contract checks,21Runner tests and75Provider tests, with2hardware-conditional skips and1KVM deselection. Actual PostgreSQL; fake runtimes or actual SDK loopback, without Cloud execution. |
 | Off-host backup and restore | Actual hardened capture authenticated all3services. [Infrastructure restore/replay](offhost-restore-final-infrastructure.json) and [application restore/replay](application-restore-attempt-1.json) passed with exact rows/audits/sequences/object checksums in isolated resources. This capture contains the first failed input; a completed-result/session recovery set is still pending. |
 
 ## Recovery and operational limits

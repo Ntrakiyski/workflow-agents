@@ -10,7 +10,7 @@ Use the local development skill for changes and operations skill before deployme
 - Mutations require the configured Origin to protect ambient Basic credentials. Expose only HTTPS application; keep APIs, databases and storage private.
 - Request row, owner-scoped submission key, attachment assignment and audit commit together. The row is the durable dispatch outbox. Stable Runner/Provider keys survive ambiguous responses. Never blindly replay uncertain work with fresh execution identity.
 - Originals, final artifacts and required session checkpoints use immutable object keys and conditional S3 writes. DB stores metadata, never file bodies. Output downloads remain hidden until validated export completes.
-- Exit zero is insufficient. Verify transferred manifest request identity, bytes/checksums/types and actual ZIP/XML DOCX structure; require a saved session. Structural checks do not prove content accuracy or rendered layout.
+- Exit zero is insufficient. Verify transferred manifest request identity, bytes/checksums/types and actual ZIP/XML DOCX structure; require a saved session with canonical `application/x-ndjson` media type. Structural checks do not prove content accuracy or rendered layout.
 - Stop only the same retained sandbox after all successful output/session exports are durable. A stop failure retries independently and cannot revoke a delivered result. No automatic destroy exists.
 - Do not add dashboards, chat, approval/clarification screens, feedback/revision flows, account administration, skill management, editors or infrastructure controls.
 - Logs/audits contain safe identifiers, action and outcome; never instructions, document text, secrets or native dependency errors.

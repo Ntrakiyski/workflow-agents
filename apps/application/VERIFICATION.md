@@ -8,7 +8,7 @@ Version `0.1.0-rc.1`; branch `app/minimal-requests`, based on merged main `3f550
 | `npm run format:check` | Passed source/frontend/tests |
 | `npm run build` | Passed TypeScript/Vite production build |
 | `npm audit --omit=dev` | Zero known dependency vulnerabilities |
-| `npm test` | 10 passes, zero skips; actual independent PostgreSQL16 and RustFS S3 |
+| `npm test` | 11 passes, zero skips; actual independent PostgreSQL16 and RustFS S3 |
 | S3 conditional write | Exact replay accepted; changed content refused; original bytes unchanged |
 | Authentication/ownership | Missing Basic and cross-origin mutations denied; foreign request/attachment/output hidden; protected downloads verified |
 | Durable admissions | Same submission returns same UUID; changed payload conflicts; cursor pagination preserves older requests |
@@ -29,3 +29,7 @@ Independent QA additionally generated a synthetic DOCX with actual OfficeCLI 1.0
 The release integration additionally fixes PostgreSQL microsecond precision loss in request-list cursors. Eleven backend checks now pass, including same-millisecond requests, an exact timestamp tie, full pagination order and a foreign-owner row. Typecheck, format and build passed again. Before the fix, independent QA reproduced silently skipped older rows in a new disposable PostgreSQL16. The cursor now uses full-precision UTC text while the SQL tuple comparison remains timestamp/UUID based.
 
 [GitHub application CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41701442123) passed at `80d876e`:10backend,2checkpoint,5runtime-cache and2desktop/mobile browser tests, with actual PostgreSQL/RustFS and mocked execution. That run precedes the pagination correction; its source and scope remain distinct from the later regression run.
+
+The canonical workload session descriptor includes required `media_type: application/x-ndjson`. The application now accepts that exact value and rejects other types. [Exact deployed-source CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41703356921) passed at `1d21e27a571388484774e401cc5d5a5a3cec0973`:11backend,2checkpoint,5runtime-cache and2browser checks. Execution remains mocked in CI.
+
+Actual hosted request `598c30fa-e0d0-4d36-96d7-16d75bd675e7` completed Pi/OfficeCLI on Runner attempt1. The previous application schema rejected its session descriptor, so an explicit operator recovery resumed export from the same completed job and stopped sandbox. No workload was replayed. Independent [browser recovery](../../docs/release/hosted-application-recovered-journey.json) and [same-source application replacement](../../docs/release/hosted-application-replacement.json) retained the exact request, file IDs, original/output bytes and checksums. These are operator-assisted recovery and replacement proofs; uninterrupted automatic completion remains separately pending.
