@@ -32,17 +32,22 @@ def main():
     parser.add_argument('--source-root', type=Path, required=True)
     parser.add_argument('--python', required=True)
     parser.add_argument('--evidence', type=Path, required=True)
+    parser.add_argument('--infrastructure-only', action='store_true',
+                        help='Exclude application archive; verify it with verify-application-restore.mjs')
     args = parser.parse_args()
     manifest = json.loads((args.archive / 'manifest.json').read_text())
     assert manifest['outcome'] == 'passed' and manifest['source_origin'] == 'https://hosting.gccssofia.com'
     credentials = json.loads(args.credentials.read_text())
+    archives = [archive for archive in manifest['archives']
+                if not args.infrastructure_only or archive['service'] != 'application']
     evidence = {'version': 1, 'operation': 'isolated-offhost-logical-restore',
                 'source_session': manifest['session'], 'outcome': 'incomplete', 'services': [],
                 'cloud_guest_restore': 'not exercised; source identities are destroyed tombstones or have no runtime',
                 'runtime_client_started': False}
+    evidence['excluded_services'] = [archive['service'] for archive in manifest['archives'] if archive not in archives]
     containers = []
     try:
-        for archive in manifest['archives']:
+        for archive in archives:
             name, commit = archive['service'], archive['deployed_commit']
             # Migrations must match the source being restored, not current HEAD.
             source_tree = command(['git', 'rev-parse', 'HEAD:services/' + name + '/migrations'], os.environ, args.source_root).strip()
