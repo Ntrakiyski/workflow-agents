@@ -2,12 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { collect, restore, s3Objects, seal, unseal } from './application-backup.mjs';
+import { verifyApplicationRestore } from '../../../deploy/verify-application-restore.mjs';
 
 const sha = value => createHash('sha256').update(value).digest('hex');
 const empty = () => ({ format: 'workflow-agents-application-snapshot', version: 1, service: 'application',
+  application_version: '0.1.0-rc.1',
   database: 'source', bucket: 'source', tables: ['audit', 'files', 'requests', 'runner_events', 'schema_migrations']
     .map(name => ({ name, columns: [], constraints: [], rows: [], row_count: 0, rows_sha256: sha('') })),
   objects: [], sequences: [] });
@@ -33,6 +37,7 @@ test('real isolated PostgreSQL and RustFS restore retains bytes, bigint audits a
     const config = JSON.parse(await readFile(process.env.APPLICATION_BACKUP_TEST_CONFIG, 'utf8'));
     const require = createRequire(root + '/package.json');
     const { Client } = require('pg'), sdk = require('@aws-sdk/client-s3');
+    const applicationVersion = require('./package.json').version;
     const { Database } = await import(pathToFileURL(root + '/dist/database.js').href);
     const suffix = randomBytes(6).toString('hex');
     const databases = ['source', 'restore', 'conflict'].map(stage => `workflow_backup_${stage}_${suffix}`);
@@ -68,11 +73,37 @@ test('real isolated PostgreSQL and RustFS restore retains bytes, bigint audits a
       await source.query(`INSERT INTO application.audit(event_id,request_id,owner_id,actor_id,action,correlation_id) VALUES(9007199254740993,$1,'backup-owner','test-actor','request.exported','correlation')`, [requestId]);
       await source.query("SELECT setval('application.audit_event_id_seq',9007199254740993,true)");
       await source.query("INSERT INTO application.runner_events(request_id,event_id,event_type) VALUES($1,'evt_fixture','job.completed')", [requestId]);
-      const snapshot = await collect(source, sourceObjects, { bucket: buckets[0], runtimeKey: 'runtime/approved.tar.gz', runtimeSha256: 'a'.repeat(64) });
+      const snapshot = await collect(source, sourceObjects, { bucket: buckets[0], runtimeKey: 'runtime/approved.tar.gz', runtimeSha256: 'a'.repeat(64), applicationVersion });
       assert.equal(snapshot.objects.length, 3);
       assert.equal(snapshot.sequences[0].last_value, '9007199254740993');
       const password = randomBytes(32).toString('hex');
       const decrypted = unseal(seal(snapshot, password), password);
+      const fixture = await mkdtemp(join(tmpdir(), 'workflow-restore-verifier-'));
+      try {
+        const archive = join(fixture, 'application.encrypted.json');
+        const credentials = join(fixture, 'credentials.json');
+        const evidence = join(fixture, 'evidence.json');
+        const manifest = join(fixture, 'manifest.json');
+        const raw = JSON.stringify(seal(snapshot, password)) + '\n';
+        await writeFile(archive, raw, { mode: 0o600 });
+        await writeFile(credentials, JSON.stringify({ application_backup_password: password }), { mode: 0o600 });
+        await writeFile(manifest, JSON.stringify({ version: 1, outcome: 'passed', archives: [
+          { service: 'application', sha256: sha(raw), deployed_commit: 'a'.repeat(40) } ] }), { mode: 0o600 });
+        const checked = await verifyApplicationRestore({ archive, credentials, evidence, manifest,
+          storageConfig: process.env.APPLICATION_BACKUP_TEST_CONFIG });
+        assert.equal(checked.outcome, 'passed'); assert.equal(checked.objects, 3);
+        assert.equal(checked.source_envelope_sha256, sha(raw));
+        assert.deepEqual(checked.cleanup, { database: true, bucket: true });
+        const publicEvidence = await readFile(evidence, 'utf8');
+        for (const secret of [password, 'Original input remains unchanged.', 'backup-owner', config.s3SecretKey])
+          assert.equal(publicEvidence.includes(secret), false);
+        await writeFile(archive, JSON.stringify(seal({ ...snapshot, application_version: '999.0.0' }, password)), { mode: 0o600 });
+        const mismatch = await verifyApplicationRestore({ archive, credentials,
+          evidence: join(fixture, 'mismatch.json'), storageConfig: process.env.APPLICATION_BACKUP_TEST_CONFIG });
+        assert.equal(mismatch.outcome, 'failed');
+        assert.equal(mismatch.error_classification, 'application_restore_application_version_mismatch');
+        assert.deepEqual(mismatch.cleanup, { database: false, bucket: false });
+      } finally { await rm(fixture, { recursive: true, force: true }); }
       const targetObjects = s3Objects(sdk, storage, buckets[1]);
       await assert.rejects(restore(target, targetObjects, decrypted, { bucket: buckets[1] }), /isolated_destination/);
       const options = { bucket: buckets[1], isolatedDestination: true };
@@ -86,7 +117,7 @@ test('real isolated PostgreSQL and RustFS restore retains bytes, bigint audits a
       await assert.rejects(restore(conflict, conflictingObjects, decrypted, { bucket: buckets[2], isolatedDestination: true }));
       assert.equal((await conflict.query('SELECT count(*)::int AS count FROM application.requests')).rows[0].count, 0);
       await source.query("UPDATE application.requests SET status='running' WHERE id=$1", [requestId]);
-      await assert.rejects(collect(source, sourceObjects, { bucket: buckets[0] }), /source_not_quiescent/);
+      await assert.rejects(collect(source, sourceObjects, { bucket: buckets[0], applicationVersion }), /source_not_quiescent/);
       await source.query("UPDATE application.requests SET status='completed' WHERE id=$1", [requestId]);
       // The export holds table locks while object bytes are read: concurrent admission is refused.
       const url = new URL(config.databaseUrl); url.pathname = '/' + databases[0];
@@ -101,7 +132,7 @@ test('real isolated PostgreSQL and RustFS restore retains bytes, bigint audits a
           }
           return sourceObjects.get(...args);
         } };
-        await collect(source, observed, { bucket: buckets[0] }); assert.equal(attempted, true);
+        await collect(source, observed, { bucket: buckets[0], applicationVersion }); assert.equal(attempted, true);
       } finally { await competing.end(); }
       process.stdout.write(JSON.stringify({ operation: 'application-backup-real-drill', outcome: 'passed',
         resources: 'independent disposable PostgreSQL databases and RustFS buckets', objects: 3,

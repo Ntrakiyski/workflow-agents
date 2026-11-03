@@ -49,7 +49,7 @@ The outer object has these exact fields:
 
 A fresh salt and nonce are generated per archive. PBKDF2 derives the 32-byte AES key. GCM authenticates both the ciphertext and the JSON encoding of the ordered array `[format,version,service,cipher,kdf,iterations,compression,salt_b64,nonce_b64]` as associated data. Authentication succeeds before gzip decompression or snapshot interpretation. Parameters, base64 encodings, field set and expansion bounds are strict.
 
-The decrypted gzip JSON snapshot uses format `workflow-agents-application-snapshot`, version 1, service `application`; it contains source database/bucket names, snapshot time, `tables`, `sequences`, `objects`, the excluded runtime descriptor and scope. Tables contain raw `rows` strings plus `row_count`/`rows_sha256`. Objects contain `object_key`, `size_bytes`, `sha256`, `media_type`, and `data_base64`. Never print or log this decrypted content.
+The decrypted gzip JSON snapshot uses format `workflow-agents-application-snapshot`, version 1, service `application`; it contains authenticated `application_version` from the exporting image's own package manifest, source database/bucket names, snapshot time, `tables`, `sequences`, `objects`, the excluded runtime descriptor and scope. Tables contain raw `rows` strings plus `row_count`/`rows_sha256`. Objects contain `object_key`, `size_bytes`, `sha256`, `media_type`, and `data_base64`. Never print or log this decrypted content. Earlier candidate envelopes without `application_version` are rejected; an exact source commit must still be recorded independently in the off-host manifest.
 
 ## Isolated restore
 
@@ -77,3 +77,23 @@ node --test scripts/application-backup.test.mjs
 For the real disposable drill, set `APPLICATION_APP_ROOT` to a built application checkout and `APPLICATION_BACKUP_TEST_CONFIG` to its private test-service configuration, then run that command. The drill creates uniquely named databases and RustFS buckets on the existing local disposable application test services. It never truncates the shared test database and removes only its newly created resources.
 
 Executed on 3 November 2026: real PostgreSQL 16 plus RustFS restored synthetic input, result and session objects; verified row hashes, audit ID `9007199254740993`, sequence state and object checksums; replayed the same restore; rejected conflicting existing object bytes and a running source request; and proved a concurrent application metadata UPDATE times out while the export holds its table locks. Crypto tests rejected wrong passwords, ciphertext/header changes, weak passwords and extra envelope fields. This is local real database/object evidence, not proof of the deployed off-host schedule, disaster recovery or Cloud guest restoration.
+
+## Verify a downloaded off-host archive
+
+From a built release checkout, run the standalone verifier against an actual downloaded encrypted file. `APPLICATION_APP_ROOT` selects that checkout's application package, installed dependencies and compiled `dist/database.js`; no application worker is started.
+
+```sh
+APPLICATION_APP_ROOT=/ABSOLUTE/RELEASE/apps/application \
+  node deploy/verify-application-restore.mjs \
+  --archive /PRIVATE/BACKUP/application.encrypted.json \
+  --credentials /PRIVATE/release-secrets.json \
+  --storage-config /PRIVATE/LOCAL-TEST/config.json \
+  --evidence /ABSOLUTE/NEW-EVIDENCE.json \
+  --manifest /PRIVATE/BACKUP/manifest.json
+```
+
+The optional off-host manifest must contain exactly one application archive entry with the matching file SHA256 and a recorded 40-character deployed commit. Evidence labels that commit as coming from the supplied manifest; package version alone does not attest an exact source commit.
+
+Credential and local test configuration files must be private mode 600 (or stricter). The verifier only permits loopback PostgreSQL configuration naming `workflow_app_test` and a loopback S3 endpoint. It creates a new random database and bucket, applies the release's own migrations, checks the authenticated source package version against the local package, restores twice and verifies the helper's exact row/object/audit/sequence evidence. It deletes only those newly created resources. Evidence is created with exclusive file creation and contains sanitized hashes/counts, package/migration versions, optional manifest source commit and cleanup outcome. It never writes decrypted rows, object bytes or passwords.
+
+The verifier was exercised with a synthetic encrypted snapshot containing three real local RustFS objects and real PostgreSQL rows, including a bigint audit ID. It passed restore/replay/cleanup, rejected a different authenticated source package version before resource creation, and checked that evidence excludes fixture text, owners and secrets. Actual downloaded deployed archives require a separate executed report; this synthetic check does not claim that journey.
