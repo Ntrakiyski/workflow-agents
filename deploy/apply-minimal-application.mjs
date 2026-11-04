@@ -94,7 +94,7 @@ const runnerId = infra.applications['job-runner'], providerId = infra.applicatio
 const runnerAuth = (await auth(runnerId, 'RUNNER_AUTH_JSON')).filter(value => value.actor_id !== 'workflow-application');
 runnerAuth.push({ actor_id: 'workflow-application', owner_id: owner, token: secrets.runner_application_token,
   permissions: ['job:submit', 'job:read'],
-  workload_profiles: ['pi-document-agent:v2', 'pi-document-agent:v3', 'pi-document-prepare:v3'], sandbox_profiles: ['pi-document-cloud:v2', 'pi-document-cloud:v3'],
+  workload_profiles: ['pi-document-agent:v2', 'pi-document-agent:v3', 'pi-document-prepare:v3', 'pi-document-agent:v4', 'pi-document-prepare:v4'], sandbox_profiles: ['pi-document-cloud:v2', 'pi-document-cloud:v3'],
   max_concurrency: 2, max_pending_jobs: 20, allow_resume: false });
 const providerAuth = (await auth(providerId, 'PROVIDER_AUTH_JSON')).filter(value => !['workflow-application', 'workflow-release-qa'].includes(value.actor_id));
 const delegates = providerAuth.filter(policy => policy.token === infraSecrets.provider_delegate_token && policy.delegate_owners);
@@ -108,7 +108,7 @@ for (const policy of providerAuth) {
 }
 providerAuth.push({ actor_id: 'workflow-application', owner_id: owner, token: secrets.provider_application_token,
   permissions: ['sandbox:create', 'sandbox:read', 'sandbox:start', 'sandbox:stop', 'sandbox:file:read', 'sandbox:file:write'],
-  workload_profiles: ['pi-document-agent:v2', 'pi-document-agent:v3', 'pi-document-prepare:v3'], sandbox_profiles: ['pi-document-cloud:v2', 'pi-document-cloud:v3'] });
+  workload_profiles: ['pi-document-agent:v2', 'pi-document-agent:v3', 'pi-document-prepare:v3', 'pi-document-agent:v4', 'pi-document-prepare:v4'], sandbox_profiles: ['pi-document-cloud:v2', 'pi-document-cloud:v3'] });
 if (process.env.INCLUDE_QA_ACCOUNT === 'true') providerAuth.push({ actor_id: 'workflow-release-qa',
   owner_id: owner, token: secrets.qa_provider_operator_token, permissions: ['sandbox:read', 'sandbox:destroy'],
   workload_profiles: [], sandbox_profiles: ['pi-document-cloud:v1','pi-document-cloud:v2','pi-document-cloud:v3'] });
@@ -128,8 +128,8 @@ const variables = { DATABASE_URL: 'postgresql://workflow_application:' + encodeU
   S3_ACCESS_KEY_ID: secrets.storage_access_key, S3_SECRET_ACCESS_KEY: secrets.storage_secret_key,
   RUNNER_URL: 'http://workflow-phase1-job-runner:8080', RUNNER_TOKEN: secrets.runner_application_token,
   PROVIDER_URL: 'http://workflow-phase1-sandbox-provider:8000', PROVIDER_TOKEN: secrets.provider_application_token,
-  SANDBOX_PROFILE: 'pi-document-cloud:v3', WORKLOAD_PROFILE: 'pi-document-agent:v3',
-  PREPARE_WORKLOAD_PROFILE: 'pi-document-prepare:v3', REQUEST_CONCURRENCY: '2', IDLE_STOP_SECONDS: '60',
+  SANDBOX_PROFILE: 'pi-document-cloud:v3', WORKLOAD_PROFILE: 'pi-document-agent:v4',
+  PREPARE_WORKLOAD_PROFILE: 'pi-document-prepare:v4', REQUEST_CONCURRENCY: '2', IDLE_STOP_SECONDS: '60',
   RUNTIME_BUNDLE_OBJECT_KEY: 'runtime/2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc/runtime-bundle.tar.gz',
   RUNTIME_BUNDLE_SHA256: '2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc',
   INITIALIZE_STORAGE: 'true', RUNTIME_BUNDLE_URL: 'https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.3/runtime-bundle.tar.gz',

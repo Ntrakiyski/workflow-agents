@@ -1,7 +1,7 @@
 {
   "workload": "pi-document-agent",
-  "version": "0.1.0-rc.3",
-  "status": "candidate-shared-runtime",
+  "version": "0.1.0-rc.4",
+  "status": "candidate-combined-prompt-controller",
   "stable_release": false,
   "hosted_qualified": false,
   "result_schema_version": 1,
@@ -10,7 +10,8 @@
     "sha256": "2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc",
     "size_bytes": 95978009,
     "expanded_bytes": 313358734,
-    "filename": "runtime-bundle.tar.gz"
+    "filename": "runtime-bundle.tar.gz",
+    "version": "0.1.0-rc.3"
   },
   "versions": {
     "node": "24.22.2",
@@ -31,7 +32,7 @@
   "icu_source_image": "docker.io/library/python@sha256:a5bab0ff300f91231c2e68bf73a8a8d60762ac39ce1c50eaf6803e4c38a9062b",
   "local_qualified_image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
   "sandbox_profile": "pi-document-cloud:v3",
-  "workload_profile": "pi-document-agent:v3",
+  "workload_profile": "pi-document-agent:v4",
   "local_qualification": {
     "reproducible_builds": 2,
     "binary_unicode_guest_validation": "passed",
@@ -43,7 +44,7 @@
     "rendered_layout": "not_performed",
     "content_accuracy": "not_performed"
   },
-  "prepare_workload_profile": "pi-document-prepare:v3",
+  "prepare_workload_profile": "pi-document-prepare:v4",
   "request_schema_version": 2,
   "previous_version_hosted_qualification": {
     "version": "0.1.0-rc.2",
@@ -84,5 +85,13 @@
         "Replacement and completed-capture restore checks are tracked separately in release evidence."
       ]
     }
+  },
+  "controller_profile": {
+    "source": "guest.py",
+    "sha256": "30ec761dc160c31c417db46a549f81d39b35cb94e2ec9c22287e8b64663376a0",
+    "distribution": "checksum-bound constant compressed source in the immutable v4 workload profile; readonly copy under each request config folder",
+    "tools": "Reuse the unchanged prepared rc3 archive; no runtime reupload or shared-tool mutation",
+    "prompt_delivery": "Default policy and request instructions form one text prompt; attachments remain separated reference data",
+    "provider_api": "openai-completions"
   }
 }

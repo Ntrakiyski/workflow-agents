@@ -6,6 +6,7 @@ import os
 from pathlib import Path, PurePosixPath
 import platform
 import re
+import runpy
 import shutil
 import stat
 import sys
@@ -132,6 +133,44 @@ def prepare(root, expected_sha256):
     return {'schema_version': 1, 'prepared': True, 'runtime_sha256': expected_sha256}
 
 
+def run_controller(runtime, request_id, source):
+    """Publish the profile-pinned small controller inside this request, reusing tools."""
+    root = ROOT / 'requests' / request_id
+    if (not re.fullmatch('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', request_id)
+            or root.is_symlink() or root.resolve() != root or not root.is_dir()
+            or not isinstance(source, str) or len(source.encode()) > 128 * 1024):
+        raise ValueError('Controller request identity mismatch')
+    config = root / 'config'
+    if config.is_symlink():
+        raise ValueError('Unsafe controller directory')
+    config.mkdir(mode=0o700, exist_ok=True)
+    encoded = source.encode()
+    path = config / ('controller-' + hashlib.sha256(encoded).hexdigest() + '.py')
+    try:
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o400)
+    except FileExistsError:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        with os.fdopen(descriptor, 'rb') as current:
+            info = os.fstat(current.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o222 or current.read(len(encoded) + 1) != encoded:
+                raise ValueError('Controller identity mismatch')
+    else:
+        with os.fdopen(descriptor, 'wb') as target:
+            target.write(encoded)
+            target.flush()
+            os.fsync(target.fileno())
+        descriptor = os.open(config, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, str(runtime))
+    module = runpy.run_path(str(path), init_globals={'PREPARED_RUNTIME_PATH': str(runtime)},
+                            run_name='workflow_document_controller')
+    return module['run'](request_id)
+
+
 def main():
     digest, operation = sys.argv[1:]
     if platform.machine() != 'x86_64':
@@ -143,6 +182,8 @@ def main():
         raise ValueError('Request identity mismatch')
     runtime = ROOT / 'runtime' / digest
     require_prepared(runtime, digest)
+    if globals().get('CONTROLLER_SOURCE') is not None:
+        raise SystemExit(run_controller(runtime, operation, CONTROLLER_SOURCE))
     os.execv(sys.executable, [sys.executable, '-B', str(runtime / 'guest.py'), operation])
 
 
