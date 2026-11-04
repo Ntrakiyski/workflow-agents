@@ -11,8 +11,8 @@ import { verifyApplicationRestore } from '../../../deploy/verify-application-res
 
 const sha = value => createHash('sha256').update(value).digest('hex');
 const empty = () => ({ format: 'workflow-agents-application-snapshot', version: 1, service: 'application',
-  application_version: '0.1.0-rc.1',
-  database: 'source', bucket: 'source', tables: ['audit', 'files', 'requests', 'runner_events', 'schema_migrations']
+  application_version: '0.2.0-rc.1',
+  database: 'source', bucket: 'source', tables: ['audit', 'files', 'requests', 'runner_events', 'schema_migrations', 'user_settings', 'user_workspaces']
     .map(name => ({ name, columns: [], constraints: [], rows: [], row_count: 0, rows_sha256: sha('') })),
   objects: [], sequences: [] });
 
@@ -28,6 +28,7 @@ test('authenticated encrypted archives reject tampering, wrong passwords and cha
   const data = Buffer.from(envelope.ciphertext_b64, 'base64'); data[0] ^= 1;
   assert.throws(() => unseal({ ...envelope, ciphertext_b64: data.toString('base64') }, password));
   assert.throws(() => unseal({ ...envelope, extra: true }, password));
+  assert.throws(() => unseal(seal({...snapshot,tables:snapshot.tables.slice(0,5)},password),password),'Historic five-table snapshots require the matching source helper');
 });
 
 test('real isolated PostgreSQL and RustFS restore retains bytes, bigint audits and replay safety',
@@ -56,8 +57,11 @@ test('real isolated PostgreSQL and RustFS restore retains bytes, bigint audits a
         await storage.send(new sdk.CreateBucketCommand({ Bucket: buckets[index] })); createdBuckets.push(buckets[index]);
       }
       const [source, target, conflict] = clients;
-      const requestId = randomUUID();
+      const requestId = randomUUID(),workspaceId=randomUUID();
+      await source.query("INSERT INTO application.user_workspaces(owner_id,id,sandbox_id,runtime_sha256,status,sandbox_stopped,wake_requested) VALUES('backup-owner',$1,'sbx_fixture',$2,'stopped',true,false)",[workspaceId,'a'.repeat(64)]);
+      await source.query("INSERT INTO application.user_settings(owner_id,system_prompt) VALUES('backup-owner','Preserve originals and stay in the assigned folder.')");
       await source.query(`INSERT INTO application.requests(id,owner_id,title,instructions,status,submission_key,fingerprint,correlation_id,sandbox_id,export_complete,sandbox_stopped) VALUES($1,'backup-owner','Synthetic backup fixture','Synthetic instructions','completed','backup-submission','fingerprint','correlation','sbx_fixture',true,true)`, [requestId]);
+      await source.query("UPDATE application.requests SET workspace_id=$2,system_prompt='Saved request prompt.' WHERE id=$1",[requestId,workspaceId]);
       const files = [
         { kind: 'input', name: 'source.txt', media: 'text/plain', data: Buffer.from('Original input remains unchanged.') },
         { kind: 'output', name: 'result.md', media: 'text/markdown', data: Buffer.from('# Synthetic result\n') },
@@ -110,6 +114,9 @@ test('real isolated PostgreSQL and RustFS restore retains bytes, bigint audits a
       const report = await restore(target, targetObjects, decrypted, options);
       assert.equal(report.outcome, 'passed'); assert.equal(report.objects, 3);
       assert.equal((await target.query('SELECT event_id::text FROM application.audit')).rows[0].event_id, '9007199254740993');
+      assert.equal((await target.query('SELECT id::text FROM application.user_workspaces')).rows[0].id,workspaceId);
+      assert.equal((await target.query('SELECT system_prompt FROM application.user_settings')).rows[0].system_prompt,'Preserve originals and stay in the assigned folder.');
+      assert.equal((await target.query('SELECT system_prompt FROM application.requests')).rows[0].system_prompt,'Saved request prompt.');
       assert.deepEqual(await restore(target, targetObjects, decrypted, options), report);
       for (const file of files) assert.deepEqual(await targetObjects.get(file.key, file.data.length), file.data);
       const conflictingObjects = s3Objects(sdk, storage, buckets[2]);

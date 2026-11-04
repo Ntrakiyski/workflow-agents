@@ -97,6 +97,9 @@ class FakeExecution implements ExecutionServices {
   submissions = new Map<string, string>();
   submitCalls = 0;
   stopCalls = 0;
+  startCalls = 0;
+  prepareCalls = 0;
+  runtimeUploads = 0;
   loseResponse = false;
   failStop = false;
   async createSandbox(requestId: string) {
@@ -106,9 +109,50 @@ class FakeExecution implements ExecutionServices {
     this.creations.set(requestId, sandbox);
     return sandbox;
   }
-  async upload(sandbox: string, path: string, data: Buffer) {
+  async createWorkspaceSandbox(workspaceId: string) {
+    return this.createSandbox(workspaceId);
+  }
+  async inspect() {
+    return { status: "running" };
+  }
+  async start() {
+    this.startCalls++;
+  }
+  async prepare(workspaceId: string, sandbox: string) {
+    this.prepareCalls++;
+    const job: Job = {
+      job_id: `job_prepare_${workspaceId}`,
+      status: "completed",
+      sandbox_id: sandbox,
+      result: {
+        exit_code: 0,
+        stdout: JSON.stringify({
+          schema_version: 1,
+          prepared: true,
+          runtime_sha256: config.runtimeBundleSha256,
+        }),
+        stderr: "",
+        output_truncated: false,
+        artifacts: [],
+      },
+      error: null,
+    };
+    this.jobs.set(job.job_id, job);
+    return job;
+  }
+  async upload(
+    sandbox: string,
+    path: string,
+    data: Buffer,
+    _key?: string,
+    _correlation?: string,
+    progress?: (uploaded: number, total: number) => Promise<void>,
+  ) {
+    await progress?.(data.length, data.length);
     const key = sandbox + "/" + path;
     const previous = this.files.get(key);
+    if (path === "runtime/runtime-bundle.tar.gz" && !previous)
+      this.runtimeUploads++;
     if (previous) assert.equal(digest(previous), digest(data));
     else this.files.set(key, data);
   }
@@ -156,7 +200,7 @@ class FakeExecution implements ExecutionServices {
   }
   complete(requestId: string, { missing = false, badHash = false } = {}) {
     const jobId = this.submissions.get(requestId),
-      sandbox = this.creations.get(requestId);
+      sandbox = jobId ? this.jobs.get(jobId)?.sandbox_id : null;
     assert.ok(jobId && sandbox);
     const output = Buffer.from("Verified result file.");
     const session = Buffer.from('{"type":"session"}\n');
@@ -407,6 +451,10 @@ test("durable dispatch reconciles lost submit response without a second executio
   const requestId = created.json().id;
   const fake = new FakeExecution();
   fake.loseResponse = true;
+  await db.pool.query(
+    "UPDATE application.requests SET workspace_id=NULL WHERE id=$1",
+    [requestId],
+  );
   const firstWorker = worker(fake);
   await db.pool.query(
     "UPDATE application.requests SET next_attempt_at=now()+interval '1 day' WHERE id<>$1",
@@ -507,6 +555,10 @@ test("zero exit with absent manifest and checksum mismatch cannot deliver succes
     );
     const requestId = created.json().id;
     const fake = new FakeExecution();
+    await db.pool.query(
+      "UPDATE application.requests SET workspace_id=NULL WHERE id=$1",
+      [requestId],
+    );
     const runner = worker(fake);
     await db.pool.query(
       "UPDATE application.requests SET next_attempt_at=now()+interval '1 day' WHERE id<>$1",
@@ -569,4 +621,498 @@ test("DOCX controller validates actual ZIP/XML and refuses malformed structures"
     session_files: [],
   });
   await assert.rejects(() => validateDelivery(result, new Map()), AppError);
+});
+
+test("login provisions once, independent requests share the prepared sandbox, and idle restart preserves installed tools", async () => {
+  const sharedConfig = {
+    ...config,
+    idleStopSeconds: 0,
+    users: [
+      {
+        username: "shared",
+        owner_id: "shared-fixture",
+        password_sha256: digest(password),
+      },
+    ],
+  };
+  const sharedApi = createApi(db, objects, sharedConfig);
+  const fake = new FakeExecution();
+  const runner = new RequestWorker(db, objects, fake, sharedConfig, api.log);
+  const auth = {
+    authorization: authorization("shared"),
+    origin: config.publicOrigin,
+  };
+  async function create(
+    instructions: string,
+    prompt = "Use the assigned folder only.",
+    key = uuid(),
+  ) {
+    const response = await sharedApi.inject({
+      method: "POST",
+      url: "/api/requests",
+      headers: { ...auth, "idempotency-key": key },
+      payload: { instructions, system_prompt: prompt },
+    });
+    assert.equal(response.statusCode, 201, response.body);
+    return response.json().id as string;
+  }
+  await db.pool.query(
+    "UPDATE application.requests SET next_attempt_at=now()+interval '1 day'",
+  );
+  // Avoid unrelated fixture workspaces stopping in this scenario.
+  await db.pool.query(
+    "UPDATE application.user_workspaces SET next_attempt_at=now()+interval '1 day'",
+  );
+  try {
+    const initial = await sharedApi.inject({
+      url: "/api/session?prepare=1",
+      headers: auth,
+    });
+    assert.equal(initial.statusCode, 200);
+    assert.equal(initial.json().workspace.status, "pending");
+    const [a, b] = await Promise.all([
+      create("Request A"),
+      create("Request B"),
+    ]);
+    for (let i = 0; i < 4; i++) {
+      await runner.tick();
+      if (
+        (await db.ownedRequest("shared-fixture", a))?.job_id &&
+        (await db.ownedRequest("shared-fixture", b))?.job_id
+      )
+        break;
+    }
+    const ar = await db.ownedRequest("shared-fixture", a),
+      br = await db.ownedRequest("shared-fixture", b);
+    assert.equal(ar?.status, "running");
+    assert.equal(br?.status, "running");
+    assert.equal(ar?.sandbox_id, br?.sandbox_id);
+    assert.notEqual(ar?.job_id, br?.job_id);
+    assert.equal(fake.runtimeUploads, 1);
+    assert.equal(fake.prepareCalls, 1);
+    assert.equal(fake.creations.size, 1);
+    const adata = JSON.parse(
+      fake.files
+        .get(`${ar!.sandbox_id}/requests/${a}/request.json`)!
+        .toString(),
+    );
+    const bdata = JSON.parse(
+      fake.files
+        .get(`${br!.sandbox_id}/requests/${b}/request.json`)!
+        .toString(),
+    );
+    assert.equal(adata.schema_version, 2);
+    assert.equal(adata.request_id, a);
+    assert.equal(bdata.request_id, b);
+    assert.equal(adata.system_prompt, "Use the assigned folder only.");
+    fake.complete(a);
+    await runner.tick();
+    assert.equal(
+      (await db.ownedRequest("shared-fixture", a))?.status,
+      "completed",
+    );
+    await runner.tick();
+    assert.equal(
+      fake.stopCalls,
+      0,
+      "An exported result cannot stop a sibling Pi session",
+    );
+    fake.complete(b);
+    await runner.tick();
+    await runner.tick();
+    const stopped = await db.workspace("shared-fixture");
+    assert.equal(stopped?.status, "stopped");
+    assert.equal(fake.stopCalls, 1);
+    assert.equal(
+      (await db.ownedRequest("shared-fixture", a))?.sandbox_stopped,
+      true,
+    );
+    // Signing in again starts the retained disk even before another request.
+    await sharedApi.inject({ url: "/api/session?prepare=1", headers: auth });
+    await runner.tick();
+    assert.equal(fake.startCalls, 1);
+    assert.equal(fake.runtimeUploads, 1);
+    assert.equal(fake.prepareCalls, 1);
+    const c = await create("Request C");
+    for (
+      let i = 0;
+      i < 3 && !(await db.ownedRequest("shared-fixture", c))?.job_id;
+      i++
+    )
+      await runner.tick();
+    assert.equal(
+      (await db.ownedRequest("shared-fixture", c))?.sandbox_id,
+      ar?.sandbox_id,
+    );
+    assert.equal(fake.runtimeUploads, 1);
+    assert.equal(fake.creations.size, 1);
+    const evidence = await db.pool.query(
+      "SELECT action FROM application.audit WHERE owner_id='shared-fixture'",
+    );
+    assert.ok(evidence.rows.some((row) => row.action === "workspace.ready"));
+    assert.ok(evidence.rows.some((row) => row.action === "workspace.stopped"));
+  } finally {
+    await sharedApi.close();
+  }
+});
+
+test("editable system prompts are owner scoped, snapshotted, and included in idempotency", async () => {
+  const prompt = "Use a concise tone and preserve all original files.";
+  const saved = await api.inject({
+    method: "PUT",
+    url: "/api/settings",
+    headers: headers(),
+    payload: { system_prompt: prompt },
+  });
+  assert.equal(saved.statusCode, 200);
+  const session = await api.inject({ url: "/api/session", headers: headers() });
+  assert.equal(session.json().system_prompt, prompt);
+  const foreign = await api.inject({
+    url: "/api/session",
+    headers: headers("bob"),
+  });
+  assert.notEqual(foreign.json().system_prompt, prompt);
+  const key = uuid();
+  const payload = {
+    instructions: "Prompt snapshot fixture",
+    system_prompt: prompt,
+  };
+  const response = await api.inject({
+    method: "POST",
+    url: "/api/requests",
+    headers: { ...headers(), "idempotency-key": key },
+    payload,
+  });
+  assert.equal(response.statusCode, 201);
+  const requestId = response.json().id;
+  await api.inject({
+    method: "PUT",
+    url: "/api/settings",
+    headers: headers(),
+    payload: { system_prompt: "A changed default for future requests." },
+  });
+  assert.equal(
+    (
+      await api.inject({
+        url: `/api/requests/${requestId}`,
+        headers: headers(),
+      })
+    ).json().system_prompt,
+    prompt,
+  );
+  assert.equal(
+    (
+      await api.inject({
+        method: "POST",
+        url: "/api/requests",
+        headers: { ...headers(), "idempotency-key": key },
+        payload,
+      })
+    ).json().id,
+    requestId,
+  );
+  assert.equal(
+    (
+      await api.inject({
+        method: "POST",
+        url: "/api/requests",
+        headers: { ...headers(), "idempotency-key": key },
+        payload: { ...payload, system_prompt: "Changed snapshot" },
+      })
+    ).statusCode,
+    409,
+  );
+  assert.equal(
+    (
+      await api.inject({
+        method: "PUT",
+        url: "/api/settings",
+        headers: { authorization: authorization() },
+        payload: { system_prompt: prompt },
+      })
+    ).statusCode,
+    403,
+  );
+});
+
+test("lost preparation acknowledgement and worker replacement retain one workspace and never dispatch before verified readiness", async () => {
+  const owner = "prepare-recovery";
+  const scopedConfig = {
+    ...config,
+    users: [
+      { username: owner, owner_id: owner, password_sha256: digest(password) },
+    ],
+  };
+  const scopedApi = createApi(db, objects, scopedConfig);
+  class RecoveringExecution extends FakeExecution {
+    lost = true;
+    async prepare(workspaceId: string, sandbox: string) {
+      const existing = this.jobs.get(`job_prepare_${workspaceId}`);
+      if (existing) return existing;
+      const job = await super.prepare(workspaceId, sandbox);
+      job.status = "running";
+      job.result = null;
+      if (this.lost) {
+        this.lost = false;
+        throw new Error("test lost response");
+      }
+      return job;
+    }
+  }
+  const fake = new RecoveringExecution();
+  await db.pool.query(
+    "UPDATE application.requests SET next_attempt_at=now()+interval '1 day'",
+  );
+  await db.pool.query(
+    "UPDATE application.user_workspaces SET next_attempt_at=now()+interval '1 day'",
+  );
+  try {
+    const auth = {
+      authorization: authorization(owner),
+      origin: config.publicOrigin,
+    };
+    const submitted = await scopedApi.inject({
+      method: "POST",
+      url: "/api/requests",
+      headers: { ...auth, "idempotency-key": uuid() },
+      payload: { instructions: "Wait for workspace verification" },
+    });
+    assert.equal(submitted.statusCode, 201);
+    const requestId = submitted.json().id;
+    const initial = new RequestWorker(db, objects, fake, scopedConfig, api.log);
+    await initial.tick();
+    assert.equal(fake.submitCalls, 0);
+    let workspace = await db.workspace(owner);
+    assert.equal(workspace?.status, "uploading");
+    assert.equal(workspace?.uploaded_bytes, 12);
+    await db.pool.query(
+      "UPDATE application.user_workspaces SET next_attempt_at=now() WHERE owner_id=$1",
+      [owner],
+    );
+    const replacement = new RequestWorker(
+      db,
+      objects,
+      fake,
+      scopedConfig,
+      api.log,
+    );
+    await replacement.tick();
+    workspace = await db.workspace(owner);
+    assert.equal(workspace?.status, "preparing");
+    assert.equal(fake.prepareCalls, 1);
+    assert.equal(fake.runtimeUploads, 1);
+    assert.equal(fake.creations.size, 1);
+    assert.equal(fake.submitCalls, 0);
+    const prepared = fake.jobs.get(workspace!.prepare_job_id!)!;
+    prepared.status = "completed";
+    prepared.result = {
+      exit_code: 0,
+      stdout: JSON.stringify({
+        schema_version: 1,
+        prepared: true,
+        runtime_sha256: config.runtimeBundleSha256,
+      }),
+      stderr: "",
+      output_truncated: false,
+      artifacts: [],
+    };
+    await replacement.tick();
+    await replacement.tick();
+    assert.equal((await db.ownedRequest(owner, requestId))?.status, "running");
+    assert.equal(fake.submitCalls, 1);
+    await Promise.all([
+      replacement.tick(),
+      new RequestWorker(db, objects, fake, scopedConfig, api.log).tick(),
+    ]);
+    assert.equal(
+      fake.submitCalls,
+      1,
+      "DB request lock preserves dispatch identity across workers",
+    );
+  } finally {
+    await scopedApi.close();
+  }
+});
+
+test("idle stop allows new admission while the next request waits for the retained sandbox", async () => {
+  const owner = "idle-race";
+  const scopedConfig = {
+    ...config,
+    idleStopSeconds: 0,
+    users: [
+      { username: owner, owner_id: owner, password_sha256: digest(password) },
+    ],
+  };
+  const scopedApi = createApi(db, objects, scopedConfig);
+  let signalStop!: () => void, releaseStop!: () => void;
+  const stopping = new Promise<void>((resolve) => {
+    signalStop = resolve;
+  });
+  const release = new Promise<void>((resolve) => {
+    releaseStop = resolve;
+  });
+  class StoppingExecution extends FakeExecution {
+    async stop() {
+      signalStop();
+      await release;
+      this.stopCalls++;
+    }
+  }
+  const fake = new StoppingExecution();
+  await db.pool.query(
+    "UPDATE application.requests SET next_attempt_at=now()+interval '1 day'",
+  );
+  await db.pool.query(
+    "UPDATE application.user_workspaces SET next_attempt_at=now()+interval '1 day'",
+  );
+  const auth = {
+    authorization: authorization(owner),
+    origin: config.publicOrigin,
+  };
+  try {
+    await scopedApi.inject({ url: "/api/session", headers: auth });
+    const workspace = await db.workspace(owner);
+    await db.pool.query(
+      "UPDATE application.user_workspaces SET status='ready',sandbox_id='sbx_idle_race',wake_requested=false WHERE owner_id=$1",
+      [owner],
+    );
+    const runner = new RequestWorker(db, objects, fake, scopedConfig, api.log);
+    const tick = runner.tick();
+    await stopping;
+    let admitted = false;
+    const submitPromise = scopedApi
+      .inject({
+        method: "POST",
+        url: "/api/requests",
+        headers: { ...auth, "idempotency-key": uuid() },
+        payload: { instructions: "Start after the idle stop" },
+      })
+      .then((response) => {
+        admitted = true;
+        return response;
+      });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.equal(admitted, true, "An in-flight stop does not block admission");
+    releaseStop();
+    await tick;
+    const response = await submitPromise;
+    assert.equal(response.statusCode, 201, response.body);
+    assert.equal((await db.workspace(owner))?.status, "stopped");
+    for (
+      let i = 0;
+      i < 3 && !(await db.ownedRequest(owner, response.json().id))?.job_id;
+      i++
+    )
+      await runner.tick();
+    const request = await db.ownedRequest(owner, response.json().id);
+    assert.equal(request?.workspace_id, workspace?.id);
+    assert.equal(request?.sandbox_id, "sbx_idle_race");
+    assert.equal(fake.startCalls, 1);
+    assert.equal(fake.runtimeUploads, 0);
+    assert.equal(fake.prepareCalls, 0);
+  } finally {
+    releaseStop();
+    await scopedApi.close();
+  }
+});
+
+test("additive migration retains legacy submission idempotency without assigning its old request to a shared workspace", async () => {
+  const requestId = uuid(),
+    key = uuid(),
+    instructions = "Legacy submission replay fixture";
+  await db.pool.query(
+    "INSERT INTO application.requests(id,owner_id,title,instructions,submission_key,fingerprint,correlation_id,status) VALUES($1::uuid,'alice',$2,$2,$3,$4,$1::text,'failed')",
+    [
+      requestId,
+      instructions,
+      key,
+      digest(JSON.stringify({ instructions, attachment_ids: [] })),
+    ],
+  );
+  const replay = await submit(instructions, key);
+  assert.equal(replay.statusCode, 201, replay.body);
+  assert.equal(replay.json().id, requestId);
+  const retained = await db.ownedRequest("alice", requestId);
+  assert.equal(retained?.workspace_id, null);
+  assert.equal(retained?.system_prompt, "");
+});
+
+test("a Provider recovery stop is observed and resumes the same prepared disk without replay or another runtime upload", async () => {
+  const owner = "transfer-recovery";
+  const scopedConfig = {
+    ...config,
+    users: [
+      { username: owner, owner_id: owner, password_sha256: digest(password) },
+    ],
+  };
+  const scopedApi = createApi(db, objects, scopedConfig);
+  class RecoveringTransfer extends FakeExecution {
+    stopped = false;
+    interrupted = false;
+    async inspect() {
+      return { status: this.stopped ? "stopped" : "running" };
+    }
+    async start() {
+      this.stopped = false;
+      this.startCalls++;
+    }
+    async upload(
+      sandbox: string,
+      path: string,
+      data: Buffer,
+      key?: string,
+      correlation?: string,
+      progress?: (uploaded: number, total: number) => Promise<void>,
+    ) {
+      if (path.includes("/request.json") && !this.interrupted) {
+        this.interrupted = true;
+        this.stopped = true;
+        throw new RemoteError("sandbox_busy", false, 409);
+      }
+      return super.upload(sandbox, path, data, key, correlation, progress);
+    }
+  }
+  const fake = new RecoveringTransfer();
+  await db.pool.query(
+    "UPDATE application.requests SET next_attempt_at=now()+interval '1 day'",
+  );
+  await db.pool.query(
+    "UPDATE application.user_workspaces SET next_attempt_at=now()+interval '1 day'",
+  );
+  try {
+    const auth = {
+      authorization: authorization(owner),
+      origin: config.publicOrigin,
+    };
+    const response = await scopedApi.inject({
+      method: "POST",
+      url: "/api/requests",
+      headers: { ...auth, "idempotency-key": uuid() },
+      payload: { instructions: "Recover only the stopped lifecycle" },
+    });
+    assert.equal(response.statusCode, 201);
+    const requestId = response.json().id;
+    const runner = new RequestWorker(db, objects, fake, scopedConfig, api.log);
+    for (let i = 0; i < 4 && !fake.interrupted; i++) await runner.tick();
+    assert.equal((await db.workspace(owner))?.status, "stopped");
+    assert.equal(fake.submitCalls, 0);
+    await db.pool.query(
+      "UPDATE application.requests SET next_attempt_at=now() WHERE id=$1",
+      [requestId],
+    );
+    for (
+      let i = 0;
+      i < 4 && !(await db.ownedRequest(owner, requestId))?.job_id;
+      i++
+    )
+      await runner.tick();
+    assert.equal((await db.ownedRequest(owner, requestId))?.status, "running");
+    assert.equal(fake.creations.size, 1);
+    assert.equal(fake.runtimeUploads, 1);
+    assert.equal(fake.prepareCalls, 1);
+    assert.equal(fake.startCalls, 1);
+    assert.equal(fake.submitCalls, 1);
+  } finally {
+    await scopedApi.close();
+  }
 });

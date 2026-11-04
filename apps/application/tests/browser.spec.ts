@@ -13,6 +13,34 @@ test("submit attached input, find persistent request, and retrieve verified outp
   await expect(
     page.getByRole("heading", { name: "New request" }),
   ).toBeVisible();
+  await expect(
+    page.getByLabel("Default system prompt", { exact: true }),
+  ).toBeHidden();
+  await page
+    .getByRole("button", { name: "System prompt", exact: true })
+    .click();
+  const prompt = `Complete this independent request in its assigned folder. Browser prompt ${info.project.name} ${Date.now()}`;
+  await page.getByLabel("Default system prompt", { exact: true }).fill(prompt);
+  const save = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/settings") &&
+      response.request().method() === "PUT",
+  );
+  await page.getByLabel("Instructions", { exact: true }).focus();
+  expect((await save).status()).toBe(200);
+  await page.reload();
+  await expect(
+    page.getByLabel("Default system prompt", { exact: true }),
+  ).toBeHidden();
+  await page
+    .getByRole("button", { name: "System prompt", exact: true })
+    .click();
+  await expect(
+    page.getByLabel("Default system prompt", { exact: true }),
+  ).toHaveValue(prompt);
+  await page
+    .getByRole("button", { name: "System prompt", exact: true })
+    .click();
   const instruction = `Browser request ${info.project.name} ${Date.now()}`;
   await page.getByLabel("Instructions", { exact: true }).fill(instruction);
   await page.getByLabel("Input files").setInputFiles({
@@ -30,6 +58,10 @@ test("submit attached input, find persistent request, and retrieve verified outp
   await expect(
     page.getByText("Your result is ready.", { exact: true }),
   ).toBeVisible();
+  await page
+    .getByText("System prompt used for this request", { exact: true })
+    .click();
+  await expect(page.getByText(prompt, { exact: true })).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("link", { name: "result.txt", exact: true }).click();
   const download = await downloadPromise;

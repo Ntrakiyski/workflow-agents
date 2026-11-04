@@ -1,6 +1,12 @@
 import pg from "pg";
 import type { PoolClient } from "pg";
-import { fileRow, requestRow, type RequestRow } from "./model.js";
+import {
+  fileRow,
+  requestRow,
+  workspaceRow,
+  uuid,
+  type RequestRow,
+} from "./model.js";
 export const migration = `
 CREATE SCHEMA IF NOT EXISTS application;
 CREATE TABLE IF NOT EXISTS application.requests (
@@ -30,6 +36,20 @@ CREATE OR REPLACE FUNCTION application.prevent_audit_mutation() RETURNS trigger 
 DROP TRIGGER IF EXISTS append_only_audit ON application.audit;
 CREATE TRIGGER append_only_audit BEFORE UPDATE OR DELETE ON application.audit FOR EACH ROW EXECUTE FUNCTION application.prevent_audit_mutation();
 `;
+export const workspaceMigration = `
+CREATE TABLE application.user_workspaces (
+ owner_id text PRIMARY KEY,id uuid NOT NULL UNIQUE,sandbox_id text,prepare_job_id text,
+ runtime_sha256 text NOT NULL,status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','uploading','preparing','ready','stopping','stopped','failed')),
+ uploaded_bytes integer NOT NULL DEFAULT 0,total_bytes integer NOT NULL DEFAULT 0,failure_message text,sandbox_stopped boolean NOT NULL DEFAULT false,wake_requested boolean NOT NULL DEFAULT true,
+ attempts integer NOT NULL DEFAULT 0,next_attempt_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE application.user_settings(owner_id text PRIMARY KEY,system_prompt text NOT NULL,updated_at timestamptz NOT NULL DEFAULT now());
+ALTER TABLE application.requests ADD COLUMN system_prompt text NOT NULL DEFAULT '';
+ALTER TABLE application.requests ADD COLUMN workspace_id uuid REFERENCES application.user_workspaces(id);
+ALTER TABLE application.requests ADD COLUMN progress_message text;
+CREATE INDEX requests_workspace_activity ON application.requests(workspace_id,status);
+`;
+export const workspaceLock = (owner: string) => `user-workspace:${owner}`;
 export class Database {
   readonly pool: pg.Pool;
   constructor(url: string) {
@@ -59,6 +79,15 @@ export class Database {
           "INSERT INTO application.schema_migrations(version) VALUES(1)",
         );
       }
+      const workspaceVersion = await c.query(
+        "SELECT version FROM application.schema_migrations WHERE version=2",
+      );
+      if (workspaceVersion.rowCount === 0) {
+        await c.query(workspaceMigration);
+        await c.query(
+          "INSERT INTO application.schema_migrations(version) VALUES(2)",
+        );
+      }
       await c.query("COMMIT");
     } catch (e) {
       await c.query("ROLLBACK");
@@ -80,6 +109,33 @@ export class Database {
     } finally {
       c.release();
     }
+  }
+  async ensureWorkspace(
+    owner: string,
+    runtimeSha: string,
+    c: Pick<PoolClient, "query"> = this.pool,
+  ) {
+    const inserted = await c.query(
+      "INSERT INTO application.user_workspaces(owner_id,id,runtime_sha256) VALUES($1,$2,$3) ON CONFLICT(owner_id) DO NOTHING RETURNING id",
+      [owner, uuid(), runtimeSha],
+    );
+    if (inserted.rowCount)
+      await c.query(
+        "INSERT INTO application.audit(owner_id,actor_id,action,correlation_id) VALUES($1,'application','workspace.queued',$2)",
+        [owner, inserted.rows[0].id],
+      );
+    const result = await c.query(
+      "SELECT * FROM application.user_workspaces WHERE owner_id=$1",
+      [owner],
+    );
+    return workspaceRow.parse(result.rows[0]);
+  }
+  async workspace(owner: string) {
+    const result = await this.pool.query(
+      "SELECT * FROM application.user_workspaces WHERE owner_id=$1",
+      [owner],
+    );
+    return result.rows[0] ? workspaceRow.parse(result.rows[0]) : null;
   }
   async ownedRequest(owner: string, id: string) {
     const result = await this.pool.query(

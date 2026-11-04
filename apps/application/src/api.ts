@@ -6,7 +6,8 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { Config } from "./config.js";
-import { Database } from "./database.js";
+import { Database, workspaceLock } from "./database.js";
+import { DEFAULT_SYSTEM_PROMPT } from "./prompt.js";
 import type { Objects } from "./storage.js";
 import {
   AppError,
@@ -138,7 +139,7 @@ export function createApi(db: Database, objects: Objects, config: Config) {
   app.get("/health/live", async () => ({
     status: "ok",
     service: "application",
-    version: "0.1.0-rc.1",
+    version: "0.2.0-rc.1",
   }));
   app.get("/health/ready", async (_, reply) => {
     try {
@@ -149,7 +150,52 @@ export function createApi(db: Database, objects: Objects, config: Config) {
       return reply.code(503).send({ status: "unavailable" });
     }
   });
-  app.get("/api/session", async (req) => ({ username: user(req).username }));
+  app.get("/api/session", async (req) => {
+    const identity = user(req);
+    const query = z
+      .object({ prepare: z.literal("1").optional() })
+      .strict()
+      .parse(req.query);
+    const workspace = await db.transaction((c) =>
+      db.ensureWorkspace(identity.owner_id, config.runtimeBundleSha256, c),
+    );
+    if (query.prepare)
+      await db.pool.query(
+        "UPDATE application.user_workspaces SET wake_requested=true,next_attempt_at=now() WHERE owner_id=$1 AND status IN ('stopped','stopping')",
+        [identity.owner_id],
+      );
+    const settings = await db.pool.query(
+      "SELECT system_prompt FROM application.user_settings WHERE owner_id=$1",
+      [identity.owner_id],
+    );
+    return {
+      username: identity.username,
+      system_prompt: settings.rows[0]?.system_prompt ?? DEFAULT_SYSTEM_PROMPT,
+      workspace: {
+        status: workspace.status,
+        uploaded_bytes: workspace.uploaded_bytes,
+        total_bytes: workspace.total_bytes,
+        failure_message: workspace.failure_message,
+      },
+    };
+  });
+  app.put("/api/settings", async (req) => {
+    const body = z
+      .object({ system_prompt: z.string().trim().min(1).max(16000) })
+      .strict()
+      .parse(req.body);
+    await db.transaction(async (c) => {
+      await c.query(
+        "INSERT INTO application.user_settings(owner_id,system_prompt) VALUES($1,$2) ON CONFLICT(owner_id) DO UPDATE SET system_prompt=excluded.system_prompt,updated_at=now()",
+        [user(req).owner_id, body.system_prompt],
+      );
+      await c.query(
+        "INSERT INTO application.audit(owner_id,actor_id,action,correlation_id) VALUES($1,$2,'settings.updated',$3)",
+        [user(req).owner_id, user(req).username, uuid()],
+      );
+    });
+    return { system_prompt: body.system_prompt };
+  });
   app.post("/api/attachments", async (req, reply) => {
     const identity = user(req);
     const file = await req.file();
@@ -222,6 +268,7 @@ export function createApi(db: Database, objects: Objects, config: Config) {
     const fingerprint = digest(
       JSON.stringify({
         instructions: body.instructions,
+        system_prompt: body.system_prompt ?? null,
         attachment_ids: [...body.attachment_ids].sort(),
       }),
     );
@@ -234,7 +281,21 @@ export function createApi(db: Database, objects: Objects, config: Config) {
         [identity.owner_id, key],
       );
       if (replay.rows[0]) {
-        if (replay.rows[0].fingerprint !== fingerprint)
+        if (
+          replay.rows[0].fingerprint !== fingerprint &&
+          !(
+            replay.rows[0].workspace_id === null &&
+            replay.rows[0].system_prompt === "" &&
+            body.system_prompt === undefined &&
+            replay.rows[0].fingerprint ===
+              digest(
+                JSON.stringify({
+                  instructions: body.instructions,
+                  attachment_ids: [...body.attachment_ids].sort(),
+                }),
+              )
+          )
+        )
           throw new AppError(
             409,
             "idempotency_conflict",
@@ -242,6 +303,22 @@ export function createApi(db: Database, objects: Objects, config: Config) {
           );
         return requestRow.parse(replay.rows[0]);
       }
+      await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [
+        workspaceLock(identity.owner_id),
+      ]);
+      const workspace = await db.ensureWorkspace(
+        identity.owner_id,
+        config.runtimeBundleSha256,
+        c,
+      );
+      const settings = await c.query(
+        "SELECT system_prompt FROM application.user_settings WHERE owner_id=$1",
+        [identity.owner_id],
+      );
+      const systemPrompt =
+        body.system_prompt ??
+        settings.rows[0]?.system_prompt ??
+        DEFAULT_SYSTEM_PROMPT;
       const attachments = await c.query(
         "SELECT * FROM application.files WHERE id=ANY($1::uuid[]) AND owner_id=$2 AND kind='input' AND request_id IS NULL ORDER BY id FOR UPDATE",
         [body.attachment_ids, identity.owner_id],
@@ -272,7 +349,7 @@ export function createApi(db: Database, objects: Objects, config: Config) {
       const title =
         body.instructions.split("\n")[0]?.slice(0, 100) ?? "Request";
       const inserted = await c.query(
-        "INSERT INTO application.requests(id,owner_id,title,instructions,submission_key,fingerprint,correlation_id) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *",
+        "INSERT INTO application.requests(id,owner_id,title,instructions,submission_key,fingerprint,correlation_id,system_prompt,workspace_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
         [
           requestId,
           identity.owner_id,
@@ -281,6 +358,8 @@ export function createApi(db: Database, objects: Objects, config: Config) {
           key,
           fingerprint,
           requestId,
+          systemPrompt,
+          workspace.id,
         ],
       );
       const r = requestRow.parse(inserted.rows[0]);
@@ -360,6 +439,12 @@ export function createApi(db: Database, objects: Objects, config: Config) {
       id: r.id,
       title: r.title,
       instructions: r.instructions,
+      system_prompt: r.system_prompt,
+      progress_message:
+        r.progress_message ??
+        (r.status === "pending"
+          ? "Your request is waiting for its workspace to be ready."
+          : null),
       status: r.status,
       created_at: r.created_at,
       final_text: r.status === "completed" ? r.final_text : null,
