@@ -1,12 +1,12 @@
 # Sandbox Provider v1 (release candidate)
 
-Candidate `1.0.0-rc.2` adds [generic scoped file transfer](../../docs/contracts/scoped-files-v1.md) and explicit Cloud result completion. The published `/v1` schemas remain compatible with existing consumers. Add `sandbox:file:read`/`sandbox:file:write` permissions only to the appropriate private service credentials. Approved guest images require Python3. Uploads use at most1 MiB chunks and256 MiB files under `/opt/workflow-transfer`; application object storage retains originals/results outside the sandbox.
+Candidate `1.0.0-rc.3` adds [opt-in bounded shared execution](../../docs/contracts/shared-execution-v1.md) alongside [generic scoped file transfer](../../docs/contracts/scoped-files-v1.md) and explicit Cloud result completion. The published `/v1` schemas remain compatible with existing consumers. Add `sandbox:file:read`/`sandbox:file:write` permissions only to the appropriate private service credentials. Approved guest images require Python3. Uploads use at most1 MiB chunks and256 MiB files under `/opt/workflow-transfer`; application object storage retains originals/results outside the sandbox.
 
-File-operation generations are committed before guest side effects. An interrupted/unconfirmed operation stops that same retained environment; unresolved stop keeps a fence until recovery. Retry only the original upload/offset/bytes, starting the stopped environment explicitly where necessary. Chunk/download bodies and JSON responses are bounded to1500000 bytes; ordinary API bodies retain their existing64 KiB limit. Cloud uses fixed-helper argv with64 KiB internal writes and32 KiB internal reads while preserving the public1 MiB chunk contract. Full-file hashes bookend each public read and descriptor metadata is checked between fragments. Consumers must independently verify the final exported checksum.
+File-operation generations are committed before guest side effects. An interrupted/unconfirmed exclusive operation stops that same retained environment; shared recovery retains its fence and waits for every sibling to finish before stopping. Unresolved stop keeps a fence until recovery. Retry only the original upload/offset/bytes, starting the stopped environment explicitly where necessary. Chunk/download bodies and JSON responses are bounded to1500000 bytes; ordinary API bodies retain their existing64 KiB limit. Cloud uses fixed-helper argv with64 KiB internal writes and32 KiB internal reads while preserving the public1 MiB chunk contract. Full-file hashes bookend each public read and descriptor metadata is checked between fragments. Consumers must independently verify the final exported checksum.
 
 Actual hosted qualification observed roughly11.5 seconds per public MiB uploaded; an80 MiB runtime bundle can take about15 minutes. This is an observed candidate limitation, not a vendor guarantee or a precise backend limit. Allow sufficient application lease/request deadlines and reuse original upload identities after interrupted transfers.
 
-Cloud results require a nonce/checksummed completion envelope even when the child is silent. Bounded same-guest result journals are diagnostic retention; active-command attach still returns nonretryable `ambiguous_execution`, never a fresh replay. Operator profiles may map `secret_environment` names to runtime-only `WORKLOAD_SECRET_*` variables. Only references persist in profile snapshots. Missing secrets prevent dispatch, and exact currently configured secret strings are redacted from returned stdout/stderr. Workloads must separately avoid secrets in their output files/session data.
+Cloud results require a nonce/checksummed completion envelope even when the child is silent. Exclusive same-guest result journals remain diagnostic retention; exclusive active-command attach returns nonretryable `ambiguous_execution`. Shared supervisors reconcile their nonce-bound complete journals without fresh replay. Operator profiles may map `secret_environment` names to runtime-only `WORKLOAD_SECRET_*` variables. Only references persist in profile snapshots. Missing secrets prevent dispatch, and exact currently configured secret strings are redacted from returned stdout/stderr. Workloads must separately avoid secrets in their output files/session data.
 
 The scoped hosted journey uses a local Provider and disposable PostgreSQL against actual Cloud guests; see [curated evidence](../../docs/release/cloud-transfer-journey.json). It verifies file checkpoint export/reupload into a distinct sandbox and forensic database restore separately. It does not qualify GCC deployment, Cloud snapshots, whole-VM backups, host reboot persistence or stable Phase2 readiness. Nonempty external `artifact_output_ref` remains rejected; use the scoped file endpoints instead.
 
@@ -200,13 +200,13 @@ Create and execute require `Idempotency-Key`. Deduplication is durable per effec
 
 `POST /sandboxes/{id}/runs/cancel-by-reference` durably fences an execution reference under the same sandbox row lock as execute. A delayed execute cannot start after cancellation won the race. Existing run replays keep their current state; new fenced references fail 409 `execution_cancelled`. This permits Runner to cancel after a timeout with no returned run ID.
 
-PostgreSQL row locks and a partial unique index enforce one active run per sandbox across processes. Workers use session advisory locks for recovery ownership. There are `MAX_CONCURRENT_RUNS` simultaneous dispatch slots per Provider process (default4, range1..4); run the production image as one Uvicorn process. Multiple Provider instances must not independently mount/copy the same BoxLite home without a separately qualified runtime configuration.
+PostgreSQL sandbox row locks and a capacity trigger enforce the approved per-sandbox active-run limit across processes. Omitted `max_concurrent_runs` preserves capacity one; a newly versioned Cloud profile may opt into capacity two (schema maximum eight is not qualification of eight). Workers use session advisory locks for recovery ownership. There are `MAX_CONCURRENT_RUNS` simultaneous dispatch slots per Provider process (default4, range1..4); run the production image as one Uvicorn process. Multiple Provider instances must not independently mount/copy the same BoxLite home without a separately qualified runtime configuration.
 
 STOP preserves disks; only the separately authorized explicit DESTROY endpoint calls SDK remove. It refuses active runs and requires `confirm:true` plus a reason. Cancellation is an intent until the runtime confirms the command stopped. Unknown outcomes never start a fresh run automatically.
 
 ## Migrations, recovery and rollback
 
-Startup applies service-owned SQL migrations under a PostgreSQL advisory lock. Replaying migrations is idempotent. Explicit migration command:
+Startup applies unapplied service-owned SQL migrations under a PostgreSQL advisory lock. Applied versions are skipped so legacy exclusive indexes are not recreated over active shared rows. Explicit migration command:
 
 ```sh
 DATABASE_URL=... .venv/bin/python -m scripts.migrate
@@ -216,7 +216,7 @@ The migration credential owns its database; do not give it access to Runner's da
 
 On restart, Provider inspects registered retained runtime identities. A missing box becomes failed and is never replaced with an empty environment. A running execution with a persisted SDK execution ID reattaches to that ID; recovered output may be incomplete and is flagged truncated. If the process died between dispatch intent and recording the SDK execution ID, Provider conservatively stops the same sandbox and marks `ambiguous_execution` nonretryable. If stop cannot be proven, active ownership remains `cancelling`; no next execution is admitted. Operator inspection is required before deciding business-level retry.
 
-Rollback this candidate by redeploying its prior immutable image/commit with unchanged persistent volume and database. Current migrations are additive; no automatic destructive down migration exists. Before a future incompatible migration, export and restore-test a complete backup, and use that matching backup/image pair for rollback. Never point an older incompatible schema version at a live registry.
+Rollback this candidate by redeploying its prior immutable image/commit with unchanged persistent volume and database. Migration005 replaces the exclusive active-run index with a capacity trigger and adds runtime nonces/transfer recovery state; no automatic down migration exists. Drain all shared runs before an older binary or a verified matching schema/image restore. Before a future incompatible migration, export and restore-test a complete backup, and use that matching backup/image pair for rollback. Never point an older incompatible schema version at a live registry.
 
 ## Backup and restore qualification
 
@@ -234,7 +234,7 @@ In Cloud mode, use an explicit file checkpoint for required data under the scope
 transfer root. The application owns the selected-file manifest and storage:
 
 1. Finish/fence workload writes, then export each selected file while the same
-   sandbox is running and has no active execution. Verify stable full size/hash
+   sandbox is running and uses either no active execution or an explicitly approved shared profile. Verify stable full size/hash
    on every public chunk and independently hash the complete exported bytes.
 2. Store bytes plus owner, source sandbox ID, relative path, size, SHA256 and
    workload/version manifest in application-owned durable storage. Stop the
@@ -421,3 +421,11 @@ dependent on the separate qualification suite.
 `GET /metrics` is an authenticated Prometheus endpoint requiring `sandbox:read`. It scopes sandbox/run state gauges to the effective credential owner (and honors explicit delegation), without owner IDs, paths, workload text or credentials in labels. `/health/live` and `/health/ready` remain public safe health endpoints. Scrape `/metrics` on the private network using a read-only credential.
 
 Coolify may override image health checks with its own `curl` probe; the production image includes `curl` and CA certificates for this integration. With missing host KVM, an explicitly API-only staging deployment may use `/health/live` for container liveness, while `/health/ready` must continue to return503 and block workload acceptance. This does not qualify BoxLite or Phase2 readiness.
+
+## Shared sandbox execution candidate rc.3
+
+See [the reviewed extension](../../docs/contracts/shared-execution-v1.md). `active_run_id` names one active run and remains non-null until every run finishes; lifecycle stop/destroy checks all active registry rows. Scoped file operations retain one durable operation generation, immutable destinations and no-follow/checksum checks while shared runs execute. An interrupted transfer keeps its fence and never stops siblings; recovery stops the same box only after all runs finish. Shared local adapters are rejected until separately qualified.
+
+Cloud shared runs use a trusted Linux child-subreaper supervisor. Before dispatch the registry persists a nonce; the guest binds state, cancellation fence and complete-result journal to that nonce and run reference. Cancellation freezes, kills and reaps descendants (including changed sessions) before publishing completion. A delayed dispatch sees the fence and cannot start. A Provider replacement reads the same journal without replay and retains the original deadline. Unverified termination remains cancelling; it never falls back to stopping siblings. This is process lifecycle control within an approved shared guest, not a hostile same-user filesystem security boundary.
+
+Run the opt-in local-stack Cloud qualification with `python scripts/qualify_shared_cloud.py --provider-database-url-file <private-file> --runner-database-url-file <private-file> --key-file <private-file> --evidence <json-path>` after building Runner. Both DB files must name fresh loopback `workflow_shared_probe_*` databases. The script runs only local service processes, creates one owned synthetic Cloud fixture, tests shared transfer/cancel/recovery/deadlines, and explicitly destroys that fixture. It does not qualify GCC replacement, Pi, rendered document layout or host reboot.

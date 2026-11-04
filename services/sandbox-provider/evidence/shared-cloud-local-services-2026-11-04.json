@@ -1,0 +1,70 @@
+{
+  "scope": "local Provider and Runner processes, disposable real PostgreSQL, actual BoxLite Cloud, synthetic Python workloads; no GCC deployment or Pi",
+  "started_at": "2026-11-04T11:39:58.944735+00:00",
+  "source_commit": "1f109a47ac7f104214dd536f7830415d73d56f61",
+  "source_dirty": true,
+  "owner_id": "shared-proof-955be08d211e649c",
+  "checks": {
+    "two_running": true,
+    "transfer_during_execution": true,
+    "independent_cancel_and_descendant_reap": true,
+    "provider_sigkill_journal_recovery_without_replay": true,
+    "independent_deadline_and_descendant_reap": true,
+    "same_sandbox_retained_running": true
+  },
+  "sandbox_id": "sbx_d1121f973aff43788c5089497d46e215",
+  "jobs": [
+    {
+      "job_id": "job_beb01c6f-5af8-4c11-9d09-5bcb23be1301",
+      "sandbox_id": "sbx_d1121f973aff43788c5089497d46e215",
+      "run_id": "run_4b5734c5e93c40a7ad4aeee6d868f758",
+      "status": "completed",
+      "attempt_count": 1
+    },
+    {
+      "job_id": "job_334682f5-aebe-4432-9aa3-0410180aaf8f",
+      "sandbox_id": "sbx_d1121f973aff43788c5089497d46e215",
+      "run_id": "run_fe428cee21484858adcf32c2167eabef",
+      "status": "cancelled",
+      "attempt_count": 1
+    },
+    {
+      "job_id": "job_cae3844a-0ae0-4473-aca1-6893cee1be92",
+      "sandbox_id": "sbx_d1121f973aff43788c5089497d46e215",
+      "run_id": "run_c6ad28738e5c40e69fdbd160b3ebf8aa",
+      "status": "completed",
+      "attempt_count": 1
+    },
+    {
+      "job_id": "job_b0e4c1e3-24ca-4634-8f86-9b40a247d1db",
+      "sandbox_id": "sbx_d1121f973aff43788c5089497d46e215",
+      "run_id": "run_7d2847238a68443f8118b94579ae4211",
+      "status": "completed",
+      "attempt_count": 1
+    },
+    {
+      "job_id": "job_4b65ffdc-e165-4c71-9415-c3e26bc12fc7",
+      "sandbox_id": "sbx_d1121f973aff43788c5089497d46e215",
+      "run_id": "run_4d45601a589d4abb924dd5b47eb34a2b",
+      "status": "completed",
+      "attempt_count": 1
+    },
+    {
+      "job_id": "job_622edfb0-3237-4937-a625-396af6fdc6ce",
+      "sandbox_id": "sbx_d1121f973aff43788c5089497d46e215",
+      "run_id": "run_bf0636c3d2734e10a1ba91b76b38100e",
+      "status": "timed_out",
+      "attempt_count": 1
+    },
+    {
+      "job_id": "job_89aea07e-613a-4d25-98fa-d1e00b502d15",
+      "sandbox_id": "sbx_d1121f973aff43788c5089497d46e215",
+      "run_id": "run_2b484f67d3ac45e2959d79bfbf05d494",
+      "status": "completed",
+      "attempt_count": 1
+    }
+  ],
+  "passed": true,
+  "fixture_destroyed": true,
+  "finished_at": "2026-11-04T11:41:16.289182+00:00"
+}

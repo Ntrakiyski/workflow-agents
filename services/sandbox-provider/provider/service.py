@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import os
+import secrets
 import uuid
 from datetime import datetime, timezone
 from psycopg.types.json import Jsonb
@@ -94,6 +95,9 @@ class ProviderService:
         self.settings.sandbox_profile(identity, row['profile'])
         return row
 
+    async def has_active_runs(self, c, sid):
+        return bool(await one(c, "SELECT run_id FROM runs WHERE sandbox_id=%s AND status IN ('queued','running','cancelling') LIMIT 1", (sid,)))
+
     async def get_run(self, c, identity, sid, rid, lock=False):
         await self.get_sandbox(c, identity, sid)
         row = await one(c, 'SELECT * FROM runs WHERE run_id=%s AND sandbox_id=%s AND owner_id=%s' + (' FOR UPDATE' if lock else ''), (rid, sid, identity.owner))
@@ -115,6 +119,8 @@ class ProviderService:
 
     async def create(self, identity, key, body, correlation):
         profile = self.settings.sandbox_profile(identity, body['profile'])
+        if profile.get('max_concurrent_runs', 1) > 1 and not getattr(self.runtime, 'shared_execution_supported', False):
+            raise ServiceError(422, 'runtime_policy_rejected', 'Shared execution is not qualified for this execution backend.')
         if getattr(self.runtime, 'requires_create_fence', False):
             self.runtime.validate_profile(profile)
         async with self.db.tx() as c:
@@ -158,7 +164,7 @@ class ProviderService:
                 self.runtime_reference(sb)
                 if sb['status'] == 'destroyed':
                     return sandbox_json(sb)
-                if sb['active_run_id'] or sb['file_operation_pending']:
+                if await self.has_active_runs(c, sid) or sb['file_operation_pending']:
                     raise ServiceError(409, 'sandbox_busy', 'Environment has an active execution.')
                 if sb['status'] != 'destroying':
                     await c.execute("UPDATE sandboxes SET status='destroying',updated_at=now() WHERE sandbox_id=%s", (sid,))
@@ -179,7 +185,7 @@ class ProviderService:
                 return sandbox_json(sb)
             if sb['status'] == 'destroyed' or (action in ('start', 'stop') and sb['status'] in ('creating', 'destroying', 'failed')):
                 raise ServiceError(409, 'invalid_state', 'Operation is not permitted in the current environment state.')
-            if sb['active_run_id']:
+            if await self.has_active_runs(c, sid):
                 raise ServiceError(409, 'sandbox_busy', 'Environment has an active execution.')
             old = sb['status']
             try:
@@ -196,7 +202,7 @@ class ProviderService:
                     kind, state = 'sandbox.resumed' if old == 'stopped' else 'sandbox.started', 'running'
                 elif action == 'stop':
                     await self.runtime.stop(self.runtime_reference(sb))
-                    await c.execute("UPDATE sandboxes SET status='stopped',file_operation_pending=false,file_operation_id=NULL,error=NULL,updated_at=now() WHERE sandbox_id=%s", (sid,))
+                    await c.execute("UPDATE sandboxes SET status='stopped',file_operation_pending=false,file_operation_recovery_required=false,file_operation_id=NULL,error=NULL,updated_at=now() WHERE sandbox_id=%s", (sid,))
                     kind, state = 'sandbox.stopped', 'stopped'
                 else:
                     # Only this explicit, separately-authorized operation calls remove.
@@ -235,15 +241,17 @@ class ProviderService:
                     fence = await one(c, 'SELECT execution_ref FROM cancellation_fences WHERE sandbox_id=%s AND execution_ref=%s', (sid, body['execution_ref']))
                     if fence:
                         raise ServiceError(409, 'execution_cancelled', 'Execution reference has been cancelled and cannot be started.')
-                    if sb['active_run_id'] or sb['file_operation_pending']:
-                        raise ServiceError(409, 'sandbox_busy', 'Environment has an active execution.')
+                    active = await one(c, "SELECT count(*) AS count FROM runs WHERE sandbox_id=%s AND status IN ('queued','running','cancelling')", (sid,))
+                    capacity = sb['profile_snapshot'].get('max_concurrent_runs', 1)
+                    if active['count'] >= capacity or (sb['file_operation_pending'] and (capacity == 1 or sb['file_operation_recovery_required'])):
+                        raise ServiceError(409, 'sandbox_busy', 'Environment execution capacity is occupied.')
                     if sb['status'] != 'running':
                         raise ServiceError(409, 'invalid_state', 'Environment must be running before execution.')
                     rid = uid('run')
                     await c.execute('''INSERT INTO runs(run_id,sandbox_id,owner_id,execution_ref,profile,request,profile_snapshot,status,correlation_id,actor_id)
                                        VALUES(%s,%s,%s,%s,%s,%s,%s,'queued',%s,%s)''',
                                     (rid, sid, identity.owner, body['execution_ref'], body['profile'], Jsonb(body), Jsonb(p | {'resolved_argv': argv}), correlation, identity.actor))
-                    await c.execute('UPDATE sandboxes SET active_run_id=%s,updated_at=now() WHERE sandbox_id=%s', (rid, sid))
+                    await c.execute('UPDATE sandboxes SET active_run_id=coalesce(active_run_id,%s),updated_at=now() WHERE sandbox_id=%s', (rid, sid))
                     await event(c, sb, identity, correlation, 'run.queued', 'queued', rid)
                 await self.remember(c, identity, 'execute:' + sid, key, body, rid)
             row = await self.get_run(c, identity, sid, rid)
@@ -299,13 +307,17 @@ class ProviderService:
         if not await self.runtime.ready():
             return
         async with self.db.tx() as c:
-            rows = await all_rows(c, "SELECT * FROM sandboxes WHERE (status IN ('running','stopped','destroying') OR file_operation_pending) AND active_run_id IS NULL FOR UPDATE")
+            # The prior process may have died before the transfer's exception
+            # handler. Retain its fence while shared siblings finish, then
+            # recover it without killing those siblings.
+            await c.execute("UPDATE sandboxes SET file_operation_recovery_required=true WHERE file_operation_pending")
+            rows = await all_rows(c, "SELECT * FROM sandboxes WHERE (status IN ('running','stopped','destroying') OR file_operation_pending) AND NOT EXISTS (SELECT 1 FROM runs WHERE runs.sandbox_id=sandboxes.sandbox_id AND runs.status IN ('queued','running','cancelling')) FOR UPDATE")
             for sb in rows:
                 identity = Identity('sandbox-provider-recovery', sb['owner_id'], {})
                 try:
                     if sb['file_operation_pending']:
                         await self.runtime.stop(self.runtime_reference(sb))
-                        await c.execute("UPDATE sandboxes SET status='stopped',file_operation_pending=false,file_operation_id=NULL,updated_at=now() WHERE sandbox_id=%s", (sb['sandbox_id'],))
+                        await c.execute("UPDATE sandboxes SET status='stopped',file_operation_pending=false,file_operation_recovery_required=false,file_operation_id=NULL,updated_at=now() WHERE sandbox_id=%s", (sb['sandbox_id'],))
                         await event(c, sb, identity, 'provider-recovery', 'file.transfer_recovered', 'stopped')
                         continue
                     found = await self.inspect_registered(sb)
@@ -336,6 +348,7 @@ class ProviderService:
         while not self.stopping:
             try:
                 self.tasks = {rid: task for rid, task in self.tasks.items() if not task.done()}
+                await self.recover_failed_transfers()
                 async with self.db.tx() as c:
                     rows = await all_rows(c, "SELECT run_id FROM runs WHERE status IN ('queued','running','cancelling') ORDER BY created_at LIMIT 32")
                 for row in rows:
@@ -346,6 +359,14 @@ class ProviderService:
             except Exception:
                 emit_log('run.dispatch_unavailable', 'provider-worker', outcome='unavailable', error_classification='dependency_unavailable')
             await asyncio.sleep(self.settings.poll_seconds)
+
+    async def recover_failed_transfers(self):
+        async with self.db.tx() as c:
+            rows = await all_rows(c, "SELECT * FROM sandboxes WHERE file_operation_recovery_required AND NOT EXISTS (SELECT 1 FROM runs WHERE runs.sandbox_id=sandboxes.sandbox_id AND runs.status IN ('queued','running','cancelling')) FOR UPDATE SKIP LOCKED")
+            for sb in rows:
+                await self.runtime.stop(self.runtime_reference(sb))
+                await c.execute("UPDATE sandboxes SET status='stopped',file_operation_pending=false,file_operation_recovery_required=false,file_operation_id=NULL,updated_at=now() WHERE sandbox_id=%s", (sb['sandbox_id'],))
+                await event(c, sb, Identity('sandbox-provider-recovery', sb['owner_id'], {}), 'provider-recovery', 'file.transfer_recovered', 'stopped')
 
     async def finish(self, c, run, sb, identity, status, result=None, error=None):
         async with c.transaction():
@@ -359,7 +380,7 @@ class ProviderService:
                 pass
             await c.execute('''UPDATE runs SET status=%s,result=%s,error=%s,finished_at=now(),updated_at=now() WHERE run_id=%s''',
                             (status, Jsonb(result) if result is not None else None, Jsonb(error) if error else None, run['run_id']))
-            await c.execute('UPDATE sandboxes SET active_run_id=NULL,updated_at=now() WHERE sandbox_id=%s AND active_run_id=%s', (sb['sandbox_id'], run['run_id']))
+            await c.execute("UPDATE sandboxes SET active_run_id=(SELECT run_id FROM runs WHERE sandbox_id=%s AND status IN ('queued','running','cancelling') ORDER BY created_at,run_id LIMIT 1),updated_at=now() WHERE sandbox_id=%s", (sb['sandbox_id'], sb['sandbox_id']))
             await event(c, sb, identity, run['correlation_id'], 'run.' + status, status, run['run_id'],
                         {'exit_code': result['exit_code']} if result else {'error_classification': error['code']} if error else {})
 
@@ -379,15 +400,23 @@ class ProviderService:
                     self.runtime_reference(sb)
                     run = await one(c, 'SELECT * FROM runs WHERE run_id=%s FOR UPDATE', (rid,))
                     identity = Identity(run['actor_id'], run['owner_id'], {})
+                    shared = sb['profile_snapshot'].get('max_concurrent_runs', 1) > 1
                     fresh = run['status'] == 'queued'
                     if fresh:
-                        await c.execute("UPDATE runs SET status='running',started_at=now(),updated_at=now() WHERE run_id=%s AND status='queued'", (rid,))
+                        await c.execute("UPDATE runs SET status='running',started_at=now(),runtime_nonce=%s,updated_at=now() WHERE run_id=%s AND status='queued'", (secrets.token_hex(32) if shared else None, rid))
+                        run = await one(c, 'SELECT * FROM runs WHERE run_id=%s', (rid,))
                         await event(c, sb, identity, run['correlation_id'], 'run.started', 'running', rid)
                 execution = None
                 try:
                     if run['status'] == 'cancelling' and not run['runtime_execution_id']:
-                        await self.runtime.stop(self.runtime_reference(sb))
-                        await self._set_stopped(c, sb)
+                        if shared:
+                            # A queued run has no dispatched side effects. A run
+                            # with nonce was durably authorized before dispatch.
+                            if run['runtime_nonce']:
+                                await self.runtime.cancel_reference(self.runtime_reference(sb), rid, run['runtime_nonce'])
+                        else:
+                            await self.runtime.stop(self.runtime_reference(sb))
+                            await self._set_stopped(c, sb)
                         await self.finish(c, run, sb, identity, 'cancelled')
                         return
                     if fresh:
@@ -399,10 +428,16 @@ class ProviderService:
                             if not value:
                                 raise ServiceError(503, 'workload_secret_unavailable', 'An approved workload runtime secret is unavailable.')
                             environment[name] = value
-                        runtime_profile = p | {'environment': environment, '_result_reference': rid}
+                        runtime_profile = p | {'environment': environment, '_result_reference': rid,
+                                              '_shared_execution': shared, '_execution_nonce': run['runtime_nonce']}
                         execution = await self.runtime.execute(self.runtime_reference(sb), p['resolved_argv'], runtime_profile, run['request']['timeout_seconds'])
                         async with c.transaction():
                             await c.execute('UPDATE runs SET runtime_execution_id=%s,updated_at=now() WHERE run_id=%s', (execution.id(), rid))
+                    elif shared and run['runtime_nonce']:
+                        await self.verify_runtime(sb)
+                        execution = self.runtime.shared_execution(self.runtime_reference(sb), rid, run['runtime_nonce'])
+                        async with c.transaction():
+                            await event(c, sb, identity, run['correlation_id'], 'run.recovered', run['status'], rid)
                     elif run['runtime_execution_id']:
                         await self.verify_runtime(sb)
                         execution = await self.runtime.attach(self.runtime_reference(sb), run['runtime_execution_id'])
@@ -419,7 +454,7 @@ class ProviderService:
                             current = await one(c, 'SELECT status FROM runs WHERE run_id=%s', (rid,))
                         if current['status'] == 'cancelling':
                             await self.runtime.cancel(execution)
-                            if getattr(self.runtime, 'cancellation_stops_environment', False):
+                            if not shared and getattr(self.runtime, 'cancellation_stops_environment', False):
                                 await self._set_stopped(c, sb)
                             collect.cancel()
                             await asyncio.gather(collect, return_exceptions=True)
@@ -427,7 +462,7 @@ class ProviderService:
                             return
                         if asyncio.get_running_loop().time() >= end:
                             await self.runtime.cancel(execution)
-                            if getattr(self.runtime, 'cancellation_stops_environment', False):
+                            if not shared and getattr(self.runtime, 'cancellation_stops_environment', False):
                                 await self._set_stopped(c, sb)
                             collect.cancel()
                             await asyncio.gather(collect, return_exceptions=True)
@@ -441,7 +476,7 @@ class ProviderService:
                         if secret:
                             for stream in ('stdout', 'stderr'):
                                 result[stream] = result[stream].replace(secret, '[redacted]')
-                    if not fresh:
+                    if not fresh and not shared:
                         result['output_truncated'] = True
                     err = None if result['exit_code'] == 0 else error_value(ServiceError(409, 'execution_failed', 'Approved workload exited unsuccessfully.'), run['correlation_id'])
                     await self.finish(c, run, sb, identity, 'completed' if err is None else 'failed', result, err)
@@ -452,10 +487,19 @@ class ProviderService:
                     # Leave durable run+execution identity for the next process; detached VM survives.
                     raise
                 except Exception as exc:
+                    if 'collect' in locals() and not collect.done():
+                        collect.cancel()
+                        await asyncio.gather(collect, return_exceptions=True)
                     err = exc if isinstance(exc, ServiceError) else ServiceError(409, 'ambiguous_execution', 'Execution outcome is unknown. Environment requires recovery.')
                     try:
-                        await self.runtime.stop(self.runtime_reference(sb))
-                        await self._set_stopped(c, sb)
+                        if shared:
+                            if execution is not None:
+                                await self.runtime.cancel(execution)
+                            elif run['runtime_nonce']:
+                                await self.runtime.cancel_reference(self.runtime_reference(sb), rid, run['runtime_nonce'])
+                        else:
+                            await self.runtime.stop(self.runtime_reference(sb))
+                            await self._set_stopped(c, sb)
                         await self.finish(c, run, sb, identity, 'failed', error=error_value(err, run['correlation_id']))
                     except Exception:
                         # Keep active ownership while unable to prove workload stopped.

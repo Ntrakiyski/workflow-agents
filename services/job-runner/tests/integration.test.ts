@@ -248,6 +248,55 @@ test(
         },
       );
       await t.test(
+        "opt-in shared sandbox dispatch overlaps two runs, queues the third and cancels independently",
+        async () => {
+          const prepared = await terminal((await submit(submission())).job_id);
+          cfg.profiles.sandboxes["minimal-linux:v1"]!.max_concurrent_runs = 2;
+          provider.stats.maxRunsPerSandbox = 2;
+          provider.stats.holdRuns = true;
+          const body = () => ({
+            ...submission(),
+            sandbox: { mode: "reuse", sandbox_id: prepared.sandbox_id },
+          });
+          try {
+            const a = await submit(body());
+            const b = await submit(body());
+            await until(
+              () => job(a.job_id),
+              (j) => j.status === "running",
+            );
+            await until(
+              () => job(b.job_id),
+              (j) => j.status === "running",
+            );
+            await migrate(pool, (r) => logs.push(r)); // Active shared rows survive migration replay.
+            const third = await submit(body());
+            await wait(100);
+            assert.equal((await job(third.job_id)).status, "queued");
+            await send("POST", "/v1/jobs/" + a.job_id + "/cancel", {});
+            assert.equal((await terminal(a.job_id)).status, "cancelled");
+            assert.equal((await job(b.job_id)).status, "running");
+            assert.equal(
+              provider.sandboxes.get(prepared.sandbox_id).status,
+              "running",
+            );
+            await until(
+              () => job(third.job_id),
+              (j) => j.status === "running",
+            );
+            for (const j of [b, third]) {
+              await send("POST", "/v1/jobs/" + j.job_id + "/cancel", {});
+              assert.equal((await terminal(j.job_id)).status, "cancelled");
+            }
+          } finally {
+            delete cfg.profiles.sandboxes["minimal-linux:v1"]!
+              .max_concurrent_runs;
+            provider.stats.maxRunsPerSandbox = 1;
+            provider.stats.holdRuns = false;
+          }
+        },
+      );
+      await t.test(
         "active cancellation waits for Provider terminal state and preserves sandbox",
         async () => {
           provider.stats.holdRuns = true;

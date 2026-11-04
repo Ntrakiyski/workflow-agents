@@ -1,5 +1,11 @@
 # Runner service verification — 2026-11-03
 
+## Shared execution candidate rc.3 (2026-11-04)
+
+Strict typecheck/build/Prettier passed. Five unit tests and17 integration TAP tests passed with a dedicated disposable PostgreSQL16 database and actual Graphile queue. The added shared scenario runs two jobs in the same retained sandbox, queues a third, cancels one independently, preserves the sibling and replays migrations while both jobs remain active. Provider HTTP in that suite is a schema-checking mock. Default single-run serialization coverage remains.
+
+A separate actual Cloud test launches local Runner/Provider processes with two isolated real databases: shared active transfer, detached-descendant cancellation, ProviderSIGKILL and journal recovery with attempt1, and independent deadlines passed. See `../sandbox-provider/evidence/shared-cloud-local-services-2026-11-04.json`. This qualifies local service source and actual Cloud execution, not deployed GCC behavior or Pi/OfficeCLI concurrency. Stable readiness remains false.
+
 Scope: implementation branch `phase1/job-runner`, release candidate `1.0.0-rc.1`. This record distinguishes actual executed tests from mock runtime behavior. The final integration commit and independent reviewer reports supersede this developer record.
 
 ## Executed
