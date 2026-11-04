@@ -9,6 +9,7 @@ import ctypes
 import fcntl
 import hashlib
 import json
+import math
 import os
 import signal
 import subprocess
@@ -140,11 +141,15 @@ def control(reference, nonce, cancel=False):
         os.close(fd)
 
 
-def run(argv, nonce, reference, maximum, secret_names):
+def run(argv, nonce, reference, maximum, secret_names, deadline_at):
     # PR_SET_CHILD_SUBREAPER: Linux keeps every orphaned descendant below this
     # supervisor until reaped, even if it creates a fresh session/process group.
     if ctypes.CDLL(None, use_errno=True).prctl(36, 1, 0, 0, 0) != 0:
         raise RuntimeError('subreaper_unavailable')
+    remaining = deadline_at - time.time()
+    if not math.isfinite(deadline_at) or remaining > 86400:
+        raise ValueError('invalid_duration')
+    deadline = time.monotonic() + max(0, remaining)
     fd = directory(reference)
     try:
         lock = os.open('control.lock', os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600, dir_fd=fd)
@@ -156,7 +161,7 @@ def run(argv, nonce, reference, maximum, secret_names):
             if fence and fence['nonce'] != nonce:
                 raise ValueError('nonce_mismatch')
             write(fd, 'state.json', {'nonce': nonce, 'pid': os.getpid(), 'start_time': identity(os.getpid())[1]})
-            process = None if fence else subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+            process = None if fence or remaining <= 0 else subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
         streams = {}
         def drain(name, pipe):
             value, count = bytearray(), 0
@@ -170,7 +175,8 @@ def run(argv, nonce, reference, maximum, secret_names):
         workers = [] if process is None else [threading.Thread(target=drain, args=(name, pipe)) for name, pipe in (('stdout', process.stdout), ('stderr', process.stderr))]
         for worker in workers:
             worker.start()
-        cancelled = process is None
+        cancelled = fence is not None
+        timed_out = remaining <= 0 and not cancelled
         while process is not None and process.poll() is None:
             fence = read(fd, 'cancel.json')
             if fence:
@@ -178,8 +184,11 @@ def run(argv, nonce, reference, maximum, secret_names):
                     raise ValueError('nonce_mismatch')
                 cancelled = True
                 break
+            if time.monotonic() >= deadline:
+                timed_out = True
+                break
             time.sleep(.025)
-        code = -signal.SIGKILL if cancelled else process.returncode
+        code = 124 if timed_out else -signal.SIGKILL if cancelled else process.returncode
         # Also remove background descendants after ordinary leader completion;
         # terminal status is never reported while this run still owns processes.
         terminate_tree()
@@ -206,5 +215,5 @@ if __name__ == '__main__':
     if sys.argv[1] == 'control':
         print(json.dumps(control(sys.argv[2], sys.argv[3], sys.argv[4] == 'cancel')), flush=True)
     else:
-        nonce, reference, maximum, secret_names = sys.argv[2:6]
-        run(sys.argv[6:], nonce, reference, int(maximum), json.loads(secret_names))
+        nonce, reference, maximum, secret_names, deadline_at = sys.argv[2:7]
+        run(sys.argv[7:], nonce, reference, int(maximum), json.loads(secret_names), float(deadline_at))

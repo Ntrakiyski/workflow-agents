@@ -137,9 +137,9 @@ def test_supervisor_cancels_detached_descendants_and_preserves_sibling(tmp_path)
     marker = tmp_path / 'descendant.pid'
     child = 'import os,time;os.setsid();open(' + repr(str(marker)) + ',"w").write(str(os.getpid()));time.sleep(30)'
     parent = 'import subprocess,time;subprocess.Popen([' + repr(sys.executable) + ',"-c",' + repr(child) + ']);time.sleep(30)'
-    args = [sys.executable, '-c', text, 'run', 'nonce-a', 'run_aaa', '32768', '[]', sys.executable, '-c', parent]
+    args = [sys.executable, '-c', text, 'run', 'nonce-a', 'run_aaa', '32768', '[]', str(time.time() + 30), sys.executable, '-c', parent]
     a = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    b = subprocess.Popen([sys.executable, '-c', text, 'run', 'nonce-b', 'run_bbb', '32768', '[]', sys.executable, '-c', 'import time;time.sleep(.5);print("sibling")'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    b = subprocess.Popen([sys.executable, '-c', text, 'run', 'nonce-b', 'run_bbb', '32768', '[]', str(time.time() + 30), sys.executable, '-c', 'import time;time.sleep(.5);print("sibling")'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
         end = time.monotonic() + 5
         while not marker.exists() and time.monotonic() < end:
@@ -163,8 +163,29 @@ def test_cancellation_fence_prevents_delayed_dispatch_and_wrong_nonce(tmp_path):
     text = source(tmp_path)
     marker = tmp_path / 'should-not-exist'
     assert control(text, 'run_delayed', 'nonce', 'cancel') == {'status': 'fenced'}
-    result = subprocess.run([sys.executable, '-c', text, 'run', 'nonce', 'run_delayed', '32768', '[]', sys.executable, '-c', 'open(' + repr(str(marker)) + ',"w").write("bad")'], capture_output=True, timeout=5)
+    result = subprocess.run([sys.executable, '-c', text, 'run', 'nonce', 'run_delayed', '32768', '[]', str(time.time() + 30), sys.executable, '-c', 'open(' + repr(str(marker)) + ',"w").write("bad")'], capture_output=True, timeout=5)
     assert result.returncode == 0 and json.loads(result.stdout)['result']['exit_code'] == -9
     assert not marker.exists()
     result = subprocess.run([sys.executable, '-c', text, 'control', 'run_delayed', 'wrong-nonce', 'cancel'], capture_output=True, timeout=5)
     assert result.returncode != 0
+
+
+def test_guest_deadline_terminates_detached_descendants_without_provider(tmp_path):
+    text = source(tmp_path)
+    marker = tmp_path / 'deadline-descendant.pid'
+    child = 'import os,time;os.setsid();open(' + repr(str(marker)) + ',"w").write(str(os.getpid()));time.sleep(30)'
+    parent = 'import subprocess,time;subprocess.Popen([' + repr(sys.executable) + ',"-c",' + repr(child) + ']);time.sleep(30)'
+    result = subprocess.run([sys.executable, '-c', text, 'run', 'nonce-deadline', 'run_deadline', '32768', '[]', str(time.time() + .2), sys.executable, '-c', parent], capture_output=True, timeout=5)
+    assert result.returncode == 0 and not result.stderr
+    envelope = json.loads(result.stdout)
+    assert envelope['result']['exit_code'] == 124
+    assert not Path('/proc/' + marker.read_text()).exists()
+
+
+def test_expired_absolute_guest_deadline_prevents_delayed_dispatch(tmp_path):
+    text = source(tmp_path)
+    marker = tmp_path / 'late-dispatch-must-not-start'
+    result = subprocess.run([sys.executable, '-c', text, 'run', 'nonce-expired', 'run_expired', '32768', '[]', str(time.time() - 1), sys.executable, '-c', 'open(' + repr(str(marker)) + ',"w").write("bad")'], capture_output=True, timeout=5)
+    assert result.returncode == 0 and not result.stderr
+    assert json.loads(result.stdout)['result']['exit_code'] == 124
+    assert not marker.exists()
