@@ -512,7 +512,9 @@ export class Worker {
       await this.finish(
         c,
         j,
-        j.cancellation_target ?? "failed",
+        r.status === "failed" && r.result
+          ? "failed"
+          : (j.cancellation_target ?? "failed"),
         r.result,
         error,
       );

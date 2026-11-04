@@ -89,7 +89,7 @@ class FakeRuntime:
         self.executions[execution.key] = execution
         execution.result_reference = profile.get('_result_reference')
         return execution
-    def shared_execution(self, reference, result_reference, nonce, deadline_at=None):
+    def shared_execution(self, reference, result_reference, nonce):
         return next(e for e in self.executions.values() if e.name == reference and e.result_reference == result_reference)
     async def cancel_reference(self, reference, result_reference, nonce):
         for execution in self.executions.values():

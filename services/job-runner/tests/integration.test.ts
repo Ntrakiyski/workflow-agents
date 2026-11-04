@@ -297,6 +297,58 @@ test(
         },
       );
       await t.test(
+        "a proven completed failure keeps its result after late deadline reconciliation",
+        async () => {
+          provider.stats.holdRuns = true;
+          try {
+            const body = submission();
+            body.limits.max_duration_seconds = 1;
+            const admitted = await submit(body);
+            const active = await until(
+              () => job(admitted.job_id),
+              (j) => j.status === "running",
+            );
+            await worker.stop();
+            const external = provider.runs.get(active.run_id);
+            external.status = "failed";
+            external.result = {
+              exit_code: 124,
+              stdout: "",
+              stderr: "",
+              output_truncated: false,
+              artifacts: [],
+            };
+            external.error = {
+              code: "execution_failed",
+              message: "Completed child exit",
+              retryable: false,
+              correlation_id: "corr_mock",
+            };
+            external.finished_at = external.updated_at =
+              new Date().toISOString();
+            provider.sandboxes.get(active.sandbox_id).active_run_id = null;
+            provider.stats.active--;
+            await pool.query(
+              "UPDATE runner.jobs SET attempt_started_at=now()-interval '2 seconds' WHERE job_id=$1",
+              [admitted.job_id],
+            );
+            worker = new Worker(service);
+            await worker.start();
+            const final = await terminal(admitted.job_id);
+            assert.equal(final.status, "failed");
+            assert.equal(final.result.exit_code, 124);
+            assert.equal(final.error.code, "execution_failed");
+            assert.equal(final.attempt_count, 1);
+          } finally {
+            provider.stats.holdRuns = false;
+            if (!worker.active) {
+              worker = new Worker(service);
+              await worker.start();
+            }
+          }
+        },
+      );
+      await t.test(
         "active cancellation waits for Provider terminal state and preserves sandbox",
         async () => {
           provider.stats.holdRuns = true;
