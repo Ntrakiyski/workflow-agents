@@ -1,7 +1,7 @@
 name: Phase 1 reusable services
 on:
   push:
-    branches: [main, 'phase1/**']
+    branches: [main, 'phase1/**', 'feat/**']
   pull_request:
 permissions:
   contents: read
@@ -15,7 +15,7 @@ jobs:
           python-version: '3.12'
       - run: pip install -r contracts/requirements-test.txt
       - run: python contracts/tests/test_contracts.py
-      - run: python contracts/build_contracts.py && git diff --exit-code -- contracts/v1
+      - run: python contracts/build_profiles.py && python contracts/build_contracts.py && git diff --exit-code -- contracts/v1
       - name: Verify offline restore guards without runtime clients
         run: python -O -m unittest discover -s deploy/tests -p 'test_verify_offhost_restore.py' -v
   job-runner:

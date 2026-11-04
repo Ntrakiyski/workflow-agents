@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /** Apply only this project's recorded service/app configuration; does not deploy. */
+import { verifyApplicationScope } from './coolify-scope.mjs';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -40,9 +41,7 @@ const common = { git_branch: 'release/minimal-application', git_commit_sha: comm
   is_auto_deploy_enabled: false, redact_all_env_values_in_logs: true };
 async function apply(uuid, expectedName, variables, settings) {
   const sourceCommit = expectedName === 'workflow-application' ? applicationCommit : commit;
-  const current = await api('GET', '/applications/' + uuid);
-  if (current.name !== expectedName || current.environment?.uuid !== infra.environment_uuid ||
-      current.environment?.project?.uuid !== infra.project_uuid) throw Error('Project/environment/name mismatch');
+  await verifyApplicationScope(api, { project: infra.project_uuid, environment: infra.environment_uuid, uuid, name: expectedName });
   await api('PATCH', '/applications/' + uuid + '/envs/bulk', { data: Object.entries(variables).map(([key, value]) => ({
     key, value: String(value), is_buildtime: false, is_runtime: true, is_preview: false, is_literal: true })) });
   await api('PATCH', '/applications/' + uuid, { ...common, git_commit_sha: sourceCommit, ...settings });
@@ -62,9 +61,8 @@ async function auth(uuid, key) {
     ? `node -e 'console.log(JSON.stringify(JSON.parse(process.env.RUNNER_AUTH_JSON).map(({token,...p})=>({...p,token_sha256:require("crypto").createHash("sha256").update(token).digest("hex")}))))'`
     : `python -c 'import json,os,hashlib;p=json.loads(os.environ["PROVIDER_AUTH_JSON"]);[x.update(token_sha256=hashlib.sha256(x.pop("token").encode()).hexdigest()) for x in p];print(json.dumps(p))'`;
   if (command.length > 255) throw Error('Policy probe command exceeds control bound');
-  const app = await api('GET', '/applications/' + uuid);
-  if (app.environment?.uuid !== infra.environment_uuid || app.environment?.project?.uuid !== infra.project_uuid)
-    throw Error('Policy probe scope mismatch');
+  const expectedName = uuid === infra.applications['job-runner'] ? 'job-runner' : 'sandbox-provider';
+  const app = await verifyApplicationScope(api, { project: infra.project_uuid, environment: infra.environment_uuid, uuid, name: expectedName });
   const task = await api('POST', '/applications/' + uuid + '/scheduled-tasks', {
     name: 'workflow-policy-' + Date.now(), command, frequency: '* * * * *',
     container: app.settings?.custom_internal_name, enabled: true, timeout: 30 });
