@@ -50,7 +50,14 @@
       for (const file of files.rows) {
         const bytes = await objects.get(file.object_key, 50 * 1024 * 1024);
         if (bytes.length !== file.size_bytes || createHash('sha256').update(bytes).digest('hex') !== file.sha256) throw Error('object_integrity');
-        checked.push({id:file.id,kind:file.kind,role:file.role,bytes:file.size_bytes,sha256:file.sha256,verified:true});
+        const verified = {id:file.id,kind:file.kind,role:file.role,bytes:file.size_bytes,sha256:file.sha256,verified:true};
+        if (row.workspace_id && file.role === 'session') {
+          const headers = bytes.toString('utf8').split('\n').filter(Boolean).map(line => JSON.parse(line)).filter(entry => entry.type === 'session');
+          if (headers.length !== 1 || headers[0].id !== row.id || headers[0].cwd !== '/opt/workflow-transfer/requests/' + row.id)
+            throw Error('independent_session_identity');
+          verified.session = {id:headers[0].id,cwd:headers[0].cwd};
+        }
+        checked.push(verified);
       }
       const record = {...row, audit:audit.rows, files:checked};
       if (row.job_id) {
