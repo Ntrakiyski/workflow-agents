@@ -29,6 +29,9 @@ const db = new Database(config.databaseUrl);
 const objects = new S3Objects(config);
 await db.migrate();
 await db.pool.query(
+  "UPDATE application.user_workspaces SET sandbox_id=NULL,prepare_job_id=NULL,status='pending',uploaded_bytes=0,total_bytes=0,next_attempt_at=now() WHERE owner_id IN ('alice','bob')",
+);
+await db.pool.query(
   "UPDATE application.requests SET next_attempt_at=now()+interval '1 day'",
 );
 try {
@@ -54,6 +57,34 @@ class BrowserFixture implements ExecutionServices {
   requests = new Map<string, string>();
   async createSandbox(id: string) {
     return "sbx_" + id.replaceAll("-", "");
+  }
+  async createWorkspaceSandbox(id: string) {
+    return this.createSandbox(id);
+  }
+  async start() {}
+  async inspect() {
+    return { status: "running" };
+  }
+  async prepare(id: string, sandbox: string) {
+    const job: Job = {
+      job_id: `job_prepare_${id}`,
+      status: "completed",
+      sandbox_id: sandbox,
+      result: {
+        exit_code: 0,
+        stdout: JSON.stringify({
+          schema_version: 1,
+          prepared: true,
+          runtime_sha256: config.runtimeBundleSha256,
+        }),
+        stderr: "",
+        output_truncated: false,
+        artifacts: [],
+      },
+      error: null,
+    };
+    this.jobs.set(job.job_id, job);
+    return job;
   }
   async upload(sandbox: string, path: string, data: Buffer) {
     this.files.set(sandbox + "/" + path, data);

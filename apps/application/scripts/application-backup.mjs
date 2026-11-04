@@ -13,8 +13,8 @@ const MAX_PLAINTEXT = 96 * MiB;
 const MAX_FILE = 10 * MiB;
 const MAX_OBJECTS = 50 * MiB;
 const MAX_ROWS_BYTES = 8 * MiB;
-const TABLES = ['audit', 'files', 'requests', 'runner_events', 'schema_migrations'];
-const INSERT_ORDER = ['schema_migrations', 'requests', 'files', 'audit', 'runner_events'];
+const TABLES = ['audit', 'files', 'requests', 'runner_events', 'schema_migrations', 'user_settings', 'user_workspaces'];
+const INSERT_ORDER = ['schema_migrations', 'user_workspaces', 'user_settings', 'requests', 'files', 'audit', 'runner_events'];
 const q = value => '"' + value.replaceAll('"', '""') + '"';
 const fail = code => { throw new Error('application_backup_' + code); };
 const sha = value => createHash('sha256').update(value).digest('hex');
@@ -100,6 +100,12 @@ async function rows(client, name) {
   if (BigInt(capacity.count) > 20000n || BigInt(capacity.bytes) > BigInt(MAX_ROWS_BYTES)) fail('row_limit_exceeded');
   return (await client.query(`SELECT to_jsonb(t)::text AS row_json FROM application.${q(name)} t ORDER BY to_jsonb(t)::text COLLATE "C"`)).rows.map(row => row.row_json);
 }
+function assertWorkspacesQuiescent(tables) {
+  for (const raw of tables.find(table => table.name === 'user_workspaces').rows) {
+    const row = JSON.parse(raw);
+    if (!['stopped','failed'].includes(row.status) || (row.sandbox_id && !row.sandbox_stopped)) fail('source_not_quiescent');
+  }
+}
 function assertQuiescent(requests) {
   for (const raw of requests) {
     const row = JSON.parse(raw);
@@ -138,6 +144,7 @@ function validateSnapshot(snapshot) {
     if (totalRowsBytes > MAX_ROWS_BYTES) fail('row_limit_exceeded');
   }
   assertQuiescent(snapshot.tables.find(table => table.name === 'requests').rows);
+  assertWorkspacesQuiescent(snapshot.tables);
   const files = referencedFiles(snapshot.tables);
   if (snapshot.objects.length !== files.size) fail('snapshot_objects_invalid');
   const seen = new Set();
@@ -178,6 +185,7 @@ export async function collect(client, objects, { bucket, runtimeKey, runtimeSha2
       tables.push({ ...table, row_count: data.length, rows_sha256: rowsDigest(data), rows: data });
     }
     assertQuiescent(tables.find(table => table.name === 'requests').rows);
+    assertWorkspacesQuiescent(tables);
     const files = referencedFiles(tables), data = [];
     for (const file of files.values()) {
       signal.throwIfAborted();

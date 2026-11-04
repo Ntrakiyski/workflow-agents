@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { z } from "zod";
 import "./style.css";
+import { DEFAULT_SYSTEM_PROMPT } from "../src/prompt.js";
 
 const requestStatus = z.enum(["pending", "running", "completed", "failed"]);
 const summary = z.object({
@@ -12,6 +13,8 @@ const summary = z.object({
 });
 const details = summary.extend({
   instructions: z.string(),
+  system_prompt: z.string(),
+  progress_message: z.string().nullable(),
   final_text: z.string().nullable(),
   validation_summary: z.string().nullable(),
   failure_message: z.string().nullable(),
@@ -57,14 +60,80 @@ function Status({ value }: { value: Summary["status"] }) {
 
 function NewRequest({ onSubmitted }: { onSubmitted: (id: string) => void }) {
   const [instructions, setInstructions] = useState("");
+  const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [preparation, setPreparation] = useState("");
+  const initialized = useRef(false);
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      try {
+        const session = z
+          .object({
+            system_prompt: z.string(),
+            workspace: z.object({
+              status: z.string(),
+              uploaded_bytes: z.number(),
+              total_bytes: z.number(),
+              failure_message: z.string().nullable(),
+            }),
+          })
+          .parse(await api("/api/session"));
+        if (!active) return;
+        if (!initialized.current) {
+          setSystemPrompt(session.system_prompt);
+          initialized.current = true;
+        }
+        setLoaded(true);
+        const w = session.workspace;
+        setPreparation(
+          w.status === "uploading"
+            ? `Preparing your workspace: uploading shared tools (${w.total_bytes ? Math.floor((w.uploaded_bytes * 100) / w.total_bytes) : 0}%). You can submit while preparation continues.`
+            : w.status === "pending" || w.status === "preparing"
+              ? "Preparing your workspace in the background. You can submit now; work starts when it is ready."
+              : w.status === "failed"
+                ? (w.failure_message ??
+                  "Your workspace needs attention. Contact support.")
+                : "",
+        );
+      } catch (reason) {
+        if (active)
+          setError(
+            reason instanceof Error
+              ? reason.message
+              : "Could not load your workspace.",
+          );
+      }
+    }
+    void load();
+    const timer = setInterval(() => void load(), 3000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, []);
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const submissionKey = useRef(crypto.randomUUID());
   const uploaded = useRef(new Map<File, string>());
+  const promptSave = useRef<Promise<unknown>>(Promise.resolve());
+  function savePrompt(value: string) {
+    promptSave.current = promptSave.current
+      .catch(() => {})
+      .then(() =>
+        api("/api/settings", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ system_prompt: value }),
+        }),
+      );
+    return promptSave.current;
+  }
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (busy) return;
+    if (busy || !loaded) return;
     setBusy(true);
     setError("");
     try {
@@ -75,6 +144,7 @@ function NewRequest({ onSubmitted }: { onSubmitted: (id: string) => void }) {
         throw new Error(
           "Attach at most eight files, totalling no more than 20 MiB.",
         );
+      await savePrompt(systemPrompt);
       const ids: string[] = [];
       for (const file of files) {
         let fileId = uploaded.current.get(file);
@@ -98,7 +168,11 @@ function NewRequest({ onSubmitted }: { onSubmitted: (id: string) => void }) {
             "content-type": "application/json",
             "idempotency-key": submissionKey.current,
           },
-          body: JSON.stringify({ instructions, attachment_ids: ids }),
+          body: JSON.stringify({
+            instructions,
+            system_prompt: systemPrompt,
+            attachment_ids: ids,
+          }),
         }),
       );
       onSubmitted(result.id);
@@ -115,8 +189,52 @@ function NewRequest({ onSubmitted }: { onSubmitted: (id: string) => void }) {
   return (
     <section aria-labelledby="new-request">
       <h1 id="new-request">New request</h1>
+      {preparation && (
+        <p className="notice" role="status">
+          {preparation}
+        </p>
+      )}
       <form onSubmit={submit}>
-        <label htmlFor="instructions">Instructions</label>
+        <div className="instructions-heading">
+          <label htmlFor="instructions">Instructions</label>
+          <button
+            type="button"
+            className="link prompt-toggle"
+            aria-expanded={promptOpen}
+            aria-controls="system-prompt-panel"
+            onClick={() => setPromptOpen((value) => !value)}
+          >
+            System prompt
+          </button>
+        </div>
+        {promptOpen && (
+          <div id="system-prompt-panel" className="system-prompt-panel">
+            <label htmlFor="system-prompt">Default system prompt</label>
+            <textarea
+              id="system-prompt"
+              rows={10}
+              value={systemPrompt}
+              maxLength={16000}
+              required
+              disabled={busy || !loaded}
+              onChange={(event) => setSystemPrompt(event.target.value)}
+              onBlur={() => {
+                if (loaded && systemPrompt.trim())
+                  void savePrompt(systemPrompt).catch((reason) =>
+                    setError(
+                      reason instanceof Error
+                        ? reason.message
+                        : "Could not save your system prompt.",
+                    ),
+                  );
+              }}
+            />
+            <p className="hint">
+              Used with your instructions for every new request. Changes save
+              when you leave this field. Each request keeps its own copy.
+            </p>
+          </div>
+        )}
         <textarea
           id="instructions"
           name="instructions"
@@ -150,7 +268,12 @@ function NewRequest({ onSubmitted }: { onSubmitted: (id: string) => void }) {
             {error}
           </p>
         )}
-        <button type="submit" disabled={busy || !instructions.trim()}>
+        <button
+          type="submit"
+          disabled={
+            busy || !loaded || !instructions.trim() || !systemPrompt.trim()
+          }
+        >
           {busy ? "Submitting…" : "Submit request"}
         </button>
       </form>
@@ -346,15 +469,22 @@ function RequestDetail({
           <p className="muted">Created {displayDate(request.created_at)}</p>
           <h2>Instructions</h2>
           <p className="preserve">{request.instructions}</p>
+          <details className="request-prompt">
+            <summary>System prompt used for this request</summary>
+            <p className="preserve">
+              {request.system_prompt ||
+                "This request used the earlier built-in prompt."}
+            </p>
+          </details>
           {request.status === "pending" && (
             <p role="status" className="notice">
-              Your request is pending.
+              {request.progress_message ?? "Your request is pending."}
             </p>
           )}
           {request.status === "running" && (
             <p role="status" className="notice">
-              Your request is running. The result will appear here when it is
-              ready.
+              {request.progress_message ??
+                "Your request is running. The result will appear here when it is ready."}
             </p>
           )}
           {request.status === "failed" && (
@@ -412,6 +542,9 @@ function RequestDetail({
   );
 }
 function App() {
+  useEffect(() => {
+    void api("/api/session?prepare=1").catch(() => {});
+  }, []);
   const [selected, setSelected] = useState(() => location.hash.slice(1));
   const [submitted, setSubmitted] = useState(false);
   const [refresh, setRefresh] = useState(0);

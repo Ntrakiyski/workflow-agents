@@ -331,3 +331,32 @@ td {
     font-size: 12px;
   }
 }
+
+.instructions-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.instructions-heading label {
+  margin: 0;
+}
+.prompt-toggle {
+  white-space: nowrap;
+  font-size: 0.875rem;
+  padding: 0.25rem 0;
+}
+.system-prompt-panel {
+  margin: 0.75rem 0;
+  padding: 1rem;
+  background: #f6f7fa;
+  border: 1px solid #dfe3e9;
+  border-radius: 0.5rem;
+}
+.request-prompt {
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+.request-prompt summary {
+  cursor: pointer;
+}
