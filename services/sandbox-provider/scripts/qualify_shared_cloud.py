@@ -156,8 +156,8 @@ async def main(args):
                 boxlite_rest_path_prefix=None, boxlite_api_key=pe['BOXLITE_API_KEY'], runtime_request_timeout=30))
             try:
                 control_state = await runtime._shared_control(runtime.shared_execution(row['runtime_id'], row['run_id'], row['runtime_nonce']))
-                runtime._verified_result(control_state['envelope'], row['runtime_nonce'], 32768)
-                evidence['checks']['guest_deadline_while_provider_down'] = control_state['status'] == 'finished' and control_state['envelope']['result']['exit_code'] == 124
+                runtime._verified_result(control_state['envelope'], row['runtime_nonce'], 32768, shared=True)
+                evidence['checks']['guest_deadline_while_provider_down'] = control_state['status'] == 'finished' and control_state['envelope']['termination_reason'] == 'timed_out'
             finally:
                 await runtime.close()
             provider_process = launch_provider();await ready(provider_url)

@@ -384,6 +384,30 @@ class ProviderService:
             await event(c, sb, identity, run['correlation_id'], 'run.' + status, status, run['run_id'],
                         {'exit_code': result['exit_code']} if result else {'error_classification': error['code']} if error else {})
 
+    async def finish_result(self, c, run, sb, identity, result):
+        for reference in run['profile_snapshot'].get('secret_environment', {}).values():
+            secret = os.environ.get(reference)
+            if secret:
+                for stream in ('stdout', 'stderr'):
+                    result[stream] = result[stream].replace(secret, '[redacted]')
+        maximum = min(self.settings.max_output, run['profile_snapshot']['max_output_bytes'])
+        for stream in ('stdout', 'stderr'):
+            raw = result[stream].encode()
+            result['output_truncated'] |= len(raw) > maximum
+            result[stream] = raw[:maximum].decode(errors='ignore')[:32768]
+        err = None if result['exit_code'] == 0 else error_value(ServiceError(409, 'execution_failed', 'Approved workload exited unsuccessfully.'), run['correlation_id'])
+        await self.finish(c, run, sb, identity, 'completed' if err is None else 'failed', result, err)
+
+    async def finish_termination(self, c, run, sb, identity, requested, outcome):
+        if outcome and outcome['termination_reason'] == 'completed':
+            # A complete journal wins late cancellation/deadline polling. The
+            # guest reason, not the collection clock or child exit124, decides.
+            await self.finish_result(c, run, sb, identity, outcome['result'])
+            return
+        status = 'timed_out' if outcome and outcome['termination_reason'] == 'timed_out' else requested
+        err = error_value(ServiceError(409, 'deadline_exceeded', 'Execution exceeded its permitted duration.'), run['correlation_id']) if status == 'timed_out' else None
+        await self.finish(c, run, sb, identity, status, error=err)
+
     async def process_run(self, rid):
         async with self.db.pool.connection() as c:
             # Session advisory lock survives commits, is released by PostgreSQL on process death.
@@ -409,15 +433,16 @@ class ProviderService:
                 execution = None
                 try:
                     if run['status'] == 'cancelling' and not run['runtime_execution_id']:
+                        outcome = None
                         if shared:
                             # A queued run has no dispatched side effects. A run
                             # with nonce was durably authorized before dispatch.
                             if run['runtime_nonce']:
-                                await self.runtime.cancel_reference(self.runtime_reference(sb), rid, run['runtime_nonce'])
+                                outcome = await self.runtime.cancel_reference(self.runtime_reference(sb), rid, run['runtime_nonce'])
                         else:
                             await self.runtime.stop(self.runtime_reference(sb))
                             await self._set_stopped(c, sb)
-                        await self.finish(c, run, sb, identity, 'cancelled')
+                        await self.finish_termination(c, run, sb, identity, 'cancelled', outcome)
                         return
                     if fresh:
                         p = run['profile_snapshot']
@@ -436,7 +461,7 @@ class ProviderService:
                             await c.execute('UPDATE runs SET runtime_execution_id=%s,updated_at=now() WHERE run_id=%s', (execution.id(), rid))
                     elif shared and run['runtime_nonce']:
                         await self.verify_runtime(sb)
-                        execution = self.runtime.shared_execution(self.runtime_reference(sb), rid, run['runtime_nonce'], run['started_at'].timestamp() + run['request']['timeout_seconds'])
+                        execution = self.runtime.shared_execution(self.runtime_reference(sb), rid, run['runtime_nonce'])
                         async with c.transaction():
                             await event(c, sb, identity, run['correlation_id'], 'run.recovered', run['status'], rid)
                     elif run['runtime_execution_id']:
@@ -454,33 +479,26 @@ class ProviderService:
                         async with c.transaction():
                             current = await one(c, 'SELECT status FROM runs WHERE run_id=%s', (rid,))
                         if current['status'] == 'cancelling':
-                            await self.runtime.cancel(execution)
+                            outcome = await self.runtime.cancel(execution)
                             if not shared and getattr(self.runtime, 'cancellation_stops_environment', False):
                                 await self._set_stopped(c, sb)
                             collect.cancel()
                             await asyncio.gather(collect, return_exceptions=True)
-                            await self.finish(c, run, sb, identity, 'cancelled')
+                            await self.finish_termination(c, run, sb, identity, 'cancelled', outcome if shared else None)
                             return
                         if asyncio.get_running_loop().time() >= end:
-                            await self.runtime.cancel(execution)
+                            outcome = await self.runtime.cancel(execution)
                             if not shared and getattr(self.runtime, 'cancellation_stops_environment', False):
                                 await self._set_stopped(c, sb)
                             collect.cancel()
                             await asyncio.gather(collect, return_exceptions=True)
-                            err = ServiceError(409, 'deadline_exceeded', 'Execution exceeded its permitted duration.')
-                            await self.finish(c, run, sb, identity, 'timed_out', error=error_value(err, run['correlation_id']))
+                            await self.finish_termination(c, run, sb, identity, 'timed_out', outcome if shared else None)
                             return
                         await asyncio.sleep(self.settings.poll_seconds)
                     result = await collect
-                    for reference in run['profile_snapshot'].get('secret_environment', {}).values():
-                        secret = os.environ.get(reference)
-                        if secret:
-                            for stream in ('stdout', 'stderr'):
-                                result[stream] = result[stream].replace(secret, '[redacted]')
                     if not fresh and not shared:
                         result['output_truncated'] = True
-                    err = None if result['exit_code'] == 0 else error_value(ServiceError(409, 'execution_failed', 'Approved workload exited unsuccessfully.'), run['correlation_id'])
-                    await self.finish(c, run, sb, identity, 'completed' if err is None else 'failed', result, err)
+                    await self.finish_result(c, run, sb, identity, result)
                 except asyncio.CancelledError:
                     if 'collect' in locals() and not collect.done():
                         collect.cancel()

@@ -161,6 +161,7 @@ def run(argv, nonce, reference, maximum, secret_names, deadline_at):
             if fence and fence['nonce'] != nonce:
                 raise ValueError('nonce_mismatch')
             write(fd, 'state.json', {'nonce': nonce, 'pid': os.getpid(), 'start_time': identity(os.getpid())[1]})
+            remaining = deadline_at - time.time()
             process = None if fence or remaining <= 0 else subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
         streams = {}
         def drain(name, pipe):
@@ -203,8 +204,10 @@ def run(argv, nonce, reference, maximum, secret_names, deadline_at):
             if value:
                 for stream in ('stdout', 'stderr'):
                     result[stream] = result[stream].replace(value, '[redacted]')
-        encoded = json.dumps(result, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
-        envelope = {'version': 1, 'nonce': nonce, 'result': result, 'sha256': hashlib.sha256(encoded.encode()).hexdigest()}
+        reason = 'timed_out' if timed_out else 'cancelled' if cancelled else 'completed'
+        encoded = json.dumps({'result': result, 'termination_reason': reason}, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
+        envelope = {'version': 2, 'nonce': nonce, 'result': result, 'termination_reason': reason,
+                    'sha256': hashlib.sha256(encoded.encode()).hexdigest()}
         write(fd, 'result.json', envelope)
         print(json.dumps(envelope, separators=(',', ':'), ensure_ascii=True), flush=True)
     finally:
