@@ -45,7 +45,7 @@
     "latest_deployments": {
       "job-runner": "cnjp6nm35djame2lrygqs990",
       "sandbox-provider": "eqzxxyzt4pmspla9u31xgwue",
-      "application": "dyz7uuqur0tzucwfm8bqyps3"
+      "application": "tx9xvettt4bhn6unr5jkllxb"
     },
     "historical_rc1_resource_statuses": [
       {
@@ -119,7 +119,7 @@
         "name": "workflow-application",
         "uuid": "7vdsilhnu96tifz7yosm61j1",
         "status": "running:healthy",
-        "commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+        "commit": "b9ba897348ebaf93c16505f50ccf926f5094a70b",
         "is_public": true,
         "observation_basis": "Integration lead scoped Coolify readback on 2026-11-04: configured source equals latest finished deployment; running:healthy."
       },
@@ -532,7 +532,7 @@
     "scope": "Real disposable PostgreSQL/RustFS with mocked execution, real local supervisor subprocesses and controller regressions; no hosted Cloud/model call."
   },
   "runtime_backend": "boxlite-cloud",
-  "recorded_at_utc": "2026-11-04T13:17:02.901Z",
+  "recorded_at_utc": "2026-11-04T13:34:59.795Z",
   "service_versions": {
     "job-runner": "1.0.0-rc.3",
     "sandbox-provider": "1.0.0-rc.3",
@@ -540,17 +540,17 @@
     "pi-document-agent": "0.1.0-rc.4"
   },
   "deployments": {
-    "observation_time_utc": "2026-11-04T13:17:02.901Z",
+    "observation_time_utc": "2026-11-04T13:34:59.795Z",
     "basis": "Finished configured deployment identities and service/database privacy; trusted HTTPS and published application health/authentication. Separate hosted request and restore evidence establishes execution and logical recovery.",
     "last_confirmed": {
       "job-runner": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
       "sandbox-provider": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
-      "application": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac"
+      "application": "b9ba897348ebaf93c16505f50ccf926f5094a70b"
     },
     "deployment_ids": {
       "job-runner": "cnjp6nm35djame2lrygqs990",
       "sandbox-provider": "eqzxxyzt4pmspla9u31xgwue",
-      "application": "dyz7uuqur0tzucwfm8bqyps3"
+      "application": "tx9xvettt4bhn6unr5jkllxb"
     },
     "state": "finished and running:healthy",
     "temporary_tasks_remaining": 0,
@@ -564,7 +564,7 @@
       "host_ports": false,
       "temporary_tasks": 0
     },
-    "evidence": "docs/release/shared-final-live-state.json",
+    "evidence": "docs/release/timeline-final-live-state.json",
     "latest_backup_capture_sources": {
       "job-runner": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
       "sandbox-provider": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
@@ -614,16 +614,16 @@
     "real_runtime_deselected": 1,
     "scope": "Historical rc1 CI at the recorded source; later local and hosted evidence does not replace or extend this CI result."
   },
-  "deployed_application_commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+  "deployed_application_commit": "b9ba897348ebaf93c16505f50ccf926f5094a70b",
   "application_ci": {
-    "commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
-    "run": 41826416700,
+    "commit": "b9ba897348ebaf93c16505f50ccf926f5094a70b",
+    "run": 41839008428,
     "outcome": "passed",
-    "api_passes": 17,
+    "api_passes": 18,
     "checkpoint_passes": 2,
     "cache_passes": 5,
     "browser_passes": 2,
-    "scope": "Deployed application code; actual PostgreSQL/RustFS with mocked execution. Current integrated CI is recorded separately."
+    "scope": "Exact deployed application source; real disposable PostgreSQL/RustFS with mocked execution. Hosted timeline/browser/model verification is recorded separately."
   },
   "deployed_service_commit_scope": "Runner and Provider infrastructure only; deployed_application_commit tracks the independently advanced application.",
   "completed_data_recovery": {
@@ -872,5 +872,16 @@
     "provider_hardware_conditional_skips": 2,
     "real_runtime_deselected": 1,
     "scope": "Actual GitHub Actions PostgreSQL; Provider fake runtimes/actual SDK loopback; no hosted Cloud claim. Local Provider run passed 77 without those conditional skips. Infrastructure remains deployed at 8387b5d; this is source verification at the independently advanced application commit."
+  },
+  "request_progress_ui": {
+    "status": "hosted_verified",
+    "application_commit": "b9ba897348ebaf93c16505f50ccf926f5094a70b",
+    "evidence": "docs/release/request-timeline-hosted.json",
+    "timeline": "Persistent newest-first safe audit history; local timestamps include seconds",
+    "total_time": "Submission to matching terminal audit, including queue/preparation; active live counter, terminal fixed",
+    "retained_existing_requests": 16,
+    "hosted_synthetic_request": "22189a66-31c2-4542-8530-230cd918b447",
+    "hosted_elapsed_seconds": 72,
+    "schema_migration": false
   }
 }

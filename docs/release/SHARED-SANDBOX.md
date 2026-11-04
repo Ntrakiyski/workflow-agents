@@ -33,7 +33,7 @@ The authenticated [application](https://workflow-agents.68.210.88.115.sslip.io) 
 | --- | --- | --- |
 | Provider | `0b816c4a127dd61a1704eac2bc8e7b1c9889adad` | `eqzxxyzt4pmspla9u31xgwue` |
 | Runner | `0b816c4a127dd61a1704eac2bc8e7b1c9889adad` | `cnjp6nm35djame2lrygqs990` |
-| Application | `73fc27fe8154dd14b7c74bdf1a726dee9c1266ac` | `dyz7uuqur0tzucwfm8bqyps3` |
+| Application | `b9ba897348ebaf93c16505f50ccf926f5094a70b` | `tx9xvettt4bhn6unr5jkllxb` |
 
 The application's initial replacement could not bootstrap because the download allowlist omitted the new rc3 asset. The deployed application fix adds the exact reviewed asset/checksum/size; public readiness now passes. No existing request was replayed. Four pre-upgrade request statuses, results and downloadable checksums survived the additive migration and replacement.
 
@@ -75,3 +75,14 @@ The installed off-host backup service completed capture `20261104T131307662Z-ae9
 Generic infrastructure is [draft PR #4](https://github.com/Ntrakiyski/workflow-agents/pull/4), based on the previous application candidate; application/workload integration is [draft PR #5](https://github.com/Ntrakiyski/workflow-agents/pull/5), stacked on #4. No automatic merge is authorized. Later documentation commits do not change the deployed pins above.
 
 Stable infrastructure readiness remains false. Broader network/escape/load testing, full Cloud guest-disk recovery, shared-host reboot and general exclusive active-output recovery remain open. The bounded shared journal recovery qualifies its recorded profile/scenarios. Structural DOCX and exact synthetic markers do not establish rendered layout, pagination or general semantic accuracy.
+
+
+## Persistent request timeline and total time
+
+Application-only deployment `tx9xvettt4bhn6unr5jkllxb` at `b9ba897348ebaf93c16505f50ccf926f5094a70b` adds a vertical, newest-first status timeline with browser-local dates/times including seconds. Progress changes append to the existing audit only when the message changes, survive reopening and expose only application-owned status text. Old requests retain their real recorded milestones without fabricated intermediate history.
+
+The request list now shows Total time from submission through completed export or failure, including queue/preparation time. A single browser timer updates active rows each second; terminal durations use the first audit matching the current outcome and do not grow during idle-stop retries. A historical terminal row without an outcome audit falls back to its last stored update. No database migration or infrastructure/workload change is required.
+
+[Hosted timeline evidence](request-timeline-hosted.json) passed actual authenticated desktop/mobile Chromium → GCC → Cloud → Pi/LiteLLM/OfficeCLI for synthetic request `22189a66-31c2-4542-8530-230cd918b447`. Startup, input preparation, dispatch/queue, Pi work, saving and completion are saved in order. Its **72-second** total matched submission/completion timestamps, advanced while active and stayed fixed after reload/reopen. The protected DOCX preserved the original and contained the requested synthetic marker once. All 16 pre-existing requests retained statuses/result hashes, file IDs, exact bytes and checksums. Screenshots were inspected outside Git; no overflow or browser console errors occurred. The shared runtime's uploaded byte count stayed unchanged.
+
+All 18 local backend checks, two desktop/mobile browser journeys, typecheck/format/build and exact-source [application CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41839008428) and [infrastructure CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41839008737) passed. CI execution is mocked; the hosted check above used the actual model. [Final live readback](timeline-final-live-state.json) confirms the finished application deployment, unchanged infrastructure pins, private dependencies, authenticated HTTPS, healthy databases/storage and no temporary tasks. The previous backup/restore evidence above retains its original capture sources and scope.

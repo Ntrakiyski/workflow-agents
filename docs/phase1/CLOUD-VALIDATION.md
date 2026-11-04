@@ -4,7 +4,7 @@
 
 ## Current shared-runtime candidate
 
-The 4 November rc.3 infrastructure and per-user application candidate supersede the deployment pins below. Current exact sources, finished deployments, hosted Pi sessions and recovery evidence are in the [shared-workspace report](../release/SHARED-SANDBOX.md) and [readiness record](readiness.json). The following rc.2 evidence is retained with its original scope. Stable readiness remains false.
+The 4 November rc.3 infrastructure and per-user application candidate supersede the deployment pins below. Current exact sources, finished deployments, hosted Pi sessions and recovery evidence are in the [shared-workspace report](../release/SHARED-SANDBOX.md) and [readiness record](readiness.json). The application-only status timeline/Total time update at `b9ba897` additionally passed [hosted browser verification and retention of all 16 existing requests](../release/request-timeline-hosted.json). The following rc.2 evidence is retained with its original scope. Stable readiness remains false.
 
 ## Historical rc.2 deployment
 
