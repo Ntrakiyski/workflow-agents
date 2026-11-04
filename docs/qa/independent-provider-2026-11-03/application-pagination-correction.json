@@ -1,0 +1,65 @@
+{
+  "date": "2026-11-03T19:19:10.342Z",
+  "scope": "Independent API injection, actual fresh isolated disposable PostgreSQL16. No object storage or execution services used; GET listing only.",
+  "source_api_sha256": "2bc5efcebb5939df96630b605107dfbe5f8c1416e84670c7d0e4e73210e53fbc",
+  "fixtures": {
+    "authorized_count": 4,
+    "foreign_count": 1,
+    "same_millisecond": true,
+    "timestamp_tie": true
+  },
+  "pages": [
+    {
+      "status": 200,
+      "ids": [
+        "70677129-24d6-434d-bcfc-299dc7c330a8"
+      ],
+      "cursor": {
+        "created_at": "2026-11-03T18:00:00.123900Z",
+        "id": "70677129-24d6-434d-bcfc-299dc7c330a8"
+      }
+    },
+    {
+      "status": 200,
+      "ids": [
+        "89ce046d-7d71-4949-9738-89e544c648b7"
+      ],
+      "cursor": {
+        "created_at": "2026-11-03T18:00:00.123800Z",
+        "id": "89ce046d-7d71-4949-9738-89e544c648b7"
+      }
+    },
+    {
+      "status": 200,
+      "ids": [
+        "6176f43e-16ff-4d9e-9f40-37872fb21511"
+      ],
+      "cursor": {
+        "created_at": "2026-11-03T18:00:00.123800Z",
+        "id": "6176f43e-16ff-4d9e-9f40-37872fb21511"
+      }
+    },
+    {
+      "status": 200,
+      "ids": [
+        "aae6f836-40a5-4880-b303-9c28eac602cd"
+      ],
+      "cursor": null
+    }
+  ],
+  "expected_order": [
+    "70677129-24d6-434d-bcfc-299dc7c330a8",
+    "89ce046d-7d71-4949-9738-89e544c648b7",
+    "6176f43e-16ff-4d9e-9f40-37872fb21511",
+    "aae6f836-40a5-4880-b303-9c28eac602cd"
+  ],
+  "seen_order": [
+    "70677129-24d6-434d-bcfc-299dc7c330a8",
+    "89ce046d-7d71-4949-9738-89e544c648b7",
+    "6176f43e-16ff-4d9e-9f40-37872fb21511",
+    "aae6f836-40a5-4880-b303-9c28eac602cd"
+  ],
+  "all_authorized_rows_returned_once_in_order": true,
+  "foreign_owner_excluded": true,
+  "outcome": "passed"
+}

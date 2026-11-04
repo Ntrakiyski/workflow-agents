@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "operation": "independent-completed-offhost-evidence-review",
+  "recorded_at_utc": "2026-11-03T20:02:00.811962+00:00",
+  "outcome": "passed_bounded_evidence_review",
+  "source_capture_session": "20261103T195631749Z-4c8fd4ea-4b04-4f0b-b2e4-e57a22e3a80f",
+  "manifest_sha256": "ddc8c34e85c03677acf8a6b8b48ba81a72e1881c7e03d5ee7cc15bb3d919f580",
+  "source_record_sha256": {
+    "offhost-backup-completed.json": "a879d1677e7e185f3517d6deef75f26669cb248614780e7eba630b86bd48c00e",
+    "application-restore-completed.json": "8207d8f88fb5bff8a4d9848750d24c015dcc2d34e80b0a0cd2dccd009452ea3c",
+    "offhost-forensic-restore-completed.json": "cf5b6ff347314702271e449a7626ad05646a6ece77a654f92f31833eb831f086",
+    "final-release-state.json": "cde46914709127fe7a7a16f4a7ad531cdc939c4a1b329f92f929148f2b357611",
+    "completed-checkpoint-known-secret-scan.json": "973746f5ea0376965d34353baa5b211ea4368713a3058f618a20ec67b1c3568c",
+    "offhost-forensic-restore-completed-bound.json": "e6352b86240d0e3bfe805ce5f5c99925c9e6a40cc0653f3b9919865fd8d9b44f",
+    "offhost-forensic-restore-completed-stdin.json": "a215fd03af006cf2cdeb3003640277ffb4a605e5190cf6a18cedbce242c09cf8"
+  },
+  "archives_independently_hashed": [
+    {
+      "service": "job-runner",
+      "encrypted_envelope_sha256": "36d7dcb41510f3142417e201a5dba726e02c5193678966c9e640a3d9b48150e5",
+      "encrypted_bytes": 82361,
+      "mode": "0600",
+      "tables_verified": 11,
+      "source_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "source_deployment": "wuvkf6x1owxobcarqjtd7wbk"
+    },
+    {
+      "service": "sandbox-provider",
+      "encrypted_envelope_sha256": "82c0e13f188bc8303cd8d426256cbe91677a0ceb8ac51a262fb9258e8eb838d4",
+      "encrypted_bytes": 128875,
+      "mode": "0600",
+      "tables_verified": 7,
+      "source_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "source_deployment": "iaeiglup1n9zxypdzk2mglcr"
+    },
+    {
+      "service": "application",
+      "encrypted_envelope_sha256": "c68884189a49e0ece75683c09a8946a2f84809d98e4dfb616ee825273dd9a424",
+      "encrypted_bytes": 40045,
+      "mode": "0600",
+      "tables_verified": 5,
+      "source_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+      "source_deployment": "uqgpm525dt5gaulngxrjsagb"
+    }
+  ],
+  "application_tables_verified": 5,
+  "application_objects_verified_against_checkpoint_metadata": 11,
+  "application_object_bytes": 53394,
+  "approved_runtime_independently_hashed": {
+    "bytes": 95977914,
+    "sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a"
+  },
+  "public_profile_inventory_sha256": "2bb8dbb7dadab4352140546de3643b30870483bff0dfdff1c13f900d9cbf592e",
+  "forensic_registry_source_table_digests_and_replay_verified": true,
+  "forensic_runtime_client_started": false,
+  "forensic_operational_cutover_permitted": false,
+  "reported_release_services_healthy": 4,
+  "reported_temporary_tasks_remaining": 0,
+  "reported_known_secret_matches": 0,
+  "limits": [
+    "Independent reviewer read private manifest/public profile metadata and hashed encrypted envelopes/runtime; no decryption or secret-file read.",
+    "Lead executed restores/release-state/known-secret captures; reviewer checked their hashes, table evidence, metadata and scope against actual capture.",
+    "Known-secret scan covers18 exact values in row JSON and decoded object bytes; compressed DOCX XML and unknown credentials excluded.",
+    "Forensic registry comparison does not attach guest disks or authorize Provider startup/cutover; full Cloud guest restore, host recovery and broader security gates remain unproved."
+  ],
+  "verifier_followup": "Resolved:3a73e8c validates and caches bounded manifest-checked envelope bytes before commands; e8ccdb6 passes those exact bytes on stdin and removes inherited environment override. Actual final rerun and replay passed with matching source hashes/table digests and complete disposable-volume cleanup.",
+  "final_forensic_restore_evidence": "docs/release/offhost-forensic-restore-completed-stdin.json",
+  "verifier_sources": {
+    "deploy/verify-offhost-restore.py": "7b3a151731db7475553353d014d44a38b2216815cb945e8a93d345b31745f2c2",
+    "deploy/tests/test_verify_offhost_restore.py": "9c07907d9b1284c5b51bc38e2aac7d924c66ba5f40f4eceb296795e3f3ba232d"
+  },
+  "independent_verifier_tests": {
+    "final_source_commit": "d2390d4",
+    "normal_passes": 5,
+    "optimized_passes": 5,
+    "scope": "Offline manifest/migration/cleanup guards with mocked Docker and one real inert200000-byte stdin child; no live service, database, Cloud or archive decryption.",
+    "earlier_hash_guard_passes_each_mode": 4
+  },
+  "independently_reproduced_environment_limit": {
+    "inert_value_bytes": 131072,
+    "observed_errno": "E2BIG",
+    "actual_provider_envelope_bytes": 128875,
+    "resolved_by": "stdin for exact checked bytes"
+  },
+  "independent_host_check": {
+    "hostname": "autonomous",
+    "timer_enabled": true,
+    "timer_active": true,
+    "last_service_run_start_utc": "2026-11-03T19:56:31Z",
+    "last_service_run_end_utc": "2026-11-03T19:59:08Z",
+    "result": "success",
+    "exit_status": 0,
+    "next_timer_trigger_observed_utc": "2026-11-04T02:43:25Z",
+    "method": "read-only systemctl show and hostname; no secret/environment-file contents read"
+  },
+  "final_reviewed_at_utc": "2026-11-03T20:06:44.381389+00:00"
+}

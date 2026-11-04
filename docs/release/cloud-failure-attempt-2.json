@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "session": "74a6b9f1d1044584a6a0fa12dc24a7e6",
+  "outcome": "failed",
+  "error_classification": "RuntimeError",
+  "checks": [
+    {
+      "scenario": "duplicate",
+      "outcome": "passed",
+      "job_id": "job_f0e13585-5448-41c1-8d52-048a231f2a7d",
+      "sandbox_id": "sbx_b5e09c43a6d74b40a8c9dacd59a3ffa4",
+      "status": "completed",
+      "attempt_count": 1,
+      "admitted_runs": 1,
+      "durable_effect_count": 1,
+      "runner_audit_events": 3,
+      "provider_audit_events": 5
+    },
+    {
+      "scenario": "transient_before_effect",
+      "outcome": "passed",
+      "job_id": "job_e6b71e2a-cb13-4c0b-913c-7e185404c3d6",
+      "sandbox_id": "sbx_2d421c0fff144d94a89b3c822f47aa9e",
+      "status": "completed",
+      "attempt_count": 1,
+      "admitted_runs": 1,
+      "durable_effect_count": 1,
+      "runner_audit_events": 3,
+      "provider_audit_events": 5
+    }
+  ],
+  "cleanup_pending_sandboxes": [
+    "sbx_2d421c0fff144d94a89b3c822f47aa9e"
+  ],
+  "runtime": "real BoxLite Cloud",
+  "databases": "isolated real PostgreSQL 16",
+  "services": "local real processes from current source; not GCC deployment proof",
+  "faults": "controlled local HTTP proxy and SIGKILL of owned service processes",
+  "host_reboot": "not performed",
+  "later_cleanup_evidence": "docs/release/cloud-failure-attempt-2-cleanup.json"
+}

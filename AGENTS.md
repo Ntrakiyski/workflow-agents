@@ -2,11 +2,11 @@
 
 ## Purpose and current state
 
-Workflow Agents provides two independent infrastructure services for future applications. Phase 1 implements a durable Job Runner and a persistent Sandbox Provider. Phase 2, the Document Assistant, is not implemented or authorized by this guide.
+Workflow Agents provides independent Job Runner and Sandbox Provider services plus a minimal Document Assistant consumer. The owner's 3 November continuation authorizes completing reusable infrastructure and building the initial application concurrently. Read [the narrowed release scope](docs/release/MINIMAL-SCOPE.md); it supersedes the broader Phase 2 feature list for this release.
 
-The current candidate is `1.0.0-rc.1` with authenticated `/v1` REST APIs. **Phase 1 acceptance is incomplete and `ready_for_phase2` is false.** Read [the current validation report](docs/phase1/CLOUD-VALIDATION.md), [machine-readable gates](docs/phase1/readiness.json), and [independent QA](docs/qa/CLOUD-REVIEW.md) before making readiness claims.
+The current infrastructure contract candidate is `1.0.0-rc.2` with authenticated `/v1` REST APIs. **Phase 1 acceptance is incomplete and `ready_for_phase2` is false.** Read [the current validation report](docs/phase1/CLOUD-VALIDATION.md), [machine-readable gates](docs/phase1/readiness.json), and [independent QA](docs/qa/MINIMAL-RELEASE-REVIEW.md) before making readiness claims.
 
-The recorded staging deployment runs source commit `04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9`. Later documentation commits do not change that deployment. Inspect live state before an operational change. Do not equate branch HEAD, a healthy container, or passing mocked tests with the deployed release.
+Runner and Provider remain at `8387b5da2084e062e7409b1af5ce81ae57b45dfd`; the application remains at `1d21e27a571388484774e401cc5d5a5a3cec0973`. The integration lead confirmed Runner, Provider, application and private storage healthy at 19:59 UTC after removing temporary QA accounts; exact current deployment IDs are in [readiness](docs/phase1/readiness.json). Fresh request `6f3085e0-7d6f-4b9e-8ad5-7ba76f587189` passed uninterrupted browser→Runner→Provider→Cloud→Pi/LiteLLM/OfficeCLI→validated protected DOCX download on its first attempt without operator recovery. Original/output/session and both manifests are durable; correlated completion/stop audits and same-sandbox stop passed. This qualifies one bounded synthetic workflow, with stable readiness still false. The earlier explicitly recovered request separately passed exact result retention through application replacement. Both automatic and explicitly recovered outputs survived final cleanup replacements with exact identities, bytes and checksums; primary owner access remained and removed QA credentials were rejected. Provider policy confirms the temporary cleanup actor is removed and the ordinary application cannot destroy sandboxes. The final encrypted off-host capture and isolated logical application/runtime reconstruction plus offline infrastructure database comparison passed; Cloud guest-disk recovery and operational cutover remain unqualified. Documentation commits do not deploy themselves; inspect finished records and live identity before operations.
 
 ## Read before working
 
@@ -26,7 +26,8 @@ User instructions define the authorized task. This file applies throughout the r
 | `services/sandbox-provider/` | Python 3.12, FastAPI, Uvicorn, Psycopg 3, JSON Schema, BoxLite SDK 0.11.0 | Sandbox registry, runtime identity, execution records, lifecycle and sandbox audits; its own PostgreSQL database |
 | `contracts/` | Versioned OpenAPI 3.1 and JSON Schema, Python generators and tests | Reviewed wire contracts, shared profile format, compatibility policy |
 | `deploy/` | Per-service Dockerfiles plus Coolify JSON configuration and operator scripts | Explicit Git commit deployment, private networking, resource settings and recovery procedures |
-| `apps/application/` | Instructions only | Future Phase 2 scope; no running application or UI |
+| `apps/application/` | React/TypeScript, Fastify, own PostgreSQL and private object storage | Instructions/attachments, authorized persistent request list, validated text/file results |
+| `workloads/pi-document-agent/` | Versioned Pi/OfficeCLI runtime archive and controller validation | Document execution, saved sessions, checksummed result manifests |
 
 Dependency locks and service manifests contain exact package versions. PostgreSQL 16 is the tested database baseline. Each service has its own dependencies, migrations, tests, Docker build context, configuration and release metadata. There is no root application package or monolithic build.
 
@@ -35,7 +36,7 @@ The request path is client -> Job Runner HTTP API -> Graphile queue -> Sandbox P
 ## Deployment and runtime boundaries
 
 - The active project is `workflow-agents-phase1`, environment `staging`, on GCC Coolify. [Deployment instructions](deploy/README.md), [configuration](deploy/coolify.phase1.json) and [resource IDs](deploy/staging-resources.json) are authoritative operational references.
-- The four resources are `job-runner`, `sandbox-provider`, `job-runner-db` and `sandbox-provider-db`. Applications deploy independently; databases have distinct credentials and persistent storage. Both APIs and both databases are private. There is no dashboard or public API documentation UI.
+- Original infrastructure resources are `job-runner`, `sandbox-provider`, `job-runner-db` and `sandbox-provider-db`. Initial application resources are recorded separately in `deploy/application-resources.json`. Applications deploy independently with separate DB credentials. Infrastructure APIs, all databases and object storage stay private; only the authenticated application may be public. There is no infrastructure dashboard or public API documentation UI.
 - **The Provider API and registry are self-hosted on GCC; active guest execution and writable guest disks are hosted by BoxLite Cloud.** `SANDBOX_RUNTIME_MODE=cloud` selects `BoxLiteCloudRuntime` behind `SandboxRuntime`. Local mode remains explicit and is the code default. Neither mode silently falls back to another runtime or a mock.
 - Cloud mode uses runtime-only `BOXLITE_API_KEY`, an HTTPS `BOXLITE_REST_URL` and a stable `BOXLITE_ACCOUNT_SCOPE`. It needs no local `/dev/kvm`. Preserve backend/account bindings; changing configuration must not reinterpret existing sandbox identities.
 - Local GCC execution remains blocked by the container's bubblewrap namespace boundary despite host KVM availability. Worfklow lacked host KVM; our Worfklow resources were removed after migration. Do not redeploy there during routine maintenance.
@@ -52,7 +53,7 @@ The request path is client -> Job Runner HTTP API -> Graphile queue -> Sandbox P
 - Enforce one active execution per sandbox. Stop preserves the disk. Destroy is a separate explicit authorized operation. Missing retained environments must fail visibly rather than become new empty boxes.
 - Emit structured JSON logs with correlation, target and execution IDs, action, duration, outcome and safe error class. Persist actor, timestamp, target and outcome in append-only audits. Never log tokens, database URLs, workload payloads or document contents.
 - Keep secrets in ignored `private/` files or the deployment secret manager. Do not copy attachment credentials into code, documentation, examples, command arguments or Git.
-- Never add Pi, OfficeCLI, SRT, approval, requester-timeout or Document Assistant logic to infrastructure. No React UI, new LiteLLM service, Hatchet or general YAML workflow engine belongs in Phase 1.
+- Never add Pi, OfficeCLI, SRT, approval, requester-timeout or Document Assistant logic to infrastructure. The React UI belongs only in `apps/application`. Reuse existing LiteLLM; no new LiteLLM service, Hatchet or general YAML workflow engine belongs here.
 
 ## Development and verification
 
@@ -87,21 +88,24 @@ python contracts/build_contracts.py
 git diff --exit-code -- contracts/v1
 ```
 
-[CI](.github/workflows/phase1.yml) runs contract generation, Runner typecheck/build/tests and Provider tests with real PostgreSQL. Runtime behavior in CI is mocked, including the real SDK pointed at a loopback HTTP stub. The `real_runtime` test and local `scripts.qualify_runtime` require local KVM; they do not qualify Cloud. Hosted proof uses the separately recorded HTTP fixture journey. Add meaningful regression tests for implementation changes and run only the checks relevant to documentation-only changes.
+[Infrastructure CI](.github/workflows/phase1.yml) runs contract generation, Runner typecheck/build/tests and Provider tests with real PostgreSQL. [Application CI](.github/workflows/application.yml) additionally runs actual PostgreSQL/RustFS checks, encrypted checkpoint/restore, runtime-cache boundaries and desktop/mobile browser tests. Runtime execution in CI is mocked, including the Provider's actual SDK pointed at a loopback HTTP stub. The `real_runtime` test and local `scripts.qualify_runtime` require local KVM; they do not qualify Cloud. Hosted proof uses separately recorded HTTP/browser journeys. Add meaningful regression tests for implementation changes and run only the checks relevant to documentation-only changes.
 
 ## Acceptance and recovery limits
 
-The recorded real Cloud journey passed workload execution, same-box marker retention across stop/start, bounded two-box file separation, duplicate admission, durable audits and stopped-box recovery across independent application replacements. This is not active-command recovery or comprehensive security qualification.
+Recorded actual Cloud evidence covers generic execution and stopped-box retention on GCC, plus scoped transfer/checkpoint reupload, descendant cancellation, seven controlled failure scenarios and bounded resource/hostname-HTTPS probes using isolated local service processes or the direct SDK. Scope and source identity remain attached to each evidence file. Encrypted off-host infrastructure archives were restored in isolation. The final installed backup service captured all three authenticated encrypted archives from current deployed sources. Its daily timer is enabled and active. Application restore and replay matched five tables, audit/sequence identities and all 11 original/output/session/manifest objects totaling 53,394 bytes; the approved 95,977,914-byte runtime was reconstructed and downloaded from a new isolated bucket at its pinned checksum. Both infrastructure archives passed offline forensic restore/replay with exact rows, audits and sequences. Owned fixtures/volumes were cleaned. These are logical-data and runtime-archive proofs; no restored Provider/Runner/Cloud client was started, and no Cloud guest disk or operational cutover was restored.
+
+Pi document workload `0.1.0-rc.2` passed reproducible builds, actual local execution in the pinned slim image with bundled ICU and one uninterrupted hosted synthetic DOCX journey. Its `hosted_qualified=true` is limited to that recorded fixture; `stable_release=false` remains unchanged. The earlier request `598c30fa-e0d0-4d36-96d7-16d75bd675e7` required explicit same-job export-only recovery for a strict canonical session-schema mismatch; its original failure/recovery audits remain historical, and no workload was replayed. Browser DOCX structure, exact synthetic marker, original bytes and protected downloads passed. These checks do not prove rendered document layout, page pagination or general semantic accuracy.
+
+Fresh uninterrupted v2 delivery, protected result download, complete required exports, correlated audits and same-box stop passed for one synthetic request. Both that request and the earlier explicitly recovered result survived final cleanup replacements with exact bytes/identities and owner access. Generic scoped file transfer passed actual Cloud qualification through a private local Provider; the legacy external `artifact_output_ref` field remains unsupported and returns 422.
 
 Keep these gates open until new evidence closes them:
 
-- Generic scoped artifact transfer. Nonempty `artifact_output_ref` currently returns 422.
-- Active-command and complete-output recovery. Cloud attach fails closed with nonretryable `ambiguous_execution`; preserve the same box and do not replay uncertain work.
-- Hosted transient retry, Provider timeout and active-worker crash failure injection.
-- Off-host database backups and coordinated registry plus Cloud guest data restore. Observed vendor capabilities disable snapshot, export, import and cloning.
-- Host restart persistence and broader resource, network and escape qualification.
+- Active-command reattachment and complete recovered output. Fresh execution requires a nonce/checksummed completion envelope; active attach remains nonretryable `ambiguous_execution`. Preserve the same box and never replay uncertain work.
+- Deployed-source failure qualification. Seven controlled proxy/SIGKILL scenarios passed against actual Cloud with isolated local Runner/Provider/PostgreSQL; these are not GCC container failure tests.
+- Coordinated operational registry/guest recovery. Completed application rows/files/runtime reconstruction and offline infrastructure database comparison passed; earlier selected-file reupload into a distinct recorded sandbox passed separately. These do not prove Cloud disk restoration, live registry-to-guest rebinding or operational cutover. Full Cloud snapshot/export/import/clone remain unavailable.
+- Host restart persistence, sustained/multitenant resource enforcement and comprehensive escape/network qualification. Exact-hostname HTTPS probes passed; raw TCP connects were accepted, and port-level, UDP/DNS and airgap claims remain unqualified.
 
-Do not use a Cloud snapshot or VM clone as a proven capability. The user's separate Pi prototype uploads a cached runtime archive; it is reference material, not repository implementation or independent Phase 1 evidence. See [the dated closeout](docs/phase1/CLOSEOUT-2026-11-03.md).
+Do not use a Cloud snapshot or VM clone as a proven capability. The repository workload uploads a checksum-pinned runtime archive; it is not a VM clone or independent proof of infrastructure acceptance. See [the dated closeout](docs/phase1/CLOSEOUT-2026-11-03.md).
 
 ## Git and handoff
 

@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "operation": "hosted-browser-document-journey",
+  "session": "64dd3cd7-bc0a-4a84-977f-8a89efd988bc",
+  "origin": "https://workflow-agents.68.210.88.115.sslip.io",
+  "recorded_at_utc": "2026-11-03T18:41:32.693Z",
+  "outcome": "incomplete",
+  "deployed_commit": "2f7820f619fe023b4278c2f97e43f7709d59d8cd",
+  "browser": "Playwright Chromium; Browser plugin not available",
+  "execution": "actual hosted application; no request routing or execution mocks installed by this helper",
+  "checks": [
+    {
+      "scenario": "unauthenticated_entry_denied_and_foreign_account_authenticated",
+      "outcome": "passed",
+      "observations": {}
+    },
+    {
+      "scenario": "page_identity_nonblank_no_framework_overlay",
+      "outcome": "passed",
+      "observations": {}
+    },
+    {
+      "scenario": "actual_browser_attachment_submission_confirmation",
+      "outcome": "passed",
+      "observations": {
+        "input_sha256": "8ea713e66ba55ac0ed017c48be1b54f72b72b5690bb9960f0c251171c42fffc9",
+        "input_bytes": 5205
+      }
+    },
+    {
+      "scenario": "same_key_submission_replay_and_changed_payload_conflict",
+      "outcome": "passed",
+      "observations": {}
+    },
+    {
+      "scenario": "persistent_paginated_request_list_reload_and_reopen",
+      "outcome": "passed",
+      "observations": {}
+    }
+  ],
+  "screenshots": [
+    "/tmp/workflow-hosted-64dd3cd7-bc0a-4a84-977f-8a89efd988bc-list-row.png"
+  ],
+  "state_file": "/home/workflow-agents-worktrees/release-qa/private/hosted-browser-64dd3cd7-bc0a-4a84-977f-8a89efd988bc/state.json",
+  "limits": [
+    "No database/deployment mutation or infrastructure credential access",
+    "DOCX ZIP/XML/checksum and exact synthetic markers checked; semantic accuracy and rendered page layout not established",
+    "Replacement is performed externally; this helper compares saved request/file identities and bytes afterwards",
+    "Sandbox stop, durable server audits and deployed commit need separate operator evidence"
+  ],
+  "request_id": "e4ce9738-c52d-4bb7-a862-93d18a2c2962",
+  "request_status": "failed",
+  "error_classification": "hosted_request_failed",
+  "console_events": [],
+  "page_error_hashes": []
+}

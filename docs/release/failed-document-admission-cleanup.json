@@ -1,0 +1,11 @@
+{
+  "deployed_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+  "task_status": "success",
+  "operation": "cleanup-failed-document-admission",
+  "outcome": "passed",
+  "sandbox_id": "sbx_71ebecb9dc2242498e8236f811be3b9d",
+  "application_request_id": "e4ce9738-c52d-4bb7-a862-93d18a2c2962",
+  "cloud_name_absent": true,
+  "registry_status": "destroyed",
+  "failed_application_request_and_audits": "preserved"
+}

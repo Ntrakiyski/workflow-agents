@@ -1,0 +1,18 @@
+{
+  "operation": "independent-host-public-runtime-cache",
+  "outcome": "passed",
+  "runtime": {
+    "relative_path": "runtime/08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a/runtime-bundle.tar.gz",
+    "sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
+    "size_bytes": 95977914,
+    "url": "https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.2/runtime-bundle.tar.gz"
+  },
+  "checks": [
+    "actual approved published rc2 download",
+    "streamed checksum and bounded length",
+    "mode600 archive and mode700 owned directories",
+    "offline verified replay"
+  ],
+  "elapsed_ms": 1495,
+  "scope": "public runtime archive only; private application rows/documents/sessions are encrypted separately"
+}

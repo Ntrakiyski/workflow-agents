@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "recorded_at_utc": "2026-11-03T18:22:03Z",
+  "operation": "bounded-cloud-resource-network-qualification",
+  "outcome": "passed_bounded_scope",
+  "runtime": "actual BoxLite Cloud, SDK0.11.0",
+  "scope": "runtime adapter only; no Provider HTTP/PostgreSQL/GCC deployment proof",
+  "profile": {
+    "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+    "cpus": 1,
+    "memory_mib": 1024,
+    "disk_mib": 1024,
+    "network": "denied",
+    "allowed_hosts": [],
+    "entrypoint": [
+      "/usr/local/bin/python3",
+      "-c",
+      "import time; time.sleep(31536000)"
+    ],
+    "cmd": []
+  },
+  "bounds": {
+    "cpus": 1,
+    "memory_mib": 1024,
+    "disk_mib": 1024,
+    "cpu_workers": 2,
+    "cpu_worker_seconds": 2,
+    "disk_max_write_mib": 1228,
+    "disk_deadline_seconds": 18,
+    "memory_max_touch_mib": 1536,
+    "memory_child_deadline_seconds": 24
+  },
+  "checks": [
+    {
+      "scenario": "approved_metadata",
+      "outcome": "passed",
+      "observations": {
+        "cpus": 1,
+        "memory_mib": 1024,
+        "network_inbound": "disabled",
+        "network_outbound": "disabled",
+        "disk_size_attestation": "SDK BoxInfo unavailable; guest filesystem observed below"
+      },
+      "source_session": "8462f2927bfb4785877f9e5af26cc335",
+      "runtime_id": "WFFxM3Q543cd"
+    },
+    {
+      "scenario": "network_denied_fixed_ip_probes",
+      "outcome": "passed",
+      "observations": {
+        "interfaces": [
+          {
+            "name": "dummy0",
+            "operstate": "down",
+            "flags": "0x82"
+          },
+          {
+            "name": "lo",
+            "operstate": "unknown",
+            "flags": "0x9"
+          }
+        ],
+        "ipv4_routes": [],
+        "attempts": [
+          {
+            "host": "1.1.1.1",
+            "connected": false,
+            "errno": 101
+          },
+          {
+            "host": "8.8.8.8",
+            "connected": false,
+            "errno": 101
+          }
+        ],
+        "scope": "two external TCP endpoints only; no universal egress or allowed-host proof"
+      },
+      "source_session": "8462f2927bfb4785877f9e5af26cc335",
+      "runtime_id": "WFFxM3Q543cd"
+    },
+    {
+      "scenario": "bounded_two_worker_cpu",
+      "outcome": "passed",
+      "observations": {
+        "cpu_count": 1,
+        "workers": 2,
+        "worker_samples": [
+          {
+            "cpu_seconds": 0.998648823,
+            "wall_seconds": 2.00436664
+          },
+          {
+            "cpu_seconds": 1.000512279,
+            "wall_seconds": 2.0000072939999995
+          }
+        ],
+        "elapsed_wall_seconds": 2.071664898,
+        "aggregate_cpu_seconds": 1.999161102,
+        "cpu_to_wall_ratio": 0.9650021603059473,
+        "memory": {
+          "MemTotal": 1070071808,
+          "MemAvailable": 955793408,
+          "SwapTotal": 0
+        },
+        "rootfs_capacity_bytes": 1039155200,
+        "rootfs_available_bytes": 886657024,
+        "interfaces": [
+          {
+            "name": "dummy0",
+            "operstate": "down",
+            "flags": "0x82"
+          },
+          {
+            "name": "lo",
+            "operstate": "unknown",
+            "flags": "0x9"
+          }
+        ],
+        "ipv4_routes": [],
+        "external_tcp_attempts": [
+          {
+            "host": "1.1.1.1",
+            "connected": false,
+            "errno": 101
+          },
+          {
+            "host": "8.8.8.8",
+            "connected": false,
+            "errno": 101
+          }
+        ]
+      },
+      "source_session": "8462f2927bfb4785877f9e5af26cc335",
+      "runtime_id": "WFFxM3Q543cd"
+    },
+    {
+      "scenario": "bounded_rootfs_capacity",
+      "outcome": "passed",
+      "observations": {
+        "written_bytes": 886632448,
+        "maximum_probe_bytes": 1287651328,
+        "reason": "enospc",
+        "errno": 28,
+        "elapsed_seconds": 5.309101907999999,
+        "filesystem_capacity_bytes": 1039155200,
+        "available_before_bytes": 886636544,
+        "available_after_bytes": 886636544,
+        "temporary_fill_removed": true
+      },
+      "source_session": "8462f2927bfb4785877f9e5af26cc335",
+      "runtime_id": "WFFxM3Q543cd"
+    },
+    {
+      "scenario": "bounded_memory_pressure",
+      "outcome": "passed",
+      "observations": {
+        "upper_probe_bytes": 1610612736,
+        "last_completed_touched_bytes": 973078528,
+        "child_exit_code": -9,
+        "child_stdout_bytes": 0,
+        "child_stderr_bytes": 0,
+        "deadline_killed_by_probe": false,
+        "kernel_oom_kill_before": null,
+        "kernel_oom_kill_after": null,
+        "maximum_child_resident_bytes": 990605312,
+        "memory": {
+          "MemTotal": 1070071808,
+          "MemAvailable": 963710976,
+          "SwapTotal": 0
+        },
+        "elapsed_seconds": 3.8546689519999995,
+        "guest_rlimit_applied": false,
+        "progress_file_removed": true,
+        "termination_interpretation": "SIGKILL during bounded memory pressure without probe kill or guest RLIMIT; consistent with guest OOM, but missing kernel oom_kill counter prevents exact cause attestation"
+      },
+      "source_session": "1e8e8ba524cb4418bd3fa40472c364c4",
+      "runtime_id": "DpdA4zWXTaUD"
+    }
+  ],
+  "attempts": [
+    {
+      "evidence": "cloud-resource-attempt-1.json",
+      "session": "11e9c609a13548c6869fc0479ff136a7",
+      "result": "Harness overconstrained interface names (dummy0 DOWN is not external connectivity); memory counter read failed before pressure started. CPU/disk observed passing.",
+      "cleanup": "confirmed stopped and removed by exact name/id"
+    },
+    {
+      "evidence": "cloud-resource-attempt-2.json",
+      "session": "8462f2927bfb4785877f9e5af26cc335",
+      "result": "Network/CPU/disk passed; optional oom_kill counter missing, memory pressure not started.",
+      "cleanup": "confirmed stopped and removed by exact name/id"
+    },
+    {
+      "evidence": "cloud-resource-memory.json",
+      "session": "1e8e8ba524cb4418bd3fa40472c364c4",
+      "result": "Memory-only bounded pressure passed; kernel kill cause not directly attested.",
+      "cleanup": "confirmed stopped and removed by exact name/id"
+    }
+  ],
+  "cleanup": "all three exact session-owned fixtures confirmed stopped and removed",
+  "source_adapter_commit": "a2540e9",
+  "source_adapter_sha256": "c6dd3d769f23f453927866ab2846d6881558d4e3d5a8ad430c552987970d10c8",
+  "helper": "tests/qa/cloud_resource_journey.py",
+  "limitations": [
+    "Direct runtime adapter/SDK execution; no Provider HTTP, PostgreSQL, GCC deployment or browser proof",
+    "CPU test is two concurrent workers for two seconds, not sustained multi-tenant load qualification",
+    "Rootfs ENOSPC is observed guest filesystem capacity, not vendor backing-store quota attestation",
+    "Memory child SIGKILL under pressure without RLIMIT/probe kill is consistent with OOM; missing kernel oom_kill counter prevents exact cause attestation",
+    "Network evidence covers network-denied profile and two IPv4 TCP destinations only; workload allowed-host and comprehensive network isolation remain separate",
+    "No host reboot, escape attempt or vendor-host recovery/performance claim"
+  ]
+}

@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Workflow Agents off-host logical backup
+
+[Timer]
+OnCalendar=*-*-* 02:40:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+Unit=workflow-agents-backup.service
+
+[Install]
+WantedBy=timers.target

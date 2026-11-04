@@ -1,0 +1,41 @@
+# Application verification — 3 November 2026
+
+Version `0.1.0-rc.1`; branch `app/minimal-requests`, based on merged main `3f550ba95ca684aeea29a630675d33040724a961`. The application is a candidate. Phase 1 gates remain open; this report does not establish stable Phase 2 readiness.
+
+| Executed check | Result and boundary |
+| --- | --- |
+| `npm run typecheck` | Passed strict server/React checks |
+| `npm run format:check` | Passed source/frontend/tests |
+| `npm run build` | Passed TypeScript/Vite production build |
+| `npm audit --omit=dev` | Zero known dependency vulnerabilities |
+| `npm test` | 11 passes, zero skips; actual independent PostgreSQL16 and RustFS S3 |
+| S3 conditional write | Exact replay accepted; changed content refused; original bytes unchanged |
+| Authentication/ownership | Missing Basic and cross-origin mutations denied; foreign request/attachment/output hidden; protected downloads verified |
+| Durable admissions | Same submission returns same UUID; changed payload conflicts; cursor pagination preserves older requests |
+| Dispatch recovery | Simulated Runner side effect then lost response; new worker uses durable keys and yields one logical execution |
+| Safe delivery | Actual manifest/checksum/size verification; zero exit with missing output and corrupt checksum fail; required session saved to real S3 |
+| Persistence/audit/stop | New API instance reads result; event deduplication/append-only audits; export precedes stop; stop failure cannot revoke delivery |
+| DOCX structure | Actual ZIP/XML document accepted; duplicate parts, CRC corruption, malformed extra XML, wrong Word namespace/body, symlink and external/escaping relationships refused; no renderer executed |
+| HTTP compatibility | Loopback mock validates Runner request against published schema, bearer/correlation/idempotency headers and bounded checksummed multichunk transfer |
+| `npm run test:browser` | 2 passes: Chromium desktop1366×900 and mobile390×844; submit attachment → confirmation → result/download → list/reload → reopen |
+| Browser console/layout | No JavaScript/console errors, framework overlay or horizontal overflow; screenshots inspected |
+
+Browser plugin was absent. Playwright followed the frontend testing skill. Scratch screenshots outside Git: `/tmp/workflow-application-desktop.png`, `/tmp/workflow-application-mobile.png`; each shows the built result view. Inspection covered heading/status placement, typography, whitespace, readable validation copy, input/output links and mobile wrapping. Form/list interactions were exercised before screenshot capture. No concept/reference design was requested; the deliberate plain surface adds no dashboards or extra screens.
+
+Runner, Provider and workload execution were mocked, including browser tests. PostgreSQL, S3 conditional writes/object bytes/checksums, HTTP transport and the browser build were real. Tests do **not** establish BoxLite Cloud transfer, hosted failure injection, Pi/LiteLLM/OfficeCLI success, actual rendered layout, application process/container replacement, off-host application restore, host reboot persistence or resource/load enforcement. Integration records those separately against exact deployed commits.
+
+Independent QA additionally generated a synthetic DOCX with actual OfficeCLI 1.0.160 and `officecli validate` reported success with zero findings. The application controller accepted those same bytes after compatibility checks for internal OPC package-root relationships and effective Default/Override content-type declarations. This proves structural tool interoperability, not rendered layout or content accuracy.
+
+The release integration additionally fixes PostgreSQL microsecond precision loss in request-list cursors. Eleven backend checks now pass, including same-millisecond requests, an exact timestamp tie, full pagination order and a foreign-owner row. Typecheck, format and build passed again. Before the fix, independent QA reproduced silently skipped older rows in a new disposable PostgreSQL16. The cursor now uses full-precision UTC text while the SQL tuple comparison remains timestamp/UUID based.
+
+[GitHub application CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41701442123) passed at `80d876e`:10backend,2checkpoint,5runtime-cache and2desktop/mobile browser tests, with actual PostgreSQL/RustFS and mocked execution. That run precedes the pagination correction; its source and scope remain distinct from the later regression run.
+
+The canonical workload session descriptor includes required `media_type: application/x-ndjson`. The application now accepts that exact value and rejects other types. [Exact deployed-source CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41703356921) passed at `1d21e27a571388484774e401cc5d5a5a3cec0973`:11backend,2checkpoint,5runtime-cache and2browser checks. Execution remains mocked in CI.
+
+Actual hosted request `598c30fa-e0d0-4d36-96d7-16d75bd675e7` completed Pi/OfficeCLI on Runner attempt1. The previous application schema rejected its session descriptor, so an explicit operator recovery resumed export from the same completed job and stopped sandbox. No workload was replayed. Independent [browser recovery](../../docs/release/hosted-application-recovered-journey.json) and [same-source application replacement](../../docs/release/hosted-application-replacement.json) retained the exact request, file IDs, original/output bytes and checksums. These establish operator-assisted recovery and replacement; the separate fresh automatic proof follows below.
+
+Fresh request `6f3085e0-7d6f-4b9e-8ad5-7ba76f587189` passed the actual [uninterrupted browser journey](../../docs/release/hosted-application-journey.json) at deployed `1d21e27`, without export recovery or workload replay. Runner `job_c28141c3-1008-4539-a041-6141b01ee45b` completed attempt1. Independent DOCX/CRC/internal-relationship checks found the exact requested synthetic marker once and preserved the original. Anonymous401, enabled foreign-owner404/list exclusion, invalid Origin403 and desktop/mobile UI checks passed. [Checkpoint inspection](../../docs/release/hosted-automatic-checkpoints.json) verified the original, output, request/result manifests and saved session, `export_complete=true`, same sandbox stopped, published Runner/Provider identities and correlated audits. [Structured logs](../../docs/release/hosted-automatic-logs.json) include completion and stop. This qualifies the stated synthetic document flow, without rendered-layout, general semantic-accuracy or broad infrastructure readiness claims.
+
+Both fresh and recovered results additionally passed final [fresh persistence](../../docs/release/hosted-application-final-persistence.json) and [recovered persistence](../../docs/release/hosted-recovered-final-persistence.json) rechecks after application replacement `uqgpm525dt5gaulngxrjsagb` and removal of the temporary foreign QA account. Exact request/file IDs, original/output bytes, DOCX markers and checksums survived. The removed account now receives401 on session/list/request/input/output, while the primary owner retains access. Provider replacement `iaeiglup1n9zxypdzk2mglcr` retained the same infrastructure source and removed its temporary cleanup actor; ordinary application credentials still lack destruction permission.
+
+The final [encrypted off-host capture](../../docs/release/offhost-backup-completed.json) and [isolated application restore](../../docs/release/application-restore-completed.json) passed against current deployed `1d21e27`:all five tables, exact row/audit/sequence identities,11 immutable original/output/manifest/session objects totaling53,394bytes and a repeated restore matched. The independent public cache reconstructed the exact95,977,914-byte rc2 runtime into the new isolated bucket and verified a fresh download; profile inventory matched. The new database and bucket were removed. Both infrastructure archives separately passed [offline forensic registry restore](../../docs/release/offhost-forensic-restore-completed-stdin.json) and replay into new disposable PostgreSQL containers whose anonymous volumes were removed. No worker, Provider/Runner server or Cloud client started, and no operational cutover or guest-disk restoration was qualified.

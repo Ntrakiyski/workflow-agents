@@ -1,0 +1,24 @@
+{
+  "coolify_url": "https://hosting.gccssofia.com",
+  "project_uuid": "ptombcqslsfcmfufdui4vk1z",
+  "environment_uuid": "tiiebld0vegfeegaapo3cdt3",
+  "storage": {
+    "uuid": "qd41pkivqrnkwwsj1nr52s0k",
+    "name": "workflow-files",
+    "image": "docker.io/rustfs/rustfs@sha256:1cfa82fb394a7c6a4ffc24f5333b52afee608d258503f94b37fcce5cc965c896",
+    "private": true,
+    "volume_uuid": "0pcvmsmk1yw7thtuqetaz6s0"
+  },
+  "database": {
+    "uuid": "6sn4lsfrot3nad4cv8gjhkja",
+    "name": "workflow-application-db",
+    "database": "workflow_application",
+    "user": "workflow_application"
+  },
+  "application": {
+    "uuid": "7vdsilhnu96tifz7yosm61j1",
+    "name": "workflow-application",
+    "url": "https://workflow-agents.68.210.88.115.sslip.io",
+    "source_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973"
+  }
+}

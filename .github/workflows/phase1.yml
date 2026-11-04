@@ -16,6 +16,8 @@ jobs:
       - run: pip install -r contracts/requirements-test.txt
       - run: python contracts/tests/test_contracts.py
       - run: python contracts/build_contracts.py && git diff --exit-code -- contracts/v1
+      - name: Verify offline restore guards without runtime clients
+        run: python -O -m unittest discover -s deploy/tests -p 'test_verify_offhost_restore.py' -v
   job-runner:
     runs-on: ubuntu-latest
     services:

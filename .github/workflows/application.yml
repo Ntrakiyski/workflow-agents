@@ -1,0 +1,91 @@
+name: Minimal application
+on:
+  push:
+    branches: [main, 'release/**', 'app/**', 'ci/**']
+    paths:
+      - 'apps/application/**'
+      - 'contracts/**'
+      - 'deploy/verify-application-restore.mjs'
+      - 'deploy/cache-approved-runtime.mjs'
+      - 'deploy/tests/cache-approved-runtime.test.mjs'
+      - '.github/workflows/application.yml'
+  pull_request:
+    paths:
+      - 'apps/application/**'
+      - 'contracts/**'
+      - 'deploy/verify-application-restore.mjs'
+      - 'deploy/cache-approved-runtime.mjs'
+      - 'deploy/tests/cache-approved-runtime.test.mjs'
+      - '.github/workflows/application.yml'
+permissions:
+  contents: read
+concurrency:
+  group: application-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  application:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
+        env:
+          POSTGRES_USER: app_test
+          POSTGRES_PASSWORD: ci-disposable-only
+          POSTGRES_DB: workflow_app_test
+        ports: ['5432/tcp']
+        options: >-
+          --health-cmd "pg_isready -U app_test -d workflow_app_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      rustfs:
+        image: rustfs/rustfs@sha256:1cfa82fb394a7c6a4ffc24f5333b52afee608d258503f94b37fcce5cc965c896
+        env:
+          RUSTFS_ACCESS_KEY: workflow-ci-only
+          RUSTFS_SECRET_KEY: workflow-ci-disposable-secret
+          RUSTFS_CONSOLE_ENABLE: 'false'
+          RUSTFS_VOLUMES: /data
+          RUSTFS_OBS_LOG_DIRECTORY: /data/logs
+        ports: ['9000/tcp']
+    defaults:
+      run:
+        working-directory: apps/application
+    env:
+      APPLICATION_TEST_CONFIG: private/test/config.json
+      APPLICATION_BACKUP_TEST_CONFIG: ${{ github.workspace }}/apps/application/private/test/config.json
+      APPLICATION_APP_ROOT: ${{ github.workspace }}/apps/application
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+          cache: npm
+          cache-dependency-path: apps/application/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run format:check
+      - run: npx prettier --check scripts/ci-test-config.mjs
+      - run: npx playwright install --with-deps chromium
+      - name: Configure and wait for isolated test services
+        env:
+          APP_CI_POSTGRES_PORT: ${{ job.services.postgres.ports['5432'] }}
+          APP_CI_S3_PORT: ${{ job.services.rustfs.ports['9000'] }}
+        run: node --import tsx scripts/ci-test-config.mjs
+      - name: API, ownership, file and recovery tests (execution mocked)
+        run: npm test
+      - run: npm run build
+      - name: Encrypted checkpoint and isolated database/object restore tests
+        run: node --test scripts/application-backup.test.mjs
+      - name: Approved runtime cache boundaries (no network)
+        run: node --test ../../deploy/tests/cache-approved-runtime.test.mjs
+      - name: Desktop and mobile browser journey (execution mocked)
+        run: npm run test:browser
+      - name: Save browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-browser-failure
+          path: |
+            apps/application/test-results/
+            apps/application/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
