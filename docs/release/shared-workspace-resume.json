@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "operation": "hosted-same-user-workspace-resume",
+  "started_at": "2026-11-04T13:01:13.163Z",
+  "outcome": "passed",
+  "timeline": [
+    {
+      "at": "2026-11-04T13:01:14.681Z",
+      "workspace": "stopped",
+      "request": "pending",
+      "progress": "Your request is waiting for its workspace to be ready."
+    },
+    {
+      "at": "2026-11-04T13:01:19.455Z",
+      "workspace": "ready",
+      "request": "pending",
+      "progress": "Preparing this request\u2019s input files."
+    },
+    {
+      "at": "2026-11-04T13:01:23.672Z",
+      "workspace": "ready",
+      "request": "running",
+      "progress": "Pi is working on this request in its own session."
+    },
+    {
+      "at": "2026-11-04T13:01:53.226Z",
+      "workspace": "ready",
+      "request": "completed",
+      "progress": null
+    }
+  ],
+  "checks": {
+    "no_runtime_upload_or_preparation_observed": true,
+    "uploaded_bytes_unchanged": true,
+    "completed": true,
+    "validated_download": true,
+    "original_preserved": true,
+    "exact_marker_count": 1,
+    "same_sandbox_and_preparation_job_verified": true
+  },
+  "before": {
+    "status": "stopped",
+    "uploaded_bytes": 95978009,
+    "total_bytes": 95978009,
+    "failure_message": null
+  },
+  "input_sha256": "4397a77a135ef3e7c2ff2e0a8e01b0b04c6987f1593a3e3986d00bb754a7606c",
+  "request_id": "5d072884-a8ca-4b09-9879-a00f4efb3c02",
+  "output": {
+    "id": "a002e553-fe33-4c96-abe7-48a3b1106f21",
+    "bytes": 1559,
+    "sha256": "735bb3f87674784bbe9ba51092a56f73050106ced43d037661fd68e62c7f3eeb"
+  },
+  "finished_at": "2026-11-04T13:01:53.423Z",
+  "scope": "Actual browser and existing user workspace after idle stop; no upload/preparation observed, upload counters unchanged, protected checksummed DOCX with exact synthetic edit and original text. Final owning-app checkpoint binds this request to the same sandbox and preparation job.",
+  "checkpoint": {
+    "id": "5d072884-a8ca-4b09-9879-a00f4efb3c02",
+    "job_id": "job_3b26471f-233b-43f4-9b0a-8fd6b045007b",
+    "sandbox_id": "sbx_90cbc75fdd2c405cab2ffff81fee921c",
+    "workspace_id": "7c99396b-0316-47fb-90e9-aac5a23f1edf",
+    "export_complete": true,
+    "sandbox_stopped": true,
+    "completed_checkpoint_verified": true,
+    "runner_attempt_count": 1,
+    "session": [
+      {
+        "id": "5d072884-a8ca-4b09-9879-a00f4efb3c02",
+        "cwd": "/opt/workflow-transfer/requests/5d072884-a8ca-4b09-9879-a00f4efb3c02",
+        "first_entry_at": "2026-11-04T13:01:24.545Z",
+        "last_entry_at": "2026-11-04T13:01:40.403Z"
+      }
+    ]
+  },
+  "prepare_job_id": "job_336ddeee-69a6-40a6-a081-f0e7a726926b"
+}

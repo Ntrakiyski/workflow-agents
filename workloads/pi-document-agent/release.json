@@ -1,9 +1,9 @@
 {
   "workload": "pi-document-agent",
   "version": "0.1.0-rc.4",
-  "status": "candidate-combined-prompt-controller",
+  "status": "candidate-hosted-shared-combined-prompt",
   "stable_release": false,
-  "hosted_qualified": false,
+  "hosted_qualified": true,
   "result_schema_version": 1,
   "runtime_bundle": {
     "architecture": "x86_64",
@@ -93,5 +93,33 @@
     "tools": "Reuse the unchanged prepared rc3 archive; no runtime reupload or shared-tool mutation",
     "prompt_delivery": "Default policy and request instructions form one text prompt; attachments remain separated reference data",
     "provider_api": "openai-completions"
+  },
+  "hosted_qualification": {
+    "application_source_commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+    "infrastructure_source_commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+    "profile_source_commit": "1f46823e3241d03278892ff3fb7487746e2274ba",
+    "capacity_configuration_commit": "0e62bfc859c12385f06afe9d02d6d73dfbdda70a",
+    "session_overlap": {
+      "start": "2026-11-04T13:10:11.605Z",
+      "end": "2026-11-04T13:10:21.252Z",
+      "milliseconds": 9647
+    },
+    "request_ids": [
+      "36144844-b877-43ee-a7c6-aec106341b4f",
+      "c627fb94-acc8-4d5c-a475-5ef3fb84ffca"
+    ],
+    "sandbox_id": "sbx_90cbc75fdd2c405cab2ffff81fee921c",
+    "attempt_count_per_request": 1,
+    "operator_export_recovery_used": false,
+    "scope": "Actual Chromium/GCC/Cloud/Pi/LiteLLM/OfficeCLI synthetic DOCX pair; overlap measured from saved sessions, separately from UI running labels. Exact edit/original/checksum and prompt snapshot checks. No rendered-layout, general semantic, OS-confinement or broad stability claim.",
+    "evidence": [
+      "../../docs/release/shared-hosted-concurrent.json",
+      "../../docs/release/shared-workspace-resume.json"
+    ]
+  },
+  "combined_prompt_local_qualification": {
+    "outcome": "passed",
+    "model_calls": "actual Pi/LiteLLM/OfficeCLI in exact slim image",
+    "evidence": "../../docs/release/combined-prompt-local.json"
   }
 }

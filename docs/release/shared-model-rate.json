@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "operation": "workflow-dedicated-model-rate-correction",
+  "recorded_at": "2026-11-04T13:09:56.348682+00:00",
+  "outcome": "passed",
+  "key_alias": "workflow-agents-document-v1",
+  "before_rpm_limit": 10,
+  "after_rpm_limit": 60,
+  "max_parallel_requests": 2,
+  "max_budget_usd": 5,
+  "tpm_limit": 100000,
+  "models": [
+    "bots/claude-sonnet-5.5"
+  ],
+  "endpoint": "https://litellm.gccssofia.com/v1",
+  "failed_pair_diagnosis": {
+    "operation": "fixed-capacity-guest-read-only",
+    "records": [
+      {
+        "request_id": "8490a42a-8667-45f9-889a-bc71d86757b4",
+        "validation_codes": [
+          "agent_execution_failed"
+        ],
+        "result_text_chars": 131,
+        "session_entries": 20,
+        "message_roles": [
+          "system",
+          "user",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "assistant",
+          "assistant",
+          "assistant"
+        ],
+        "stop_reasons": [
+          "toolUse",
+          "toolUse",
+          "toolUse",
+          "toolUse",
+          "error",
+          "error",
+          "error",
+          "error"
+        ],
+        "error_categories": {
+          "429": true,
+          "400": false,
+          "401": false,
+          "500": false,
+          "503": false,
+          "budget": false,
+          "rate": true,
+          "context": false,
+          "timeout": false,
+          "overload": false,
+          "concurrent": false,
+          "rpm": false,
+          "tpm": false,
+          "parallel": false,
+          "cooldown": false,
+          "github": false,
+          "copilot": false,
+          "retry": false,
+          "KeyRateLimitError": false,
+          "user_api_key": false
+        },
+        "tool_calls": [
+          "officecli",
+          "officecli",
+          "officecli",
+          "officecli"
+        ]
+      },
+      {
+        "request_id": "2762eccb-1599-480f-89ac-ce18a2756112",
+        "validation_codes": [
+          "agent_execution_failed"
+        ],
+        "result_text_chars": 131,
+        "session_entries": 26,
+        "message_roles": [
+          "system",
+          "user",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "toolResult",
+          "assistant",
+          "assistant",
+          "assistant",
+          "assistant"
+        ],
+        "stop_reasons": [
+          "toolUse",
+          "toolUse",
+          "toolUse",
+          "toolUse",
+          "toolUse",
+          "toolUse",
+          "error",
+          "error",
+          "error",
+          "error"
+        ],
+        "error_categories": {
+          "429": true,
+          "400": false,
+          "401": false,
+          "500": false,
+          "503": false,
+          "budget": false,
+          "rate": true,
+          "context": false,
+          "timeout": false,
+          "overload": false,
+          "concurrent": false,
+          "rpm": false,
+          "tpm": false,
+          "parallel": false,
+          "cooldown": false,
+          "github": false,
+          "copilot": false,
+          "retry": false,
+          "KeyRateLimitError": false,
+          "user_api_key": false
+        },
+        "tool_calls": [
+          "officecli",
+          "officecli",
+          "officecli",
+          "officecli",
+          "officecli",
+          "officecli",
+          "officecli",
+          "officecli"
+        ]
+      }
+    ]
+  },
+  "scope": "Dedicated Workflow Agents virtual key only; model scope, concurrency and budget retained. Two saved sessions exhausted the former model-call allowance during tool steps; no failed request replayed."
+}

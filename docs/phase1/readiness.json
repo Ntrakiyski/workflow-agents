@@ -43,9 +43,9 @@
       }
     },
     "latest_deployments": {
-      "job-runner": "qxdmf2udt1aotfbtkvjbyphf",
-      "sandbox-provider": "f3ynfn7t8mjedta8pmoesshw",
-      "application": "jorlzdpk0c0ytxk3xnwuhque"
+      "job-runner": "cnjp6nm35djame2lrygqs990",
+      "sandbox-provider": "eqzxxyzt4pmspla9u31xgwue",
+      "application": "dyz7uuqur0tzucwfm8bqyps3"
     },
     "historical_rc1_resource_statuses": [
       {
@@ -525,26 +525,176 @@
     "report": "docs/phase1/GCC-MIGRATION-REPORT.md"
   },
   "ci": {
-    "commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
-    "run": 41703357570,
-    "url": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41703357570",
+    "commit": "fe7301333ef3503e832c1d8a3fcadb8f51facd34",
+    "infrastructure_run": 41835125321,
+    "application_run": 41835125346,
     "outcome": "passed",
-    "contracts": 6,
-    "runner_tap_passes": 21,
-    "provider_passes": 75,
-    "provider_hardware_conditional_skips": 2,
-    "real_runtime_deselected": 1,
-    "scope": "Actual GitHub Actions PostgreSQL; Provider fake runtimes/actual SDK loopback; no hosted Cloud claim. Local Provider run passed 77 without those conditional skips. Infrastructure remains deployed at 8387b5d; this is source verification at the independently advanced application commit."
+    "scope": "Real disposable PostgreSQL/RustFS with mocked execution, real local supervisor subprocesses and controller regressions; no hosted Cloud/model call."
   },
   "runtime_backend": "boxlite-cloud",
-  "recorded_at_utc": "2026-11-03T20:03:38Z",
+  "recorded_at_utc": "2026-11-04T13:17:02.901Z",
   "service_versions": {
+    "job-runner": "1.0.0-rc.3",
+    "sandbox-provider": "1.0.0-rc.3",
+    "application": "0.2.0-rc.1",
+    "pi-document-agent": "0.1.0-rc.4"
+  },
+  "deployments": {
+    "observation_time_utc": "2026-11-04T13:17:02.901Z",
+    "basis": "Finished configured deployment identities and service/database privacy; trusted HTTPS and published application health/authentication. Separate hosted request and restore evidence establishes execution and logical recovery.",
+    "last_confirmed": {
+      "job-runner": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+      "sandbox-provider": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+      "application": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac"
+    },
+    "deployment_ids": {
+      "job-runner": "cnjp6nm35djame2lrygqs990",
+      "sandbox-provider": "eqzxxyzt4pmspla9u31xgwue",
+      "application": "dyz7uuqur0tzucwfm8bqyps3"
+    },
+    "state": "finished and running:healthy",
+    "temporary_tasks_remaining": 0,
+    "private_storage": {
+      "name": "workflow-files",
+      "uuid": "qd41pkivqrnkwwsj1nr52s0k",
+      "status": "running:healthy",
+      "commit": "HEAD",
+      "deployment_uuid": "n79eilpg37gjlq7ye4wasl7x",
+      "public": false,
+      "host_ports": false,
+      "temporary_tasks": 0
+    },
+    "evidence": "docs/release/shared-final-live-state.json",
+    "latest_backup_capture_sources": {
+      "job-runner": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+      "sandbox-provider": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+      "application": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac"
+    }
+  },
+  "application_candidate": {
+    "origin": "https://workflow-agents.68.210.88.115.sslip.io",
+    "application_release": "0.2.0-rc.1",
+    "workload_release": "0.1.0-rc.4",
+    "tool_bundle_release": "0.1.0-rc.3",
+    "sandbox_profile": "pi-document-cloud:v3",
+    "prepare_workload_profile": "pi-document-prepare:v4",
+    "workload_profile": "pi-document-agent:v4",
+    "profile_source_commit": "1f46823e3241d03278892ff3fb7487746e2274ba",
+    "capacity_configuration_commit": "0e62bfc859c12385f06afe9d02d6d73dfbdda70a",
+    "runtime_bundle_sha256": "2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc",
+    "runtime_bundle_bytes": 95978009,
+    "hosted_qualified": true,
+    "hosted_qualification_scope": "Actual Chromium/GCC/Cloud/Pi/LiteLLM/OfficeCLI synthetic DOCX pair; overlap measured from saved sessions, separately from UI running labels. Exact edit/original/checksum and prompt snapshot checks. No rendered-layout, general semantic, OS-confinement or broad stability claim.",
+    "concurrent_requests": [
+      "36144844-b877-43ee-a7c6-aec106341b4f",
+      "c627fb94-acc8-4d5c-a475-5ef3fb84ffca"
+    ],
+    "session_overlap": {
+      "start": "2026-11-04T13:10:11.605Z",
+      "end": "2026-11-04T13:10:21.252Z",
+      "milliseconds": 9647
+    },
+    "same_disk_resume": "passed",
+    "prompt_delivery": "Saved default plus request instructions in one text prompt on the existing endpoint",
+    "retained_pre_upgrade_requests": 4,
+    "evidence": [
+      "docs/release/shared-hosted-concurrent.json",
+      "docs/release/shared-workspace-resume.json",
+      "docs/release/shared-archived-prompts.json"
+    ]
+  },
+  "historical_rc1_ci": {
+    "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
+    "run": 41647734872,
+    "outcome": "passed",
+    "contracts": 5,
+    "runner_tap_passes": 21,
+    "provider_passes": 52,
+    "provider_skips": 2,
+    "real_runtime_deselected": 1,
+    "scope": "Historical rc1 CI at the recorded source; later local and hosted evidence does not replace or extend this CI result."
+  },
+  "deployed_application_commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+  "application_ci": {
+    "commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+    "run": 41826416700,
+    "outcome": "passed",
+    "api_passes": 17,
+    "checkpoint_passes": 2,
+    "cache_passes": 5,
+    "browser_passes": 2,
+    "scope": "Deployed application code; actual PostgreSQL/RustFS with mocked execution. Current integrated CI is recorded separately."
+  },
+  "deployed_service_commit_scope": "Runner and Provider infrastructure only; deployed_application_commit tracks the independently advanced application.",
+  "completed_data_recovery": {
+    "outcome": "passed",
+    "capture_session": "20261104T131307662Z-ae916641-4be5-4aa4-9561-f9178fc0ba21",
+    "capture_manifest_sha256": "3c1f498efffb126a1bc41785b8bd58f31926cbca270a9f939c317ea586850e7b",
+    "capture_source_commits": {
+      "job-runner": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+      "sandbox-provider": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+      "application": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac"
+    },
+    "installed_operator_commit": "1f46823e3241d03278892ff3fb7487746e2274ba",
+    "installed_service_invocation": "passed",
+    "daily_timer_enabled": true,
+    "daily_timer_active": true,
+    "authenticated_archives": 3,
+    "application_tables": 7,
+    "application_objects": 55,
+    "application_object_bytes": 453829,
+    "application_audit_rows": 93,
+    "application_requests": 15,
+    "runtime_bytes": 95978009,
+    "runtime_sha256": "2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc",
+    "runtime_reconstructed_in_new_bucket": true,
+    "profile_inventory_sha256": "7df65d2f2157be95c3081a9b7ffdddea6a1b382643c3da7bc0c95c936bd26717",
+    "application_repeated_restore": true,
+    "forensic_registry_repeated_restore": true,
+    "runtime_client_started": false,
+    "cloud_guest_restored": false,
+    "operational_provider_cutover_permitted": false,
+    "scope": "Matching seven-table application rows and immutable objects restored twice; rc3 tools reconstructed and checksum-downloaded from a new bucket. Runner/Provider rows, audits and sequences compared twice in offline disposable databases. No Cloud disk, runtime rebinding, restored worker or operational cutover.",
+    "evidence": [
+      "docs/release/shared-offhost-backup.json",
+      "docs/release/shared-application-restore.json",
+      "docs/release/shared-infrastructure-forensic-restore.json",
+      "docs/release/shared-archived-prompts.json",
+      "docs/release/shared-checkpoint-secret-scan.json"
+    ]
+  },
+  "shared_candidate_ci": {
+    "commit": "fe7301333ef3503e832c1d8a3fcadb8f51facd34",
+    "infrastructure_run": 41835125321,
+    "application_run": 41835125346,
+    "outcome": "passed",
+    "scope": "Real disposable PostgreSQL/RustFS with mocked execution, real local supervisor subprocesses and controller regressions; no hosted Cloud/model call."
+  },
+  "shared_user_sandboxes": {
+    "status": "bounded_hosted_qualified",
+    "report": "docs/release/SHARED-SANDBOX.md",
+    "capacity_per_user": 2,
+    "runner_global_capacity": 2,
+    "provider_dispatch_capacity": 2,
+    "model_parallel_calls": 2,
+    "model_calls_per_minute": 60,
+    "tool_bundle_version": "0.1.0-rc.3",
+    "controller_version": "0.1.0-rc.4",
+    "retained_sandbox_id": "sbx_90cbc75fdd2c405cab2ffff81fee921c",
+    "prepare_job_id": "job_336ddeee-69a6-40a6-a081-f0e7a726926b",
+    "actual_saved_session_overlap_ms": 9647,
+    "idle_stop": "passed",
+    "same_disk_resume_without_preparation": "passed",
+    "seven_table_restore": "passed",
+    "stable_release": false
+  },
+  "historical_rc2_service_versions": {
     "job-runner": "1.0.0-rc.1",
     "sandbox-provider": "1.0.0-rc.2",
     "application": "0.1.0-rc.1",
     "pi-document-agent": "0.1.0-rc.2"
   },
-  "deployments": {
+  "historical_rc2_deployments": {
     "observation_time_utc": "2026-11-03T19:59:33.850Z",
     "basis": "Integration lead final scoped control-plane/readiness readback confirms all four resources healthy and latest deployments finished. Trusted HTTPS primary 200, anonymous 401 and removed QA 401; no private service public origin, host ports or temporary tasks. Independent browser checks separately verify exact completed output retention; documentation worker made no live calls.",
     "last_confirmed": {
@@ -587,7 +737,7 @@
       "application": "1d21e27a571388484774e401cc5d5a5a3cec0973"
     }
   },
-  "application_candidate": {
+  "historical_rc2_application_candidate": {
     "origin": "https://workflow-agents.68.210.88.115.sslip.io",
     "workload_release": "0.1.0-rc.2",
     "sandbox_profile": "pi-document-cloud:v2",
@@ -661,31 +811,7 @@
       "docs/release/hosted-recovered-final-persistence.json"
     ]
   },
-  "historical_rc1_ci": {
-    "commit": "04b7dc46dc8e1bc6c126f8304823c4739d5ec5c9",
-    "run": 41647734872,
-    "outcome": "passed",
-    "contracts": 5,
-    "runner_tap_passes": 21,
-    "provider_passes": 52,
-    "provider_skips": 2,
-    "real_runtime_deselected": 1,
-    "scope": "Historical rc1 CI at the recorded source; later local and hosted evidence does not replace or extend this CI result."
-  },
-  "deployed_application_commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
-  "application_ci": {
-    "commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
-    "run": 41826416700,
-    "url": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41826416700",
-    "outcome": "passed",
-    "api_passes": 17,
-    "checkpoint_passes": 2,
-    "cache_passes": 5,
-    "browser_passes": 2,
-    "scope": "Actual GitHub Actions on deployed application source; real PostgreSQL/RustFS, mocked execution. Hosted Cloud/Pi proof recorded separately."
-  },
-  "deployed_service_commit_scope": "Runner and Provider infrastructure only; deployed_application_commit tracks the independently advanced application.",
-  "completed_data_recovery": {
+  "historical_rc2_completed_data_recovery": {
     "outcome": "passed",
     "capture_session": "20261103T195631749Z-4c8fd4ea-4b04-4f0b-b2e4-e57a22e3a80f",
     "capture_manifest_sha256": "ddc8c34e85c03677acf8a6b8b48ba81a72e1881c7e03d5ee7cc15bb3d919f580",
@@ -735,18 +861,16 @@
     ],
     "forensic_manifest_binding_verified": true
   },
-  "shared_candidate_ci": {
-    "commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
-    "infrastructure_run": 41826416628,
-    "application_run": 41826416700,
+  "historical_rc2_ci": {
+    "commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+    "run": 41703357570,
+    "url": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41703357570",
     "outcome": "passed",
-    "scope": "Real disposable PostgreSQL/RustFS with mocked runtimes and actual local supervisor subprocesses; no hosted Cloud/model call."
-  },
-  "shared_user_sandboxes": {
-    "status": "hosted_verification_in_progress",
-    "report": "docs/release/SHARED-SANDBOX.md",
-    "capacity_per_user": 2,
-    "runtime_version": "0.1.0-rc.3",
-    "stable_release": false
+    "contracts": 6,
+    "runner_tap_passes": 21,
+    "provider_passes": 75,
+    "provider_hardware_conditional_skips": 2,
+    "real_runtime_deselected": 1,
+    "scope": "Actual GitHub Actions PostgreSQL; Provider fake runtimes/actual SDK loopback; no hosted Cloud claim. Local Provider run passed 77 without those conditional skips. Infrastructure remains deployed at 8387b5d; this is source verification at the independently advanced application commit."
   }
 }

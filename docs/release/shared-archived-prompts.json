@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "operation": "authenticated-archive-combined-prompt-session-verification",
+  "recorded_at": "2026-11-04T13:16:38.212Z",
+  "outcome": "passed",
+  "checks": [
+    {
+      "request_id": "36144844-b877-43ee-a7c6-aec106341b4f",
+      "manifest_snapshot_matches": true,
+      "one_combined_user_message": true,
+      "default_and_request_instructions_present": true,
+      "actual_uuid_directory_present": true,
+      "independent_session": true
+    },
+    {
+      "request_id": "c627fb94-acc8-4d5c-a475-5ef3fb84ffca",
+      "manifest_snapshot_matches": true,
+      "one_combined_user_message": true,
+      "default_and_request_instructions_present": true,
+      "actual_uuid_directory_present": true,
+      "independent_session": true
+    },
+    {
+      "request_id": "5d072884-a8ca-4b09-9879-a00f4efb3c02",
+      "manifest_snapshot_matches": true,
+      "one_combined_user_message": true,
+      "default_and_request_instructions_present": true,
+      "actual_uuid_directory_present": true,
+      "independent_session": true
+    }
+  ],
+  "scope": "In-memory authenticated request rows, immutable request manifests and saved Pi sessions; no prompt bodies, document contents or credentials emitted."
+}

@@ -1,6 +1,12 @@
 # Workload verification
 
-Recorded 4 November 2026 for workload candidate 0.1.0-rc.3. Hosted qualification for this new shared-runtime version is pending; stable release and Phase 1 readiness remain false.
+Current controller candidate is `0.1.0-rc.4`, profile `pi-document-agent:v4`, reusing the unchanged rc3 tools. The saved default prompt and request instructions are combined into one text prompt on the existing endpoint. See the [current shared-workspace report](../../docs/release/SHARED-SANDBOX.md) for exact live and configuration sources, hosted session overlap and retained-disk reuse evidence. The two Node and 17 Python controller regressions, plus a [real local Pi/LiteLLM/OfficeCLI check](../../docs/release/combined-prompt-local.json), passed. Stable readiness remains false.
+
+The [hosted pair](../../docs/release/shared-hosted-concurrent.json) completed both requests on attempt 1 with 9,647 ms of saved Pi session overlap in one retained sandbox, separate UUID IDs/cwds, validated protected outputs and complete exports before safe idle stop. The [resume check](../../docs/release/shared-workspace-resume.json) reused the same disk/preparation job with unchanged uploaded bytes. These are integration-lead checks; the earlier independent source review did not repeat the v4 controller or hosted model journey.
+
+## Historical rc3 tool-bundle qualification
+
+Recorded 4 November 2026 for workload candidate 0.1.0-rc.3. The table below records the original tool-bundle checks; current controller/hosted qualification is linked above. Stable release and Phase 1 readiness remain false.
 
 | Check | Executed scope | Result |
 | --- | --- | --- |
