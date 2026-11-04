@@ -78,6 +78,19 @@ class Contracts(unittest.TestCase):
    invalid(write,{'file':path,'text':'hello'})
   invalid(write,{'file':'file.txt','text':'hello','command':'evil'})
   invalid(write,{'file':'file.txt','text':'x'*4097})
+ def test_shared_execution_capacity_is_opt_in_and_bounded(self):
+  v=Draft202012Validator(load('profiles.schema.json'))
+  template=load('profiles.template.json')
+  profile=template['sandboxes']['minimal-linux:v1']
+  profile['image']='example.invalid/test-fixture@sha256:'+'0'*64
+  valid(v,template)
+  for capacity in (1,2,8):
+   profile['max_concurrent_runs']=capacity
+   valid(v,template)
+  for capacity in (0,9,1.5,True,'2'):
+   profile['max_concurrent_runs']=capacity
+   invalid(v,template)
+  self.assertNotIn('max_concurrent_runs',load('profiles.template.json')['sandboxes']['minimal-linux:v1'])
  def test_scoped_transfer_addition_preserves_existing_wire_shapes(self):
   doc=load('provider-v1.openapi.json')
   valid(validator(doc,'FileUploadRequest'),{'path':'requests/request-1/inputs/a.txt','size_bytes':1,'sha256':'a'*64})
