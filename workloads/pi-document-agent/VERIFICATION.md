@@ -1,5 +1,24 @@
 # Workload verification
 
+Recorded 4 November 2026 for workload candidate 0.1.0-rc.3. Hosted qualification for this new shared-runtime version is pending; stable release and Phase 1 readiness remain false.
+
+| Check | Executed scope | Result |
+| --- | --- | --- |
+| `npm ci --ignore-scripts --no-audit --no-fund` | Actual npm integrity-locked packages; lifecycle scripts disabled | Passed; host npm initially reported Node22 engine warning; the packaged runtime and exact-image smoke use locked Node24.22.2 |
+| `npm test` | Two Node tool boundary checks and 15 Python regression checks | Passed; includes actual concurrent guest subprocesses with a fake Pi executable, archive preparation/identity/read-only checks, prompt placement, replay fences and original validation checks |
+| Two independent runtime builds `output/rc3-b` and `output/rc3-c` | Fresh vendor downloads, integrity-locked npm install and locked-image ICU extraction | Identical SHA256 `2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc`; 95,978,009 compressed bytes, 313,358,734 expanded bytes |
+| `tests/shared-runtime-smoke.py` in exact slim image | Two concurrent actual Node/Pi-version/OfficeCLI sessions sharing one read-only runtime, with independent homes/documents and all runtime file checksums compared before/after | Passed; both persisted Unicode edits/readback, OfficeCLI schema and bundled guest validation; shared runtime unchanged |
+| Runtime preparation and per-request bootstrap | Real local archive bytes and files; normal bootstrap called with archive removed after preparation | Passed; ordinary execution requires the published exact identity and does not open the archive |
+| System-prompt boundary | Saved policy and instructions passed as system content; TXT reference only in user content; canonical request directory appended | Passed via direct prompt-boundary regression and concurrent guest subprocess argument inspection |
+| Model calls, BoxLite Cloud concurrent sessions and independent cancellation | Not performed by this workload package | Unqualified here; integration evidence must qualify new services/profiles |
+| Rendered layout, pagination and semantic/content accuracy | Not performed | Unqualified |
+
+The exact image is `docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337`, using no network, a read-only root and runtime/source mounts, all capabilities dropped, no-new-privileges, 2 CPUs, 2 GiB RAM, 128 PIDs and 256 MiB writable `/tmp` tmpfs. Node 24.22.2, Pi 1.5.0 and OfficeCLI 1.0.160 are actual binaries; the Pi smoke checks its version and uses the actual constrained extension for OfficeCLI, but does not call a model. Concurrent guest process tests execute the real Python workload with a fake Pi executable; they establish request/session/file separation rather than model behavior or Cloud isolation.
+
+The v3 renderer emits sandbox `pi-document-cloud:v3` with `max_concurrent_runs:2`, preparation workload `pi-document-prepare:v3` and request workload `pi-document-agent:v3`. Preparation is separately tracked, has no LiteLLM secret and publishes an exact pinned runtime only after checksum verification. Normal request jobs refuse absent, wrong, symlinked or writable prepared identities, use UUID-local session/config/home/temp/cache paths and disable Jiti filesystem caching. Runtime files and directories are read-only; the existing constrained tool still enforces the assigned working-copy path. This is not OS-level per-request isolation inside one user sandbox, and the system prompt alone is not a filesystem security boundary.
+
+## Historical rc2 qualification
+
 Recorded 3 November 2026 for workload candidate 0.1.0-rc.2. This report is not Phase 1 or application readiness approval.
 
 | Check | Executed scope | Result |

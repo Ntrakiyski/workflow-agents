@@ -17,12 +17,19 @@ def profile(metadata, image, base_url, model):
     if url.scheme != 'https' or not url.hostname or url.port not in (None, 443) or url.username or url.password or url.query or url.fragment:
         raise ValueError('HTTPS LiteLLM endpoint required')
     bootstrap = (ROOT / 'bootstrap.py').read_text()
-    sandbox_id, workload_id = 'pi-document-cloud:v2', 'pi-document-agent:v2'
+    sandbox_id, workload_id = 'pi-document-cloud:v3', 'pi-document-agent:v3'
     return {'version': 1, 'sandboxes': {sandbox_id: {
         'image': image, 'cpus': 2, 'memory_mib': 2048, 'disk_mib': 2048,
+        'max_concurrent_runs': 2,
         'network': 'allowlist', 'allowed_hosts': [url.hostname],
         'entrypoint': ['/usr/local/bin/python3', '-c', 'import time; time.sleep(31536000)'], 'cmd': []}},
-        'workloads': {workload_id: {
+        'workloads': {'pi-document-prepare:v3': {
+            'sandbox_profiles': [sandbox_id], 'working_directory': '/',
+            'max_duration_seconds': 180, 'max_output_bytes': 4096,
+            'environment': {},
+            'argv': ['/usr/local/bin/python3', '-c', bootstrap, metadata['sha256'], '--prepare'],
+            'arguments_schema': {'type': 'object', 'properties': {}, 'additionalProperties': False}},
+        workload_id: {
             'sandbox_profiles': [sandbox_id], 'working_directory': '/',
             'max_duration_seconds': 900, 'max_output_bytes': 4096,
             'environment': {'LITELLM_BASE_URL': base_url, 'LITELLM_MODEL_ALIAS': model,

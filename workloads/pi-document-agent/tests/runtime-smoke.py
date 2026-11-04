@@ -19,9 +19,12 @@ runtime = parser.parse_args().runtime.resolve()
 with tempfile.TemporaryDirectory() as temp:
     root = Path(temp)
     (root / 'outputs').mkdir()
+    (root / 'tmp').mkdir()
     document = root / 'outputs/document.docx'
     env = os.environ | {'HOME': str(root), 'OFFICECLI_NO_AUTO_RESIDENT': '1', 'LD_LIBRARY_PATH': str(runtime / 'lib'),
-                        'PI_REQUEST_ROOT': str(root), 'PI_DOCX_PATH': str(document)}
+                        'PI_REQUEST_ROOT': str(root), 'PI_DOCX_PATH': str(document),
+                        'TMPDIR': str(root / 'tmp'), 'JITI_FS_CACHE': 'false',
+                        'XDG_CACHE_HOME': str(root / 'cache')}
     def run(argv):
         return subprocess.check_output(argv, env=env, text=True, timeout=90).strip()
     assert run([str(runtime / 'node'), '--version']) == 'v24.22.2'

@@ -20,4 +20,6 @@ The runtime includes checksum-locked ICU libraries copied only from the pinned i
 
 Run `npm ci --ignore-scripts`, `npm test`, `python3 build_runtime.py`, then `python3 tests/runtime-smoke.py --runtime <extracted-runtime>`. Record real binaries, mocked checks, real model/runtime checks and blocked checks separately. A local binary pass is not Cloud or full application acceptance.
 
-The rc2 hosted qualification is bounded to the uninterrupted synthetic DOCX journey recorded in `VERIFICATION.md` and `release.json`. Preserve its source/runtime/request/job/sandbox/run identities and evidence attribution. It does not approve a stable release, general network isolation, rendered layout, semantic accuracy or broad infrastructure recovery.
+The rc3 shared-runtime candidate requires independent hosted qualification. Preparation is a separate tracked job before user workspace readiness; normal requests must never reinstall or rescan shared runtime bytes. Each UUID request owns its Pi session, HOME, temporary files and cache. Keep Jiti disk caching disabled and OfficeCLI nonresident. Stop only when sibling work and exports are idle.
+
+The historical rc2 hosted qualification is bounded to the uninterrupted synthetic DOCX journey recorded in `VERIFICATION.md` and `release.json`. Preserve its source/runtime/request/job/sandbox/run identities and evidence attribution. It does not approve a stable release, general network isolation, rendered layout, semantic accuracy or broad infrastructure recovery.
