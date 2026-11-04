@@ -1,8 +1,11 @@
 """Render reviewed workload configuration; output contains no credentials."""
 import argparse
+import base64
+import hashlib
 import json
 from pathlib import Path
 import re
+import zlib
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
@@ -17,18 +20,32 @@ def profile(metadata, image, base_url, model):
     if url.scheme != 'https' or not url.hostname or url.port not in (None, 443) or url.username or url.password or url.query or url.fragment:
         raise ValueError('HTTPS LiteLLM endpoint required')
     bootstrap = (ROOT / 'bootstrap.py').read_text()
-    sandbox_id, workload_id = 'pi-document-cloud:v2', 'pi-document-agent:v2'
+    controller = (ROOT / 'guest.py').read_bytes()
+    compressed = base64.b64encode(zlib.compress(controller)).decode()
+    launch = ('import base64,zlib,hashlib\nCONTROLLER_SOURCE=zlib.decompress(base64.b64decode('
+              + repr(compressed) + ')).decode()\nif hashlib.sha256(CONTROLLER_SOURCE.encode()).hexdigest()!='
+              + repr(hashlib.sha256(controller).hexdigest()) + ':raise ValueError("Controller checksum mismatch")\n' + bootstrap)
+    if len(launch) > 16384:
+        raise ValueError('Trusted controller profile exceeds argument bound')
+    sandbox_id, workload_id = 'pi-document-cloud:v3', 'pi-document-agent:v4'
     return {'version': 1, 'sandboxes': {sandbox_id: {
         'image': image, 'cpus': 2, 'memory_mib': 2048, 'disk_mib': 2048,
+        'max_concurrent_runs': 2,
         'network': 'allowlist', 'allowed_hosts': [url.hostname],
         'entrypoint': ['/usr/local/bin/python3', '-c', 'import time; time.sleep(31536000)'], 'cmd': []}},
-        'workloads': {workload_id: {
+        'workloads': {'pi-document-prepare:v4': {
+            'sandbox_profiles': [sandbox_id], 'working_directory': '/',
+            'max_duration_seconds': 180, 'max_output_bytes': 4096,
+            'environment': {},
+            'argv': ['/usr/local/bin/python3', '-c', bootstrap, metadata['sha256'], '--prepare'],
+            'arguments_schema': {'type': 'object', 'properties': {}, 'additionalProperties': False}},
+        workload_id: {
             'sandbox_profiles': [sandbox_id], 'working_directory': '/',
             'max_duration_seconds': 900, 'max_output_bytes': 4096,
             'environment': {'LITELLM_BASE_URL': base_url, 'LITELLM_MODEL_ALIAS': model,
                             'PI_EXECUTION_TIMEOUT_SECONDS': '600'},
             'secret_environment': {'LITELLM_API_KEY': 'WORKLOAD_SECRET_LITELLM_API_KEY'},
-            'argv': ['/usr/local/bin/python3', '-c', bootstrap, metadata['sha256'], '${arg:request_id}'],
+            'argv': ['/usr/local/bin/python3', '-c', launch, metadata['sha256'], '${arg:request_id}'],
             'arguments_schema': {'type': 'object', 'properties': {
                 'request_id': {'type': 'string', 'pattern': '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'}},
                 'required': ['request_id'], 'additionalProperties': False}}}}

@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "operation": "hosted-shared-workspace-browser-journey",
+  "outcome": "passed",
+  "configuration_source_commit": "1f46823e3241d03278892ff3fb7487746e2274ba",
+  "application_source_commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+  "infrastructure_source_commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+  "workload_profile": "pi-document-agent:v4",
+  "tool_bundle_sha256": "2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc",
+  "browser": {
+    "version": 1,
+    "started_at": "2026-11-04T12:48:39.387Z",
+    "requests": [
+      {
+        "id": "f91242fd-4b29-4c97-b19d-4097f5cc8a07",
+        "marker": "WORKFLOW_SHARED_A_39cc0b2c-56d0-4a80-8b6c-5171a2e911b9",
+        "output": {
+          "id": "de3ab1c2-537b-487a-8013-be33bd655a5b",
+          "sha256": "a1510e4f950da9b7e67f3ffa466b3f13786a46e23ca21ef69b93334247096eb3",
+          "size_bytes": 1553,
+          "exact_marker_count": 1,
+          "original_preserved": true
+        },
+        "prompt_snapshot_verified": true
+      },
+      {
+        "id": "8f8a0e0c-62f9-442c-9e2b-6a1774e39b59",
+        "marker": "WORKFLOW_SHARED_B_1dfc0575-5409-47e8-9959-bc09471b540c",
+        "output": {
+          "id": "015628b9-4c64-48b4-932f-13d5feabd519",
+          "sha256": "03f1d12debb7003858050d076e9c46f5f9e86ea717595392659a73755e37a33e",
+          "size_bytes": 1555,
+          "exact_marker_count": 1,
+          "original_preserved": true
+        },
+        "prompt_snapshot_verified": true
+      }
+    ],
+    "checks": {
+      "anonymous_denied": true,
+      "prompt_collapsed_edit_saved_reload": true,
+      "default_restored_snapshots_preserved": true,
+      "browser_protected_download_marker_original_prompt_persistence": true
+    },
+    "prompt_sha256": "de1b8d783fd4d9b7072d7db892e8d525a1dc12bb19f6b293fb8f30aee15cd72d",
+    "input_sha256": "4397a77a135ef3e7c2ff2e0a8e01b0b04c6987f1593a3e3986d00bb754a7606c",
+    "finished_at": "2026-11-04T12:51:09.691Z"
+  },
+  "status_observations": {
+    "scope": "actual deployed application status observations",
+    "requests": [
+      "f91242fd-4b29-4c97-b19d-4097f5cc8a07",
+      "8f8a0e0c-62f9-442c-9e2b-6a1774e39b59"
+    ],
+    "timeline": [
+      {
+        "at": "2026-11-04T12:48:52.713Z",
+        "workspace": "ready",
+        "uploaded_bytes": 95978009,
+        "total_bytes": 95978009,
+        "percent": 100,
+        "requests": [
+          {
+            "id": "f91242fd-4b29-4c97-b19d-4097f5cc8a07",
+            "status": "running",
+            "progress": "Pi is working on this request in its own session.",
+            "failure": null
+          },
+          {
+            "id": "8f8a0e0c-62f9-442c-9e2b-6a1774e39b59",
+            "status": "pending",
+            "progress": "Preparing this request\u2019s input files.",
+            "failure": null
+          }
+        ]
+      },
+      {
+        "at": "2026-11-04T12:49:02.804Z",
+        "workspace": "ready",
+        "uploaded_bytes": 95978009,
+        "total_bytes": 95978009,
+        "percent": 100,
+        "requests": [
+          {
+            "id": "f91242fd-4b29-4c97-b19d-4097f5cc8a07",
+            "status": "running",
+            "progress": "Pi is working on this request in its own session.",
+            "failure": null
+          },
+          {
+            "id": "8f8a0e0c-62f9-442c-9e2b-6a1774e39b59",
+            "status": "running",
+            "progress": "Your request is queued. It will start when a session slot is available.",
+            "failure": null
+          }
+        ]
+      },
+      {
+        "at": "2026-11-04T12:49:54.013Z",
+        "workspace": "ready",
+        "uploaded_bytes": 95978009,
+        "total_bytes": 95978009,
+        "percent": 100,
+        "requests": [
+          {
+            "id": "f91242fd-4b29-4c97-b19d-4097f5cc8a07",
+            "status": "completed",
+            "progress": null,
+            "failure": null
+          },
+          {
+            "id": "8f8a0e0c-62f9-442c-9e2b-6a1774e39b59",
+            "status": "running",
+            "progress": "Pi is working on this request in its own session.",
+            "failure": null
+          }
+        ]
+      },
+      {
+        "at": "2026-11-04T12:50:55.577Z",
+        "workspace": "ready",
+        "uploaded_bytes": 95978009,
+        "total_bytes": 95978009,
+        "percent": 100,
+        "requests": [
+          {
+            "id": "f91242fd-4b29-4c97-b19d-4097f5cc8a07",
+            "status": "completed",
+            "progress": null,
+            "failure": null
+          },
+          {
+            "id": "8f8a0e0c-62f9-442c-9e2b-6a1774e39b59",
+            "status": "completed",
+            "progress": null,
+            "failure": null
+          }
+        ]
+      }
+    ],
+    "both_reported_running": true,
+    "completed": true
+  },
+  "scope": "Actual authenticated Chromium desktop/mobile -> GCC app -> Runner -> Provider -> same retained Cloud workspace -> Pi/LiteLLM/OfficeCLI -> controller export -> independent protected output/original checks. Actual Pi session overlap and idle stop are verified separately by the owning-app checkpoint inspection. This first successful v4 pair was serialized by the former Runner queue/global limits of one; it does not prove concurrent execution.",
+  "actual_session_overlap": false
+}

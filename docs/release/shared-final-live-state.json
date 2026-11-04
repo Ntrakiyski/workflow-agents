@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "recorded_at": "2026-11-04T13:17:02.901Z",
+  "operation": "shared-candidate-final-live-readback",
+  "outcome": "passed",
+  "applications": [
+    {
+      "name": "sandbox-provider",
+      "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+      "status": "running:healthy",
+      "commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+      "deployment_uuid": "eqzxxyzt4pmspla9u31xgwue",
+      "public": false,
+      "host_ports": false,
+      "temporary_tasks": 0
+    },
+    {
+      "name": "job-runner",
+      "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+      "status": "running:healthy",
+      "commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+      "deployment_uuid": "cnjp6nm35djame2lrygqs990",
+      "public": false,
+      "host_ports": false,
+      "temporary_tasks": 0
+    },
+    {
+      "name": "workflow-application",
+      "uuid": "7vdsilhnu96tifz7yosm61j1",
+      "status": "running:healthy",
+      "commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+      "deployment_uuid": "dyz7uuqur0tzucwfm8bqyps3",
+      "public": true,
+      "host_ports": false,
+      "temporary_tasks": 0
+    },
+    {
+      "name": "workflow-files",
+      "uuid": "qd41pkivqrnkwwsj1nr52s0k",
+      "status": "running:healthy",
+      "commit": "HEAD",
+      "deployment_uuid": "n79eilpg37gjlq7ye4wasl7x",
+      "public": false,
+      "host_ports": false,
+      "temporary_tasks": 0
+    }
+  ],
+  "databases": [
+    {
+      "name": "sandbox-provider-db",
+      "uuid": "vv6xrcopkfiry4naqltlvlfg",
+      "status": "running:healthy",
+      "public": false
+    },
+    {
+      "name": "job-runner-db",
+      "uuid": "5alfx46nkf9d1vfzdivdybqh",
+      "status": "running:healthy",
+      "public": false
+    },
+    {
+      "name": "workflow-application-db",
+      "uuid": "6sn4lsfrot3nad4cv8gjhkja",
+      "status": "running:healthy",
+      "public": false
+    }
+  ],
+  "health": {
+    "/health/live": {
+      "status": "ok",
+      "service": "application",
+      "version": "0.2.0-rc.1"
+    },
+    "/health/ready": {
+      "status": "ok",
+      "checks": {
+        "database": "ok",
+        "object_storage": "ok"
+      }
+    }
+  },
+  "anonymous_status": 401,
+  "primary_status": 200,
+  "stable_readiness": false,
+  "scope": "Finished configured deployment identities and service/database privacy; trusted HTTPS and published application health/authentication. Separate hosted request and restore evidence establishes execution and logical recovery."
+}

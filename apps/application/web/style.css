@@ -153,13 +153,16 @@ th {
   border-bottom: 1px solid #dfe5e8;
 }
 th:first-child {
-  width: 52%;
+  width: 43%;
 }
 th:nth-child(2) {
-  width: 29%;
+  width: 25%;
+}
+th:nth-child(3) {
+  width: 17%;
 }
 th:last-child {
-  width: 19%;
+  width: 15%;
 }
 td {
   padding: 18px 10px 18px 0;
@@ -303,13 +306,16 @@ td {
     font-size: 25px;
   }
   th:first-child {
-    width: 48%;
+    width: 34%;
   }
   th:nth-child(2) {
-    width: 27%;
+    width: 22%;
+  }
+  th:nth-child(3) {
+    width: 24%;
   }
   th:last-child {
-    width: 25%;
+    width: 20%;
   }
   .date {
     font-size: 11px;
@@ -330,4 +336,90 @@ td {
   .hint {
     font-size: 12px;
   }
+}
+
+.instructions-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.instructions-heading label {
+  margin: 0;
+}
+.prompt-toggle {
+  white-space: nowrap;
+  font-size: 0.875rem;
+  padding: 0.25rem 0;
+}
+.system-prompt-panel {
+  margin: 0.75rem 0;
+  padding: 1rem;
+  background: #f6f7fa;
+  border: 1px solid #dfe3e9;
+  border-radius: 0.5rem;
+}
+.request-prompt {
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+.request-prompt summary {
+  cursor: pointer;
+}
+
+.duration {
+  color: #596a74;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.timeline {
+  list-style: none;
+  padding: 0 0 0 9px;
+  margin: 0;
+}
+.timeline li {
+  position: relative;
+  border-left: 1px solid #d5dfd9;
+  padding: 0 0 20px 24px;
+}
+.timeline li::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: -5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #bac8c0;
+}
+.timeline li:first-child::before {
+  background: #527a63;
+}
+.timeline li:last-child {
+  border-color: transparent;
+  padding-bottom: 0;
+}
+.timeline p {
+  margin: 0 0 4px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.timeline li:first-child p {
+  color: #315542;
+  font-weight: 550;
+}
+.timeline time {
+  font-size: 12px;
+  color: #63747e;
+  font-variant-numeric: tabular-nums;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

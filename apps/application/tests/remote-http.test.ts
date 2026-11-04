@@ -52,7 +52,10 @@ test("HTTP adapters preserve published Runner payload/auth and checksummed bound
   fixture.post("/v1/sandboxes", async (req) => {
     assert.ok(req.headers["idempotency-key"]);
     assert.deepEqual(req.body, {
-      owner_ref: `application:${correlation}`,
+      owner_ref:
+        req.headers["idempotency-key"] === `workspace:create:${correlation}`
+          ? `application:user-workspace:${correlation}`
+          : `application:${correlation}`,
       profile: "fixture:v1",
       persistent: true,
     });
@@ -115,14 +118,26 @@ test("HTTP adapters preserve published Runner payload/auth and checksummed bound
     };
   });
   fixture.post("/v1/jobs", async (req) => {
-    assert.equal(req.headers["idempotency-key"], `submit:${correlation}`);
     assert.ok(submission(req.body), JSON.stringify(submission.errors));
+    if (req.headers["idempotency-key"] === `workspace:prepare:${correlation}`) {
+      assert.deepEqual(req.body, {
+        client_reference: `application:workspace:${correlation}`,
+        workload: { profile: "pi-document-prepare:v3", arguments: {} },
+        sandbox: { mode: "reuse", sandbox_id: "sbx_fixture" },
+        limits: { max_duration_seconds: 180, max_attempts: 1 },
+      });
+    } else
+      assert.equal(req.headers["idempotency-key"], `submit:${correlation}`);
     return job;
   });
   fixture.get("/v1/jobs/job_fixture", async () => job);
   fixture.get("/v1/jobs/job_fixture/events", async () => ({
     events: [{ event_id: "event_1", type: "job.submitted" }],
     next_cursor: null,
+  }));
+  fixture.get("/v1/sandboxes/sbx_fixture", async () => ({ status: "stopped" }));
+  fixture.post("/v1/sandboxes/sbx_fixture/start", async () => ({
+    status: "running",
   }));
   fixture.post("/v1/sandboxes/sbx_fixture/stop", async () => ({
     status: "stopped",
@@ -146,6 +161,19 @@ test("HTTP adapters preserve published Runner payload/auth and checksummed bound
   const client = new HttpExecutionServices(config);
   try {
     assert.equal(await client.createSandbox(correlation), "sbx_fixture");
+    assert.equal(
+      await client.createWorkspaceSandbox(correlation),
+      "sbx_fixture",
+    );
+    assert.equal(
+      (await client.inspect("sbx_fixture", correlation)).status,
+      "stopped",
+    );
+    await client.start("sbx_fixture", correlation);
+    assert.equal(
+      (await client.prepare(correlation, "sbx_fixture")).job_id,
+      "job_fixture",
+    );
     await client.upload(
       "sbx_fixture",
       "runtime/bundle.tar.gz",

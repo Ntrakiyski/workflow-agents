@@ -57,7 +57,7 @@ export async function verifyApplicationRestore(options) {
     evidence.checks.application_package_version = true;
     const migration = snapshot.tables.find(table => table.name === 'schema_migrations');
     evidence.source_migration_versions = migration.rows.map(raw => JSON.parse(raw).version).sort();
-    if (JSON.stringify(evidence.source_migration_versions) !== '[1]') fail('migration_version_mismatch');
+    if (JSON.stringify(evidence.source_migration_versions) !== '[1,2]') fail('migration_version_mismatch');
     if (options.manifest) {
       const rawManifest = await boundedFile(options.manifest, 8 * 1024 * 1024);
       const manifest = JSON.parse(rawManifest.toString('utf8'));

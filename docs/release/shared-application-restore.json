@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "operation": "application-offhost-isolated-restore-verification",
+  "recorded_at": "2026-11-04T13:16:37.978Z",
+  "outcome": "passed",
+  "scope": "application logical rows and exported immutable objects in new local PostgreSQL/RustFS resources; no worker, Cloud guest or host recovery",
+  "checks": {
+    "envelope_authenticated": true,
+    "application_package_version": true,
+    "supplied_manifest_archive_hash": true,
+    "approved_profile_inventory": true,
+    "cached_runtime_reconstructed": true,
+    "isolated_new_resources": true,
+    "matching_schema_and_migration": true,
+    "exact_row_digests": true,
+    "audit_identifiers_and_history": true,
+    "object_sizes_and_checksums": true,
+    "sequence_values": true,
+    "repeated_restore": true
+  },
+  "cleanup": {
+    "database": true,
+    "bucket": true
+  },
+  "source_envelope_sha256": "a16dbec41e5d7148b9be0034a4533b1833b9e26b53b86ed2a338ab803db0b90f",
+  "source_envelope_bytes": 353773,
+  "application_version": "0.2.0-rc.1",
+  "source_migration_versions": [
+    1,
+    2
+  ],
+  "source_manifest_sha256": "3c1f498efffb126a1bc41785b8bd58f31926cbca270a9f939c317ea586850e7b",
+  "deployed_commit_from_manifest": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+  "profile_inventory_sha256": "7df65d2f2157be95c3081a9b7ffdddea6a1b382643c3da7bc0c95c936bd26717",
+  "runtime": {
+    "sha256": "2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc",
+    "bytes": 95978009,
+    "source": "independent host public runtime cache",
+    "isolated_object_reconstruction": true,
+    "download_verified": true
+  },
+  "tables": [
+    {
+      "table": "application.audit",
+      "rows": 93,
+      "rows_sha256": "3f2b1596746838c837792a1a1b7194390aeb131d8cc3e9648d5b6e6243fc5626"
+    },
+    {
+      "table": "application.files",
+      "rows": 55,
+      "rows_sha256": "39281a47cc13014e238ab61a3fcbc3b392fbbb1f1e3914cb07ca8ecf13d5dbb2"
+    },
+    {
+      "table": "application.requests",
+      "rows": 15,
+      "rows_sha256": "4ec64bdb02055c72b747e4cb274e266471d33df464ba43069536588ff1f35433"
+    },
+    {
+      "table": "application.runner_events",
+      "rows": 39,
+      "rows_sha256": "dde9bb3f855b9fe74e31e283df718ef1c133d2585e8fb5a911744b2b4a3918e2"
+    },
+    {
+      "table": "application.schema_migrations",
+      "rows": 2,
+      "rows_sha256": "9357c089f624127f101b640c0240b972ed51c6951bf60c1b6aec9e855e6916d8"
+    },
+    {
+      "table": "application.user_settings",
+      "rows": 1,
+      "rows_sha256": "f06df354b9ef041a27ce48b7fbec6e4df1ab5bfec796d97ae2705feaebfe9fcc"
+    },
+    {
+      "table": "application.user_workspaces",
+      "rows": 1,
+      "rows_sha256": "7eb48e71cf9c14462a5e65f52cc922b5ed663e426d613bb72157b75365e1e7bc"
+    }
+  ],
+  "objects": 55,
+  "object_bytes": 453829,
+  "audit_history_sha256": "3f2b1596746838c837792a1a1b7194390aeb131d8cc3e9648d5b6e6243fc5626",
+  "sequences": 1
+}

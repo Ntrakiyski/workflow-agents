@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /** Apply only this project's recorded service/app configuration; does not deploy. */
+import { verifyApplicationScope } from './coolify-scope.mjs';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -36,13 +37,11 @@ async function api(method, path, body) {
   if (!response.ok) throw Error('Configuration HTTP ' + response.status);
   return await response.json();
 }
-const common = { git_branch: 'release/minimal-application', git_commit_sha: commit,
+const common = { git_branch: 'feat/user-sandboxes', git_commit_sha: commit,
   is_auto_deploy_enabled: false, redact_all_env_values_in_logs: true };
 async function apply(uuid, expectedName, variables, settings) {
   const sourceCommit = expectedName === 'workflow-application' ? applicationCommit : commit;
-  const current = await api('GET', '/applications/' + uuid);
-  if (current.name !== expectedName || current.environment?.uuid !== infra.environment_uuid ||
-      current.environment?.project?.uuid !== infra.project_uuid) throw Error('Project/environment/name mismatch');
+  await verifyApplicationScope(api, { project: infra.project_uuid, environment: infra.environment_uuid, uuid, name: expectedName });
   await api('PATCH', '/applications/' + uuid + '/envs/bulk', { data: Object.entries(variables).map(([key, value]) => ({
     key, value: String(value), is_buildtime: false, is_runtime: true, is_preview: false, is_literal: true })) });
   await api('PATCH', '/applications/' + uuid, { ...common, git_commit_sha: sourceCommit, ...settings });
@@ -62,9 +61,8 @@ async function auth(uuid, key) {
     ? `node -e 'console.log(JSON.stringify(JSON.parse(process.env.RUNNER_AUTH_JSON).map(({token,...p})=>({...p,token_sha256:require("crypto").createHash("sha256").update(token).digest("hex")}))))'`
     : `python -c 'import json,os,hashlib;p=json.loads(os.environ["PROVIDER_AUTH_JSON"]);[x.update(token_sha256=hashlib.sha256(x.pop("token").encode()).hexdigest()) for x in p];print(json.dumps(p))'`;
   if (command.length > 255) throw Error('Policy probe command exceeds control bound');
-  const app = await api('GET', '/applications/' + uuid);
-  if (app.environment?.uuid !== infra.environment_uuid || app.environment?.project?.uuid !== infra.project_uuid)
-    throw Error('Policy probe scope mismatch');
+  const expectedName = uuid === infra.applications['job-runner'] ? 'job-runner' : 'sandbox-provider';
+  const app = await verifyApplicationScope(api, { project: infra.project_uuid, environment: infra.environment_uuid, uuid, name: expectedName });
   const task = await api('POST', '/applications/' + uuid + '/scheduled-tasks', {
     name: 'workflow-policy-' + Date.now(), command, frequency: '* * * * *',
     container: app.settings?.custom_internal_name, enabled: true, timeout: 30 });
@@ -96,8 +94,8 @@ const runnerId = infra.applications['job-runner'], providerId = infra.applicatio
 const runnerAuth = (await auth(runnerId, 'RUNNER_AUTH_JSON')).filter(value => value.actor_id !== 'workflow-application');
 runnerAuth.push({ actor_id: 'workflow-application', owner_id: owner, token: secrets.runner_application_token,
   permissions: ['job:submit', 'job:read'],
-  workload_profiles: ['pi-document-agent:v2'], sandbox_profiles: ['pi-document-cloud:v2'],
-  max_concurrency: 1, max_pending_jobs: 20, allow_resume: false });
+  workload_profiles: ['pi-document-agent:v2', 'pi-document-agent:v3', 'pi-document-prepare:v3', 'pi-document-agent:v4', 'pi-document-prepare:v4'], sandbox_profiles: ['pi-document-cloud:v2', 'pi-document-cloud:v3'],
+  max_concurrency: 2, max_pending_jobs: 20, allow_resume: false });
 const providerAuth = (await auth(providerId, 'PROVIDER_AUTH_JSON')).filter(value => !['workflow-application', 'workflow-release-qa'].includes(value.actor_id));
 const delegates = providerAuth.filter(policy => policy.token === infraSecrets.provider_delegate_token && policy.delegate_owners);
 if (delegates.length !== 1) throw Error('Require exactly the recorded Runner delegate');
@@ -110,14 +108,16 @@ for (const policy of providerAuth) {
 }
 providerAuth.push({ actor_id: 'workflow-application', owner_id: owner, token: secrets.provider_application_token,
   permissions: ['sandbox:create', 'sandbox:read', 'sandbox:start', 'sandbox:stop', 'sandbox:file:read', 'sandbox:file:write'],
-  workload_profiles: ['pi-document-agent:v2'], sandbox_profiles: ['pi-document-cloud:v2'] });
+  workload_profiles: ['pi-document-agent:v2', 'pi-document-agent:v3', 'pi-document-prepare:v3', 'pi-document-agent:v4', 'pi-document-prepare:v4'], sandbox_profiles: ['pi-document-cloud:v2', 'pi-document-cloud:v3'] });
 if (process.env.INCLUDE_QA_ACCOUNT === 'true') providerAuth.push({ actor_id: 'workflow-release-qa',
   owner_id: owner, token: secrets.qa_provider_operator_token, permissions: ['sandbox:read', 'sandbox:destroy'],
-  workload_profiles: [], sandbox_profiles: ['pi-document-cloud:v1','pi-document-cloud:v2'] });
+  workload_profiles: [], sandbox_profiles: ['pi-document-cloud:v1','pi-document-cloud:v2','pi-document-cloud:v3'] });
 await apply(providerId, 'sandbox-provider', { PROVIDER_AUTH_JSON: JSON.stringify(providerAuth),
-  PROVIDER_PROFILES_JSON: JSON.stringify(profiles), WORKLOAD_SECRET_LITELLM_API_KEY: liteKey }, { domains: '' });
+  PROVIDER_PROFILES_JSON: JSON.stringify(profiles), WORKLOAD_SECRET_LITELLM_API_KEY: liteKey,
+  MAX_CONCURRENT_RUNS: 2 }, { domains: '' });
 await apply(runnerId, 'job-runner', { RUNNER_AUTH_JSON: JSON.stringify(runnerAuth),
-  RUNNER_PROFILES_JSON: JSON.stringify(profiles) }, { domains: '' });
+  RUNNER_PROFILES_JSON: JSON.stringify(profiles), QUEUE_CONCURRENCY: 2,
+  MAX_GLOBAL_CONCURRENCY: 2 }, { domains: '' });
 const appOrigin = 'https://workflow-agents.68.210.88.115.sslip.io';
 const users = [{ username: secrets.application_username,
   password_sha256: createHash('sha256').update(secrets.application_password).digest('hex'), owner_id: secrets.application_owner }];
@@ -130,10 +130,11 @@ const variables = { DATABASE_URL: 'postgresql://workflow_application:' + encodeU
   S3_ACCESS_KEY_ID: secrets.storage_access_key, S3_SECRET_ACCESS_KEY: secrets.storage_secret_key,
   RUNNER_URL: 'http://workflow-phase1-job-runner:8080', RUNNER_TOKEN: secrets.runner_application_token,
   PROVIDER_URL: 'http://workflow-phase1-sandbox-provider:8000', PROVIDER_TOKEN: secrets.provider_application_token,
-  SANDBOX_PROFILE: 'pi-document-cloud:v2', WORKLOAD_PROFILE: 'pi-document-agent:v2',
-  RUNTIME_BUNDLE_OBJECT_KEY: 'runtime/08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a/runtime-bundle.tar.gz',
-  RUNTIME_BUNDLE_SHA256: '08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a',
-  INITIALIZE_STORAGE: 'true', RUNTIME_BUNDLE_URL: 'https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.2/runtime-bundle.tar.gz',
+  SANDBOX_PROFILE: 'pi-document-cloud:v3', WORKLOAD_PROFILE: 'pi-document-agent:v4',
+  PREPARE_WORKLOAD_PROFILE: 'pi-document-prepare:v4', REQUEST_CONCURRENCY: '2', IDLE_STOP_SECONDS: '60',
+  RUNTIME_BUNDLE_OBJECT_KEY: 'runtime/2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc/runtime-bundle.tar.gz',
+  RUNTIME_BUNDLE_SHA256: '2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc',
+  INITIALIZE_STORAGE: 'true', RUNTIME_BUNDLE_URL: 'https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.3/runtime-bundle.tar.gz',
   APPLICATION_BACKUP_PASSWORD: secrets.application_backup_password,
   MAX_DURATION_SECONDS: '900', PORT: '8082' };
 await apply(ids.application.uuid, 'workflow-application', variables, { domains: appOrigin,

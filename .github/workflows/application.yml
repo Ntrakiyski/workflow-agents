@@ -1,11 +1,13 @@
 name: Minimal application
 on:
   push:
-    branches: [main, 'release/**', 'app/**', 'ci/**']
+    branches: [main, 'release/**', 'app/**', 'ci/**', 'feat/**']
     paths:
       - 'apps/application/**'
       - 'contracts/**'
       - 'deploy/verify-application-restore.mjs'
+      - 'deploy/coolify-scope.mjs'
+      - 'deploy/coolify-scope.test.mjs'
       - 'deploy/cache-approved-runtime.mjs'
       - 'deploy/tests/cache-approved-runtime.test.mjs'
       - '.github/workflows/application.yml'
@@ -14,6 +16,8 @@ on:
       - 'apps/application/**'
       - 'contracts/**'
       - 'deploy/verify-application-restore.mjs'
+      - 'deploy/coolify-scope.mjs'
+      - 'deploy/coolify-scope.test.mjs'
       - 'deploy/cache-approved-runtime.mjs'
       - 'deploy/tests/cache-approved-runtime.test.mjs'
       - '.github/workflows/application.yml'
@@ -75,6 +79,8 @@ jobs:
       - run: npm run build
       - name: Encrypted checkpoint and isolated database/object restore tests
         run: node --test scripts/application-backup.test.mjs
+      - name: Exact deployment scope boundaries (no network)
+        run: node --test ../../deploy/coolify-scope.test.mjs
       - name: Approved runtime cache boundaries (no network)
         run: node --test ../../deploy/tests/cache-approved-runtime.test.mjs
       - name: Desktop and mobile browser journey (execution mocked)
