@@ -10,8 +10,12 @@ const summary = z.object({
   title: z.string(),
   status: requestStatus,
   created_at: z.string(),
+  finished_at: z.string().nullable(),
 });
 const details = summary.extend({
+  timeline: z.array(
+    z.object({ id: z.string(), message: z.string(), created_at: z.string() }),
+  ),
   instructions: z.string(),
   system_prompt: z.string(),
   progress_message: z.string().nullable(),
@@ -43,11 +47,27 @@ async function api(url: string, init?: RequestInit): Promise<unknown> {
   }
   return value;
 }
-function displayDate(value: string) {
+function displayDate(value: string, seconds = false) {
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
-    timeStyle: "short",
+    timeStyle: seconds ? "medium" : "short",
   }).format(new Date(value));
+}
+function displayDuration(item: Summary, now: number) {
+  const seconds = Math.max(
+    0,
+    Math.floor(
+      ((item.finished_at ? Date.parse(item.finished_at) : now) -
+        Date.parse(item.created_at)) /
+        1000,
+    ),
+  );
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = String(seconds % 60).padStart(2, "0");
+  return hours
+    ? `${hours}h ${String(minutes).padStart(2, "0")}m ${remainder}s`
+    : `${minutes}m ${remainder}s`;
 }
 function Status({ value }: { value: Summary["status"] }) {
   return (
@@ -288,6 +308,14 @@ function RequestList({
   refresh: number;
 }) {
   const [items, setItems] = useState<Summary[]>([]);
+  const [now, setNow] = useState(Date.now);
+  const hasActive = items.some((item) => item.finished_at === null);
+  useEffect(() => {
+    if (!hasActive) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [hasActive]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [next, setNext] = useState<string | null>(null);
   const [pages, setPages] = useState<Array<string | null>>([]);
@@ -352,6 +380,9 @@ function RequestList({
                 <th>Request</th>
                 <th>Created</th>
                 <th>Status</th>
+                <th title="From submission until the result is ready or the request fails, including queue time">
+                  Total time
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -370,6 +401,7 @@ function RequestList({
                   <td>
                     <Status value={item.status} />
                   </td>
+                  <td className="duration">{displayDuration(item, now)}</td>
                 </tr>
               ))}
             </tbody>
@@ -476,17 +508,22 @@ function RequestDetail({
                 "This request used the earlier built-in prompt."}
             </p>
           </details>
-          {request.status === "pending" && (
-            <p role="status" className="notice">
-              {request.progress_message ?? "Your request is pending."}
+          <section aria-labelledby="status-timeline">
+            <h2 id="status-timeline">Status timeline</h2>
+            <p className="sr-only" role="status">
+              {request.timeline[0]?.message}
             </p>
-          )}
-          {request.status === "running" && (
-            <p role="status" className="notice">
-              {request.progress_message ??
-                "Your request is running. The result will appear here when it is ready."}
-            </p>
-          )}
+            <ol className="timeline" aria-label="Status updates, newest first">
+              {request.timeline.map((event) => (
+                <li key={event.id}>
+                  <p>{event.message}</p>
+                  <time dateTime={event.created_at}>
+                    {displayDate(event.created_at, true)}
+                  </time>
+                </li>
+              ))}
+            </ol>
+          </section>
           {request.status === "failed" && (
             <p role="alert" className="error">
               {request.failure_message ??

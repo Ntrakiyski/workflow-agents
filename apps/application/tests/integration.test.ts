@@ -13,6 +13,7 @@ import {
   type ExecutionServices,
   type Job,
 } from "../src/remote.js";
+import { progress } from "../src/progress.js";
 import { inspectDocx, validateDelivery } from "../src/validate.js";
 import { ZipFile } from "yazl";
 
@@ -381,6 +382,135 @@ test("pagination preserves every same-millisecond request and timestamp tie", as
     await pager.close();
   }
 });
+test("status history persists without polling duplicates, is owner scoped, and terminal timing matches the current outcome", async () => {
+  const requestId = (await submit("Timeline and duration fixture")).json().id;
+  const r = (await db.ownedRequest("alice", requestId))!;
+  await db.transaction(async (c) => {
+    await db.progress(c, r, progress.queued);
+    await db.progress(c, r, progress.queued);
+    await db.progress(c, r, progress.working);
+    await db.progress(c, r, progress.working);
+  });
+  const timeline = await db.timeline("alice", requestId);
+  assert.deepEqual(
+    timeline.map((e) => e.message),
+    [progress.working, progress.queued, "Request submitted."],
+  );
+  assert.equal(
+    timeline[0].created_at,
+    timeline[1].created_at,
+    "Same timestamp uses descending event identity",
+  );
+  assert.ok(BigInt(timeline[0].id) > BigInt(timeline[1].id));
+  assert.deepEqual(await db.timeline("bob", requestId), []);
+  const newApi = createApi(db, objects, config);
+  await newApi.ready();
+  try {
+    const reopened = await newApi.inject({
+      url: `/api/requests/${requestId}`,
+      headers: headers(),
+    });
+    assert.deepEqual(reopened.json().timeline, timeline);
+    assert.equal(reopened.json().finished_at, null);
+    assert.equal(
+      (
+        await newApi.inject({
+          url: `/api/requests/${requestId}`,
+          headers: headers("bob"),
+        })
+      ).statusCode,
+      404,
+    );
+    await db.audit(db.pool, r, "request.progress", "application-worker", {
+      message: "PRIVATE AUDIT DETAIL",
+    });
+    await db.audit(db.pool, r, "internal.fixture", "application-worker", {
+      message: "PRIVATE AUDIT DETAIL",
+    });
+    assert.deepEqual(
+      await db.timeline("alice", requestId),
+      timeline,
+      "Unrecognized audit content stays private",
+    );
+    const start = Date.parse(r.created_at);
+    const failed = new Date(start + 2000).toISOString();
+    const completed = new Date(start + 65000).toISOString();
+    for (const [action, at] of [
+      ["request.failed", failed],
+      ["request.completed", completed],
+    ]) {
+      await db.pool.query(
+        "INSERT INTO application.audit(request_id,owner_id,actor_id,action,correlation_id,created_at) VALUES($1,$2,'test',$3,$4,$5)",
+        [r.id, r.owner_id, action, r.correlation_id, at],
+      );
+    }
+    await db.pool.query(
+      "UPDATE application.requests SET status='failed',updated_at=created_at+interval '5 minutes' WHERE id=$1",
+      [r.id],
+    );
+    assert.equal(
+      (
+        await newApi.inject({
+          url: `/api/requests/${requestId}`,
+          headers: headers(),
+        })
+      ).json().finished_at,
+      failed,
+    );
+    await db.pool.query(
+      "UPDATE application.requests SET status='completed' WHERE id=$1",
+      [r.id],
+    );
+    const completedDetail = (
+      await newApi.inject({
+        url: `/api/requests/${requestId}`,
+        headers: headers(),
+      })
+    ).json();
+    assert.equal(
+      completedDetail.finished_at,
+      completed,
+      "Earlier failure and later cleanup cannot inflate completion time",
+    );
+    assert.equal(
+      completedDetail.timeline[0].message,
+      "Result files saved and ready.",
+    );
+    const list = (
+      await newApi.inject({
+        url: "/api/requests?limit=100",
+        headers: headers(),
+      })
+    ).json().requests;
+    assert.equal(
+      list.find((item: { id: string }) => item.id === r.id).finished_at,
+      completed,
+    );
+    assert.ok(
+      !(await newApi.inject({ url: "/api/requests", headers: headers("bob") }))
+        .json()
+        .requests.some((item: { id: string }) => item.id === r.id),
+    );
+    const legacy = (await submit("Legacy terminal timing fixture")).json().id;
+    await db.pool.query(
+      "UPDATE application.requests SET status='failed',updated_at=created_at+interval '3 seconds' WHERE id=$1",
+      [legacy],
+    );
+    const fallback = (
+      await newApi.inject({
+        url: `/api/requests/${legacy}`,
+        headers: headers(),
+      })
+    ).json();
+    assert.equal(
+      Date.parse(fallback.finished_at) - Date.parse(fallback.created_at),
+      3000,
+    );
+  } finally {
+    await newApi.close();
+  }
+});
+
 test("immutable real S3 writes reject changed content and tolerate exact replay", async () => {
   const key = "test/immutable/" + uuid();
   await objects.put(
@@ -530,6 +660,13 @@ test("durable dispatch reconciles lost submit response without a second executio
   });
   assert.equal(afterRestart.json().status, "completed");
   assert.equal(afterRestart.json().final_text, "Your request is complete.");
+  const messages = afterRestart
+    .json()
+    .timeline.map((e: { message: string }) => e.message);
+  assert.ok(messages.includes(progress.working));
+  assert.ok(messages.includes(progress.saving));
+  assert.equal(messages[0], "Result files saved and ready.");
+  assert.equal(afterRestart.json().finished_at, state?.finished_at);
   await newApi.close();
   const events = await db.pool.query(
     "SELECT count(*)::int AS count FROM application.runner_events WHERE request_id=$1",

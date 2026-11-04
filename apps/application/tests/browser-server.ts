@@ -55,6 +55,7 @@ class BrowserFixture implements ExecutionServices {
   files = new Map<string, Buffer>();
   jobs = new Map<string, Job>();
   requests = new Map<string, string>();
+  submittedAt = new Map<string, number>();
   async createSandbox(id: string) {
     return "sbx_" + id.replaceAll("-", "");
   }
@@ -97,6 +98,7 @@ class BrowserFixture implements ExecutionServices {
   async submit(requestId: string, sandbox: string) {
     const jobId = "job_" + requestId.replaceAll("-", "");
     this.requests.set(jobId, requestId);
+    this.submittedAt.set(jobId, Date.now());
     const artifact = Buffer.from("Browser verified downloadable result.");
     const session = Buffer.from('{"type":"session"}\n');
     const result = {
@@ -172,6 +174,16 @@ class BrowserFixture implements ExecutionServices {
   async job(id: string) {
     const job = this.jobs.get(id);
     if (!job) throw new Error("Unknown fixture job");
+    const submitted = this.submittedAt.get(id);
+    if (submitted !== undefined) {
+      const elapsed = Date.now() - submitted;
+      if (elapsed < 10000)
+        return {
+          ...job,
+          status: elapsed < 3000 ? ("queued" as const) : ("running" as const),
+          result: null,
+        };
+    }
     return job;
   }
   async events(id: string) {

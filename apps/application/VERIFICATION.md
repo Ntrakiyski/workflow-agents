@@ -50,3 +50,10 @@ The first new desktop/mobile browser and seven-table backup attempts were blocke
 
 
 After the lead removed regenerable inactive-worktree dependencies and duplicate runtime build outputs, the complete rerun passed: 17 backend tests, both desktop/mobile browser journeys (including collapsed prompt, autosave, reload and exact request snapshot), and both encrypted-checkpoint tests with real isolated PostgreSQL/RustFS. The seven-table restore retained workspace UUIDs, owner prompt defaults, request prompt snapshots, exact original/result/session objects, bigint audit identity and sequence state; replay and conflict/quiescence negatives passed. The root verifier from `f85ad53` was used for the migration-2 drill and its temporary local copy was removed afterward. No test cases were skipped in these reruns.
+
+
+## Persistent status timeline and total time (4 November 2026)
+
+Executed against dedicated local PostgreSQL16/RustFS: all18 backend tests passed. New coverage checks atomic progress persistence and deduplication, timestamp ties ordered by audit ID, history after API recreation, foreign-owner404/list exclusion, filtering of unrecognized audit detail, active null finish times, terminal failure, recovered completion after an earlier failure, independence from later stop/retry updates and the documented legacy timestamp fallback. The existing dispatch/restart test additionally verifies actual worker progress and terminal history.
+
+Typecheck, formatting and production build passed. Both Chromium journeys passed (desktop1366×900 and mobile390×844, Europe/Sofia timezone): queued → working → completed, newest-first timestamps including seconds, a live Total time counter, fixed terminal duration, reload/reopen history and protected download. Screenshots of the list and details were inspected; no horizontal overflow or browser/console errors occurred. Browser plugin was unavailable; repository Playwright was used. Execution services remain test-only mocks; live deployment verification is recorded separately in the release evidence. No database or infrastructure contract migration is involved.

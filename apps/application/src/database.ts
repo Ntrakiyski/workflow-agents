@@ -5,8 +5,17 @@ import {
   requestRow,
   workspaceRow,
   uuid,
+  iso,
   type RequestRow,
 } from "./model.js";
+import { z } from "zod";
+import { timelineMessage } from "./progress.js";
+
+// Match the current outcome: an explicitly recovered request retains its earlier failure audit.
+export const finishedAtSql = `CASE WHEN r.status IN ('completed','failed') THEN COALESCE(
+  (SELECT min(a.created_at) FROM application.audit a
+   WHERE a.request_id=r.id AND a.owner_id=r.owner_id AND a.action='request.' || r.status),
+  r.updated_at) ELSE NULL END`;
 export const migration = `
 CREATE SCHEMA IF NOT EXISTS application;
 CREATE TABLE IF NOT EXISTS application.requests (
@@ -139,10 +148,51 @@ export class Database {
   }
   async ownedRequest(owner: string, id: string) {
     const result = await this.pool.query(
-      "SELECT * FROM application.requests WHERE id=$1 AND owner_id=$2",
+      `SELECT r.*, ${finishedAtSql} AS finished_at FROM application.requests r WHERE r.id=$1 AND r.owner_id=$2`,
       [id, owner],
     );
-    return result.rows[0] ? requestRow.parse(result.rows[0]) : null;
+    return result.rows[0]
+      ? requestRow.extend({ finished_at: iso.nullable() }).parse(result.rows[0])
+      : null;
+  }
+  async timeline(owner: string, requestId: string) {
+    const result = await this.pool.query(
+      `SELECT event_id::text,action,detail,created_at FROM application.audit
+       WHERE request_id=$1 AND owner_id=$2 AND action IN
+         ('request.submitted','sandbox.prepared','request.dispatched','request.progress','request.completed','request.failed')
+       ORDER BY created_at DESC,event_id DESC`,
+      [requestId, owner],
+    );
+    return result.rows.flatMap((row) => {
+      const event = z
+        .object({
+          event_id: z.string(),
+          action: z.string(),
+          detail: z.unknown(),
+          created_at: iso,
+        })
+        .parse(row);
+      const message = timelineMessage(event.action, event.detail);
+      return message
+        ? [{ id: event.event_id, message, created_at: event.created_at }]
+        : [];
+    });
+  }
+  async progress(
+    c: Pick<PoolClient, "query">,
+    r: Pick<RequestRow, "id">,
+    message: string,
+  ) {
+    await c.query(
+      `WITH changed AS (
+         UPDATE application.requests SET progress_message=$2
+         WHERE id=$1 AND progress_message IS DISTINCT FROM $2
+         RETURNING id,owner_id,correlation_id
+       ) INSERT INTO application.audit(request_id,owner_id,actor_id,action,correlation_id,detail)
+         SELECT id,owner_id,'application-worker','request.progress',correlation_id,
+           jsonb_build_object('message',$2::text) FROM changed`,
+      [r.id, message],
+    );
   }
   async files(requestId: string) {
     const rows = await this.pool.query(

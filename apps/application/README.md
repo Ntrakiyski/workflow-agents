@@ -4,6 +4,12 @@ This candidate implements three tasks: submit instructions with permitted files,
 
 The continuation defers the broader Phase 2 catalog, dashboards/analytics, workflow editor, infrastructure controls, chat, feedback/revisions, approvals, clarification dialogs, skill management, project/account administration and document editors. There are no hidden implementations of these features.
 
+## Request progress and duration
+
+Each request shows an automatically refreshed vertical status timeline, newest first, with browser-local dates and times including seconds. The application stores each changed progress message in its existing append-only audit; repeated polls do not add duplicates. Only allowlisted application status text is public. Reopening retains the history. Older requests show their recorded submission/dispatch/outcome milestones; missing historical intermediate steps are not invented.
+
+The request list's **Total time** measures submission to result delivery or failure, including workspace preparation and queue time. Active durations refresh every second. Terminal durations use the first audit for the current outcome, so idle-stop retries do not extend a delivered result's time and a recovered completion does not end at an older failure. Legacy terminal rows without a matching outcome audit use their last stored update timestamp. Both list and detail return `finished_at`; detail also returns the owner-scoped `timeline` array of stable event IDs, safe messages and timestamps. No schema migration is required; the existing seven-table checkpoint retains this history.
+
 ## Runtime configuration
 
 Use `.env.example` as the key inventory; the service does not automatically load dotenv. Inject secrets through the runtime deployment secret manager. Production Docker context is this directory alone. Startup applies the service-owned versioned schema, checks S3, then starts API and reconciliation worker. Exact npm dependencies are locked.

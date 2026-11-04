@@ -17,6 +17,7 @@ import {
 import { RemoteError, type ExecutionServices } from "./remote.js";
 import type { Objects } from "./storage.js";
 import { validateDelivery } from "./validate.js";
+import { progress, uploadProgress } from "./progress.js";
 
 export class RequestWorker {
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -370,28 +371,32 @@ export class RequestWorker {
             "Your workspace needs attention. Contact support. Your request has been saved.",
         );
       if (w.status !== "ready") {
-        const progress =
+        const message =
           w.status === "uploading"
-            ? `Preparing your workspace: uploading shared tools (${w.total_bytes ? Math.floor((w.uploaded_bytes * 100) / w.total_bytes) : 0}%). This happens once.`
+            ? uploadProgress(
+                w.total_bytes
+                  ? Math.floor((w.uploaded_bytes * 100) / w.total_bytes)
+                  : 0,
+              )
             : w.status === "preparing"
-              ? "Preparing your workspace: installing and checking shared tools."
+              ? progress.installing
               : w.status === "stopping"
-                ? "Preparing your saved workspace for the next request."
+                ? progress.stopping
                 : w.status === "stopped"
-                  ? "Starting your saved workspace."
-                  : "Preparing your workspace in the background.";
-        await c.query(
-          "UPDATE application.requests SET progress_message=$2 WHERE id=$1",
-          [r.id, progress],
-        );
+                  ? progress.starting
+                  : progress.preparing;
+        await this.db.progress(c, r, message);
         return;
       }
       if (!w.sandbox_id) throw new Error("workspace_identity_missing");
       sandbox = w.sandbox_id;
-      await c.query(
-        "UPDATE application.requests SET sandbox_id=$2,progress_message='Preparing this request’s input files.' WHERE id=$1 AND job_id IS NULL",
-        [r.id, sandbox],
-      );
+      if (!r.job_id) {
+        await c.query(
+          "UPDATE application.requests SET sandbox_id=$2 WHERE id=$1 AND job_id IS NULL",
+          [r.id, sandbox],
+        );
+        await this.db.progress(c, r, progress.inputs);
+      }
     }
     if (!sandbox) {
       sandbox = await this.remote.createSandbox(r.id);
@@ -478,7 +483,7 @@ export class RequestWorker {
       jobId = submitted.job_id;
       await this.db.transaction(async (tx) => {
         await tx.query(
-          "UPDATE application.requests SET job_id=$2,status='running',progress_message='Pi is working on this request in its own session.',updated_at=now(),attempts=0 WHERE id=$1",
+          "UPDATE application.requests SET job_id=$2,status='running',progress_message=NULL,updated_at=now(),attempts=0 WHERE id=$1",
           [r.id, jobId],
         );
         await this.db.audit(tx, r, "request.dispatched");
@@ -524,23 +529,18 @@ export class RequestWorker {
       return;
     }
     if (job.status !== "completed") {
-      await c.query(
-        "UPDATE application.requests SET progress_message=$2 WHERE id=$1",
-        [
-          r.id,
-          ["queued", "scheduled", "retry_wait", "dispatching"].includes(
-            job.status,
-          )
-            ? "Your request is queued. It will start when a session slot is available."
-            : "Pi is working on this request in its own session.",
-        ],
+      await this.db.progress(
+        c,
+        r,
+        ["queued", "scheduled", "retry_wait", "dispatching"].includes(
+          job.status,
+        )
+          ? progress.queued
+          : progress.working,
       );
       return;
     }
-    await c.query(
-      "UPDATE application.requests SET progress_message='Saving and validating the result files.' WHERE id=$1",
-      [r.id],
-    );
+    await this.db.progress(c, r, progress.saving);
     if (job.result?.exit_code !== 0)
       throw new AppError(
         422,

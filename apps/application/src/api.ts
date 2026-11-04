@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { Config } from "./config.js";
-import { Database, workspaceLock } from "./database.js";
+import { Database, workspaceLock, finishedAtSql } from "./database.js";
 import { DEFAULT_SYSTEM_PROMPT } from "./prompt.js";
 import type { Objects } from "./storage.js";
 import {
@@ -14,6 +14,7 @@ import {
   digest,
   fileRow,
   id,
+  iso,
   MAX_FILE_BYTES,
   MAX_TOTAL_BYTES,
   permittedFile,
@@ -399,7 +400,7 @@ export function createApi(db: Database, objects: Objects, config: Config) {
       }
     }
     const rows = await db.pool.query(
-      `SELECT r.*, to_char(r.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_created_at
+      `SELECT r.*, ${finishedAtSql} AS finished_at, to_char(r.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_created_at
        FROM application.requests r WHERE r.owner_id=$1 AND ($2::timestamptz IS NULL OR (r.created_at,r.id)<($2::timestamptz,$3::uuid))
        ORDER BY r.created_at DESC,r.id DESC LIMIT $4`,
       [
@@ -411,6 +412,7 @@ export function createApi(db: Database, objects: Objects, config: Config) {
     );
     const list = rows.rows.map((v) => ({
       ...requestRow.parse(v),
+      finished_at: iso.nullable().parse(v.finished_at),
       cursorCreatedAt: z.iso.datetime().parse(v.cursor_created_at),
     }));
     const page = list.slice(0, query.limit);
@@ -421,6 +423,7 @@ export function createApi(db: Database, objects: Objects, config: Config) {
         title: r.title,
         status: r.status,
         created_at: r.created_at,
+        finished_at: r.finished_at,
       })),
       next_cursor:
         list.length > query.limit && last
@@ -447,6 +450,8 @@ export function createApi(db: Database, objects: Objects, config: Config) {
           : null),
       status: r.status,
       created_at: r.created_at,
+      finished_at: r.finished_at,
+      timeline: await db.timeline(r.owner_id, r.id),
       final_text: r.status === "completed" ? r.final_text : null,
       validation_summary:
         r.status === "completed" ? r.validation_summary : null,
