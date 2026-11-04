@@ -1,5 +1,14 @@
 # Provider candidate verification
 
+## Shared execution candidate rc.3 (2026-11-04)
+
+- Dedicated real PostgreSQL plus test runtime:84 passed,1 local-KVM test deselected; shared coverage includes two overlapping runs, third admission blocking, replay, representative-pointer replacement, cancellation/deadline without sibling stop, unsupported-adapter rejection, active migration replay, and retained nonce/deadline/physical execution across worker recovery.
+- Real local Linux subprocess tests exercise child-subreaper cleanup of a detached `setsid` descendant, sibling survival, and durable cancellation fencing before a delayed launch. These are real processes, not VM-isolation proof.
+- Actual Cloud direct feasibility passed two simultaneous executions and detached-descendant cancellation with sibling completion and same-box liveness; exact fixture removal confirmed. `evidence/shared-cloud-direct-2026-11-04.json`.
+- Local Provider and Runner processes, two disposable real PostgreSQL databases, actual Cloud: scoped upload while two runs are active; independent cancellation of a run with a detached descendant; SIGKILL/replacement of Provider while two runs are active followed by checksummed journal recovery on attempt1; deadline termination without sibling failure; same retained sandbox still running; explicit owned-fixture destruction. See `evidence/shared-cloud-local-services-2026-11-04.json` and repeatable `scripts/qualify_shared_cloud.py`. Initial evidence explicitly records dirty development source; exact committed-source rerun is recorded separately when completed.
+
+These proofs use synthetic Python workloads. They do not prove GCC replacement, Pi model concurrency, hostile same-user filesystem isolation, sustained load, broad network rules, off-host guest recovery or host reboot. Exclusive attachment limitations remain. Stable readiness remains false.
+
 ## Cloud allowlist preflight (2026-11-03)
 
 Full suite with the dedicated disposable PostgreSQL16 database:

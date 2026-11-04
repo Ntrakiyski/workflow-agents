@@ -2,7 +2,7 @@
 
 This service is **Phase 1 reusable infrastructure**, not a Pi- or document-specific app. Read `PHASE-1-REUSABLE-SERVICES.md`.
 
-Read the root [AGENTS.md](../../AGENTS.md) first. This file adds Provider-specific instructions. The current version is `1.0.0-rc.2`; [readiness](../../docs/phase1/readiness.json) remains false for Phase 2 until separately qualified.
+Read the root [AGENTS.md](../../AGENTS.md) first. This file adds Provider-specific instructions. The current candidate version is `1.0.0-rc.3`; [readiness](../../docs/phase1/readiness.json) remains false for Phase 2 until separately qualified.
 
 ## Stack and source map
 
@@ -59,8 +59,8 @@ The `real_runtime` test and `scripts.qualify_runtime` are local-mode qualificati
 - Execute fixed operator-owned argv with JSON Schema arguments. Never allow a request to choose a shell, image, mount, executable, cwd or secret environment. Preserve immutable profile IDs and image digests.
 - Validate Cloud capacity without silent rounding: whole-GiB memory and disk, Cloud CPU bounds and approved network directions. Metadata checks are not complete quota or isolation proof.
 - Cloud `allowed_hosts` rules have no URL schemes or port suffixes. Reject such configuration before registry creation intent. Exact-hostname rules do not enforce destination ports; preserve this limitation and separately qualify DNS/UDP behavior.
-- Enforce one active run per sandbox using durable registry constraints. Preserve idempotency keys, execution references, cancellation fences and destruction tombstones through restart and archival.
-- Cloud active-command attach fails with nonretryable `ambiguous_execution`. Stop the same retained environment and require reconciliation. Never convert uncertain output into an empty successful result or blindly rerun it. Fresh execution requires the verified completion envelope even when native exit is zero. Cancellation/timeout confirms same-box stop before terminal status so descendants cannot survive native leader-only kill.
+- Enforce approved sandbox execution capacity using durable registry constraints: omitted `max_concurrent_runs` means one; newly versioned Cloud profiles may opt into shared capacity. Preserve idempotency keys, execution references, cancellation fences and destruction tombstones through restart and archival.
+- Exclusive Cloud active-command attach fails with nonretryable `ambiguous_execution`; its recovery stops the same retained environment. Shared runs instead reconcile their exact nonce-bound supervisor journal and never stop siblings on cancellation, deadline or recovery failure. Linux subreaper termination must reap every descendant before terminal status; uncertainty retains active/cancelling ownership. Never turn missing output into success or replay uncertain work. Fresh and recovered shared completion requires the verified envelope.
 - Keep structured logs free of credentials, payloads and native sensitive errors. Preserve append-only audits of actor, target, time and outcome. Report cancellation truthfully after actual termination/fencing.
 - Do not add privileged containers, host capabilities, Docker sockets, broad mounts, unconfined profiles or global host security changes as a compatibility fix. Never delete account-wide resources.
 

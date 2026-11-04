@@ -112,6 +112,7 @@ export async function mockProvider() {
     executions: 0,
     active: 0,
     maxActive: 0,
+    maxRunsPerSandbox: 1,
     ambiguousCreate: false,
     rejectCreateAlways: false,
     ambiguousExecute: false,
@@ -207,7 +208,12 @@ export async function mockProvider() {
     if (!s) return error(reply, "not_found", 404);
     stats.stopStarted = true;
     if (stats.stopDelayMs) await wait(stats.stopDelayMs);
-    if (s.active_run_id) return error(reply, "sandbox_busy");
+    if (
+      [...runs.values()].filter(
+        (r) => r.sandbox_id === s.sandbox_id && r.status === "running",
+      ).length > 0
+    )
+      return error(reply, "sandbox_busy");
     s.status = "stopped";
     return wire(s);
   });
@@ -231,7 +237,12 @@ export async function mockProvider() {
       const { payload, ...rest } = r;
       return reply.code(202).send(rest);
     }
-    if (s.active_run_id) return error(reply, "sandbox_busy");
+    if (
+      [...runs.values()].filter(
+        (r) => r.sandbox_id === s.sandbox_id && r.status === "running",
+      ).length >= stats.maxRunsPerSandbox
+    )
+      return error(reply, "sandbox_busy");
     const now = new Date().toISOString(),
       rid = "run_" + randomUUID();
     const r = {
@@ -259,12 +270,15 @@ export async function mockProvider() {
         timers.delete(timer);
         if (r.status !== "running") return;
         stats.active--;
-        s.active_run_id = null;
         r.finished_at = new Date().toISOString();
         r.updated_at = r.finished_at;
         if (stats.transientRuns > 0) {
           stats.transientRuns--;
           r.status = "failed";
+          s.active_run_id =
+            [...runs.values()].find(
+              (x) => x.sandbox_id === s.sandbox_id && x.status === "running",
+            )?.run_id ?? null;
           r.error = {
             code: "runtime_temporarily_unavailable",
             message: "transient",
@@ -274,6 +288,10 @@ export async function mockProvider() {
           return;
         }
         r.status = "completed";
+        s.active_run_id =
+          [...runs.values()].find(
+            (x) => x.sandbox_id === s.sandbox_id && x.status === "running",
+          )?.run_id ?? null;
         if (body.profile === "fixture-write-file:v1")
           s.files[body.arguments.file] = body.arguments.text;
         r.result = {
@@ -316,7 +334,10 @@ export async function mockProvider() {
         r.status = "cancelled";
         r.updated_at = new Date().toISOString();
         r.finished_at = r.updated_at;
-        s.active_run_id = null;
+        s.active_run_id =
+          [...runs.values()].find(
+            (x) => x.sandbox_id === s.sandbox_id && x.status === "running",
+          )?.run_id ?? null;
         stats.active--;
       }
       return reply
@@ -343,7 +364,10 @@ export async function mockProvider() {
         r.status = "cancelled";
         r.updated_at = new Date().toISOString();
         r.finished_at = r.updated_at;
-        s.active_run_id = null;
+        s.active_run_id =
+          [...runs.values()].find(
+            (x) => x.sandbox_id === s.sandbox_id && x.status === "running",
+          )?.run_id ?? null;
         stats.active--;
       }
       const { payload, ...rest } = r;
