@@ -61,3 +61,5 @@ Agent instructions and verified procedures are maintained with each service:
 The [machine-readable gates](docs/phase1/readiness.json) separate implementation and bounded Cloud evidence from remaining stable acceptance. Active attach stays ambiguous without replay; host restart, comprehensive escape/network/load qualification and full guest-disk recovery remain unverified or vendor blocked. Same-box stop/start, required-file checkpoints and a runtime archive do not prove a VM clone or full host recovery.
 
 The application and workload consume versioned APIs and approved profiles. Pi, OfficeCLI and document semantics remain outside Runner and Provider. RustFS is self-hosted application storage; encrypted exports are separately copied off-host, without a Coolify S3 backup destination.
+
+The [per-user workspace candidate](docs/release/SHARED-SANDBOX.md) adds background preparation, two independent request sessions in a shared retained sandbox, and an editable default system prompt. Its deployment and qualification are separate from the previous release evidence.
