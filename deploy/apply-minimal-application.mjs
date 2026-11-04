@@ -115,7 +115,8 @@ if (process.env.INCLUDE_QA_ACCOUNT === 'true') providerAuth.push({ actor_id: 'wo
 await apply(providerId, 'sandbox-provider', { PROVIDER_AUTH_JSON: JSON.stringify(providerAuth),
   PROVIDER_PROFILES_JSON: JSON.stringify(profiles), WORKLOAD_SECRET_LITELLM_API_KEY: liteKey }, { domains: '' });
 await apply(runnerId, 'job-runner', { RUNNER_AUTH_JSON: JSON.stringify(runnerAuth),
-  RUNNER_PROFILES_JSON: JSON.stringify(profiles) }, { domains: '' });
+  RUNNER_PROFILES_JSON: JSON.stringify(profiles), QUEUE_CONCURRENCY: 2,
+  MAX_GLOBAL_CONCURRENCY: 2 }, { domains: '' });
 const appOrigin = 'https://workflow-agents.68.210.88.115.sslip.io';
 const users = [{ username: secrets.application_username,
   password_sha256: createHash('sha256').update(secrets.application_password).digest('hex'), owner_id: secrets.application_owner }];
