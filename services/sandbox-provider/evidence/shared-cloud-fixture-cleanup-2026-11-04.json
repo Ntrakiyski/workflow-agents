@@ -1,0 +1,139 @@
+{
+  "scope": "owned local qualification/test fixtures only; no GCC resources",
+  "cloud_fixture_destroyed": true,
+  "sandbox_id": "sbx_09897523312946788ef801c88c38913d",
+  "source_commit": "9a083191b4529d0b6c89e539ebde00495166b2aa",
+  "databases": [
+    {
+      "service": "sandbox-provider",
+      "name": "workflow_shared_sandbox_provider_f0eeb231",
+      "dropped": true
+    },
+    {
+      "service": "job-runner",
+      "name": "workflow_shared_job_runner_452dc083",
+      "dropped": true
+    },
+    {
+      "service": "sandbox-provider",
+      "name": "workflow_shared_probe_sandbox_provider_1074980f",
+      "dropped": true
+    },
+    {
+      "service": "job-runner",
+      "name": "workflow_shared_probe_job_runner_cfbec4b6",
+      "dropped": true
+    },
+    {
+      "service": "sandbox-provider",
+      "name": "workflow_shared_probe_final_sandbox_provider_f5b1aaf4",
+      "dropped": true
+    },
+    {
+      "service": "job-runner",
+      "name": "workflow_shared_probe_final_job_runner_6f3765d4",
+      "dropped": true
+    }
+  ],
+  "audit_counts": {
+    "sandbox-provider": [
+      {
+        "type": "file.upload_completed",
+        "status": "completed",
+        "count": 1
+      },
+      {
+        "type": "file.upload_created",
+        "status": "uploading",
+        "count": 1
+      },
+      {
+        "type": "run.cancellation_requested",
+        "status": "cancelling",
+        "count": 2
+      },
+      {
+        "type": "run.cancelled",
+        "status": "cancelled",
+        "count": 1
+      },
+      {
+        "type": "run.completed",
+        "status": "completed",
+        "count": 5
+      },
+      {
+        "type": "run.queued",
+        "status": "queued",
+        "count": 7
+      },
+      {
+        "type": "run.recovered",
+        "status": "running",
+        "count": 4
+      },
+      {
+        "type": "run.started",
+        "status": "running",
+        "count": 7
+      },
+      {
+        "type": "run.timed_out",
+        "status": "timed_out",
+        "count": 1
+      },
+      {
+        "type": "sandbox.created",
+        "status": "running",
+        "count": 1
+      },
+      {
+        "type": "sandbox.creation_requested",
+        "status": "creating",
+        "count": 1
+      },
+      {
+        "type": "sandbox.destroyed",
+        "status": "destroyed",
+        "count": 1
+      },
+      {
+        "type": "sandbox.destruction_requested",
+        "status": "destroying",
+        "count": 1
+      }
+    ],
+    "job-runner": [
+      {
+        "type": "job.cancellation_requested",
+        "status": "cancelling",
+        "count": 2
+      },
+      {
+        "type": "job.cancelled",
+        "status": "cancelled",
+        "count": 1
+      },
+      {
+        "type": "job.completed",
+        "status": "completed",
+        "count": 5
+      },
+      {
+        "type": "job.dispatched",
+        "status": "dispatching",
+        "count": 7
+      },
+      {
+        "type": "job.submitted",
+        "status": "queued",
+        "count": 7
+      },
+      {
+        "type": "job.timed_out",
+        "status": "timed_out",
+        "count": 1
+      }
+    ]
+  }
+}

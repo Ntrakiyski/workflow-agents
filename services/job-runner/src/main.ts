@@ -21,7 +21,7 @@ async function main() {
   log(sink, {
     action: "service.started",
     outcome: "ok",
-    version: "1.0.0-rc.1",
+    version: "1.0.0-rc.3",
   });
   let closing = false;
   const close = async () => {

@@ -25,7 +25,7 @@ def upload_json(row):
 
 async def available(service, c, identity, sid):
     sb = await service.get_sandbox(c, identity, sid, lock=True)
-    if sb['status'] != 'running' or sb['active_run_id'] or sb['file_operation_pending']:
+    if sb['status'] != 'running' or (sb['profile_snapshot'].get('max_concurrent_runs', 1) == 1 and await service.has_active_runs(c, sid)) or sb['file_operation_pending']:
         raise ServiceError(409, 'sandbox_busy', 'File transfer requires a running environment without an active execution.')
     await service.verify_runtime(sb)
     return sb
@@ -40,7 +40,7 @@ async def create_upload(service, identity, sid, key, body, correlation):
         if upload_id:
             row = await one(c, 'SELECT * FROM file_uploads WHERE upload_id=%s AND owner_id=%s', (upload_id, identity.owner))
             return upload_json(row)
-        if sb['status'] != 'running' or sb['active_run_id'] or sb['file_operation_pending']:
+        if sb['status'] != 'running' or (sb['profile_snapshot'].get('max_concurrent_runs', 1) == 1 and await service.has_active_runs(c, sid)) or sb['file_operation_pending']:
             raise ServiceError(409, 'sandbox_busy', 'File transfer requires a running environment without an active execution.')
         existing = await one(c, 'SELECT upload_id FROM file_uploads WHERE sandbox_id=%s AND path=%s', (sid, body['path']))
         if existing:
@@ -111,6 +111,12 @@ async def fail_transfer(service, identity, sb, correlation, operation_id):
         current = await service.get_sandbox(c, identity, sb['sandbox_id'], lock=True)
         if current['file_operation_id'] != operation_id:
             return  # A newer lifecycle/transfer owns this environment now.
+        if await service.has_active_runs(c, sb['sandbox_id']) and current['profile_snapshot'].get('max_concurrent_runs', 1) > 1:
+            # Keep the operation fence until all executions finish. Stopping
+            # here would terminate unrelated requests in the shared sandbox.
+            await c.execute('UPDATE sandboxes SET file_operation_recovery_required=true WHERE sandbox_id=%s', (sb['sandbox_id'],))
+            await event(c, sb, identity, correlation, 'file.transfer_interrupted', 'recovery_pending')
+            return
         stopped = False
         try:
             await service.runtime.stop(service.runtime_reference(sb))

@@ -16,15 +16,18 @@ class JournalExecution:
     native: object
     nonce: str
     runtime_reference: str | None = None
+    result_reference: str | None = None
+    shared: bool = False
 
     def id(self):
-        return self.native.id()
+        return self.native.id() if self.native else self.result_reference
 
 
 class BoxLiteCloudRuntime(BoxLiteRuntime):
     requires_create_fence = True
     cancellation_stops_environment = True
     file_transfer_input = 'argv'
+    shared_execution_supported = True
 
     def __init__(self, settings):
         self.settings, self.runtime = settings, None
@@ -221,14 +224,15 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
 
     async def execute(self, reference, argv, profile, timeout):
         box = await self._box(reference)
-        nonce = secrets.token_hex(32)
+        shared = profile.get('_shared_execution', False)
+        nonce = profile['_execution_nonce'] if shared else secrets.token_hex(32)
         result_reference = profile.get('_result_reference', 'run_' + uuid.uuid4().hex)
-        source = Path(__file__).with_name('guest_run.py').read_text()
+        source = Path(__file__).with_name('guest_shared.py' if shared else 'guest_run.py').read_text()
         try:
-            native = await self._request(box.exec('python3', args=['-c', source, nonce, result_reference,
-                str(min(profile['max_output_bytes'], 32768)), json.dumps(list(profile.get('secret_environment', {}))), *argv],
-                env=list(profile.get('environment', {}).items()), cwd=profile['working_directory'], timeout_secs=timeout))
-            return JournalExecution(native, nonce, reference)
+            native = await self._request(box.exec('python3', args=['-c', source, *(['run'] if shared else []), nonce, result_reference,
+                str(min(profile['max_output_bytes'], 32768)), json.dumps(list(profile.get('secret_environment', {}))), *([str(profile['_deadline_at'])] if shared else []), *argv],
+                env=list(profile.get('environment', {}).items()), cwd=profile['working_directory'], timeout_secs=None if shared else timeout))
+            return JournalExecution(native, nonce, reference, result_reference, shared)
         except ServiceError as error:
             if error.retryable:
                 raise ServiceError(409, 'ambiguous_execution', 'Execution outcome is unknown. Environment requires recovery.') from None
@@ -240,6 +244,15 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
         if not isinstance(execution, JournalExecution):
             raise ServiceError(409, 'ambiguous_execution', 'A complete workload result could not be verified. Environment requires recovery.')
         try:
+            if execution.shared and execution.native is None:
+                while True:
+                    state = await self._shared_control(execution)
+                    if state['status'] == 'finished':
+                        result = self._verified_result(state['envelope'], execution.nonce, max_output, shared=True)
+                        if state['envelope']['termination_reason'] == 'timed_out':
+                            raise ServiceError(409, 'deadline_exceeded', 'Execution exceeded its permitted duration.')
+                        return result
+                    await asyncio.sleep(.5)
             async def drain(stream):
                 data = bytearray()
                 async for part in stream:
@@ -252,25 +265,66 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
             if native_result.exit_code != 0 or getattr(native_result, 'error_message', None) or err:
                 raise ValueError('incomplete_wrapper')
             envelope = json.loads(out)
-            result = envelope['result']
-            if (envelope['version'] != 1 or envelope['nonce'] != execution.nonce
-                    or set(result) != {'exit_code', 'stdout', 'stderr', 'output_truncated', 'artifacts'}
-                    or type(result['exit_code']) is not int or type(result['output_truncated']) is not bool
-                    or result['artifacts'] != [] or not isinstance(result['stdout'], str)
-                    or not isinstance(result['stderr'], str)):
-                raise ValueError('invalid_wrapper')
-            encoded = json.dumps(result, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
-            if hashlib.sha256(encoded.encode()).hexdigest() != envelope['sha256']:
-                raise ValueError('invalid_checksum')
-            for name in ('stdout', 'stderr'):
-                raw = result[name].encode()
-                result['output_truncated'] |= len(raw) > max_output
-                result[name] = raw[:max_output].decode(errors='replace')[:32768]
+            result = self._verified_result(envelope, execution.nonce, max_output, shared=execution.shared)
+            if execution.shared and envelope['termination_reason'] == 'timed_out':
+                raise ServiceError(409, 'deadline_exceeded', 'Execution exceeded its permitted duration.')
             return result
         except ServiceError:
             raise
         except Exception:
             raise ServiceError(409, 'ambiguous_execution', 'A complete workload result could not be verified. Environment requires recovery.') from None
+
+    @staticmethod
+    def _verified_result(envelope, nonce, max_output, shared=False):
+        result = envelope['result']
+        if (envelope['version'] != (2 if shared else 1) or envelope['nonce'] != nonce
+                or set(result) != {'exit_code', 'stdout', 'stderr', 'output_truncated', 'artifacts'}
+                or type(result['exit_code']) is not int or type(result['output_truncated']) is not bool
+                or result['artifacts'] != [] or not isinstance(result['stdout'], str)
+                or not isinstance(result['stderr'], str)):
+            raise ValueError('invalid_wrapper')
+        if shared and envelope.get('termination_reason') not in ('completed', 'cancelled', 'timed_out'):
+            raise ValueError('invalid_termination_reason')
+        material = {'result': result, 'termination_reason': envelope['termination_reason']} if shared else result
+        encoded = json.dumps(material, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
+        if hashlib.sha256(encoded.encode()).hexdigest() != envelope['sha256']:
+            raise ValueError('invalid_checksum')
+        for name in ('stdout', 'stderr'):
+            raw = result[name].encode()
+            result['output_truncated'] |= len(raw) > max_output
+            result[name] = raw[:max_output].decode(errors='replace')[:32768]
+        return result
+
+    async def _shared_control(self, execution, cancel=False):
+        box = await self._box(execution.runtime_reference)
+        source = Path(__file__).with_name('guest_shared.py').read_text()
+        try:
+            native = await self._request(box.exec('python3', args=['-c', source, 'control', execution.result_reference,
+                execution.nonce, 'cancel' if cancel else 'inspect'], cwd='/', timeout_secs=15))
+            async def drain(stream):
+                data = bytearray()
+                async for part in stream:
+                    raw = part.encode() if isinstance(part, str) else bytes(part)
+                    if len(data) + len(raw) > 1048576:
+                        raise ValueError('control_too_large')
+                    data.extend(raw)
+                return bytes(data)
+            async with asyncio.timeout(self.settings.runtime_request_timeout):
+                out, err, result = await asyncio.gather(drain(native.stdout()), drain(native.stderr()), native.wait())
+            if result.exit_code != 0 or getattr(result, 'error_message', None) or err:
+                raise ValueError('control_unverified')
+            state = json.loads(out)
+            if state['status'] not in ('running', 'pending', 'fenced', 'finished'):
+                raise ValueError('control_unverified')
+            return state
+        except Exception:
+            raise ServiceError(409, 'ambiguous_execution', 'Per-execution termination or output requires operator reconciliation.') from None
+
+    def shared_execution(self, reference, result_reference, nonce):
+        return JournalExecution(None, nonce, reference, result_reference, True)
+
+    async def cancel_reference(self, reference, result_reference, nonce):
+        return await self.cancel(self.shared_execution(reference, result_reference, nonce))
 
     async def attach(self, reference, execution_id):
         # SDK0.11 may recover a zero exit status after losing output, without
@@ -280,6 +334,17 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
         raise ServiceError(409, 'ambiguous_execution', 'Execution output cannot be safely recovered from this backend. Environment requires recovery.')
 
     async def cancel(self, execution):
+        if isinstance(execution, JournalExecution) and execution.shared:
+            async with asyncio.timeout(self.settings.runtime_request_timeout):
+                while True:
+                    state = await self._shared_control(execution, cancel=True)
+                    if state['status'] == 'fenced':
+                        return  # Durable nonce fence prevents any delayed launch.
+                    if state['status'] == 'finished':
+                        result = self._verified_result(state['envelope'], execution.nonce, 32768, shared=True)
+                        return {'result': result, 'termination_reason': state['envelope']['termination_reason']}
+                    await asyncio.sleep(.1)
+            return
         # A wrapper kill alone cannot prove its subprocess tree terminated.
         # Confirm same-box stop before reporting cancellation; retain the disk.
         if not isinstance(execution, JournalExecution) or not execution.runtime_reference:

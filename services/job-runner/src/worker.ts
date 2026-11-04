@@ -261,6 +261,18 @@ export class Worker {
     return (await this.read(c, j.job_id))!;
   }
   async claim(c: pg.PoolClient, j: JobRow) {
+    const boxProfile =
+      j.payload.sandbox.mode === "ensure"
+        ? j.payload.sandbox.profile!
+        : (
+            await this.service.provider.sandbox(
+              j.owner_id,
+              j.correlation_id,
+              j.sandbox_id!,
+            )
+          ).profile;
+    const capacity =
+      this.config.profiles.sandboxes[boxProfile]?.max_concurrent_runs ?? 1;
     return tx(c, async () => {
       await c.query(
         "SELECT pg_advisory_xact_lock(hashtextextended('runner:capacity',0))",
@@ -284,16 +296,16 @@ export class Worker {
         counts.global >= this.config.maxGlobalConcurrency ||
         counts.owner >=
           (principal?.max_concurrency ?? this.config.maxOwnerConcurrency) ||
-        counts.dispatch > 0 ||
-        counts.sandbox > 0
+        counts.dispatch >= capacity ||
+        counts.sandbox >= capacity
       ) {
         await this.enqueue(c, j);
         return null;
       }
       const claimed = (
         await c.query<JobRow>(
-          "UPDATE runner.jobs SET status='dispatching',started_at=coalesce(started_at,now()),updated_at=now() WHERE job_id=$1 RETURNING *",
-          [j.job_id],
+          "UPDATE runner.jobs SET status='dispatching',sandbox_capacity=$2,started_at=coalesce(started_at,now()),updated_at=now() WHERE job_id=$1 RETURNING *",
+          [j.job_id, capacity],
         )
       ).rows[0]!;
       await this.service.audit(c, claimed, "job.dispatched", "dispatching", {
@@ -500,7 +512,9 @@ export class Worker {
       await this.finish(
         c,
         j,
-        j.cancellation_target ?? "failed",
+        r.status === "failed" && r.result
+          ? "failed"
+          : (j.cancellation_target ?? "failed"),
         r.result,
         error,
       );
