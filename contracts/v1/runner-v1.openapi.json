@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Workflow Agents Job Runner API",
-    "version": "1.0.0-rc.1",
+    "version": "1.0.0-rc.3",
     "description": "Initial reviewed Phase 1 wire contract. Release candidate until all real-runtime gates pass. See docs/contracts/v1.md."
   },
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
