@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "recorded_date": "2026-11-03",
+  "recorded_date": "2026-11-04",
   "phase": 1,
   "decision": "incomplete",
   "ready_for_phase2": false,
-  "release_version": "1.0.0-rc.2",
+  "release_version": "1.0.0-rc.3",
   "stable_release": false,
   "repository": "https://github.com/Ntrakiyski/workflow-agents",
-  "integration_branch": "release/minimal-application",
-  "deployed_service_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+  "integration_branch": "feat/user-sandboxes",
+  "deployed_service_commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
   "api_version": "v1",
   "contracts": [
     "contracts/v1/runner-v1.openapi.json",
@@ -25,7 +25,7 @@
       "job-runner": "xoirtvdhn7kofdlkekgdegry",
       "sandbox-provider": "byna6ecrish0jprg0dbywo37"
     },
-    "deployment_identity_note": "Final scoped readback at 2026-11-03T19:59:33.850Z confirms Runner, Provider, application and private storage healthy; all latest deployments finished with unchanged code pins, no host port mappings or temporary tasks. Browser result retention and final authenticated capture/restores passed separately. Documentation worker performed no live control-plane calls.",
+    "deployment_identity_note": "Scoped control-plane readback on 4 November confirms healthy finished shared-candidate deployments; actual browser/Cloud acceptance and final backup evidence are recorded separately. Historical evidence below retains its original source scope.",
     "historical_rc1_health": {
       "job-runner": {
         "database": "ok",
@@ -43,9 +43,9 @@
       }
     },
     "latest_deployments": {
-      "job-runner": "wuvkf6x1owxobcarqjtd7wbk",
-      "sandbox-provider": "iaeiglup1n9zxypdzk2mglcr",
-      "application": "uqgpm525dt5gaulngxrjsagb"
+      "job-runner": "qxdmf2udt1aotfbtkvjbyphf",
+      "sandbox-provider": "f3ynfn7t8mjedta8pmoesshw",
+      "application": "jorlzdpk0c0ytxk3xnwuhque"
     },
     "historical_rc1_resource_statuses": [
       {
@@ -101,27 +101,27 @@
         "name": "job-runner",
         "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
         "status": "running:healthy",
-        "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+        "commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
         "is_public": false,
-        "observation_basis": "Integration lead final readback docs/release/final-release-state.json at 2026-11-03T19:59:33.850Z; finished deployment and running:healthy."
+        "observation_basis": "Integration lead scoped Coolify readback on 2026-11-04: configured source equals latest finished deployment; running:healthy."
       },
       {
         "kind": "applications",
         "name": "sandbox-provider",
         "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
         "status": "running:healthy",
-        "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+        "commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
         "is_public": false,
-        "observation_basis": "Integration lead final readback docs/release/final-release-state.json at 2026-11-03T19:59:33.850Z; finished deployment and running:healthy."
+        "observation_basis": "Integration lead scoped Coolify readback on 2026-11-04: configured source equals latest finished deployment; running:healthy."
       },
       {
         "kind": "applications",
         "name": "workflow-application",
         "uuid": "7vdsilhnu96tifz7yosm61j1",
         "status": "running:healthy",
-        "commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+        "commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
         "is_public": true,
-        "observation_basis": "Integration lead final readback docs/release/final-release-state.json at 2026-11-03T19:59:33.850Z; finished deployment and running:healthy."
+        "observation_basis": "Integration lead scoped Coolify readback on 2026-11-04: configured source equals latest finished deployment; running:healthy."
       },
       {
         "kind": "applications",
@@ -672,17 +672,17 @@
     "real_runtime_deselected": 1,
     "scope": "Historical rc1 CI at the recorded source; later local and hosted evidence does not replace or extend this CI result."
   },
-  "deployed_application_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+  "deployed_application_commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
   "application_ci": {
-    "commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
-    "run": 41703356921,
-    "url": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41703356921",
+    "commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+    "run": 41826416700,
+    "url": "https://github.com/Ntrakiyski/workflow-agents/actions/runs/41826416700",
     "outcome": "passed",
-    "api_passes": 11,
+    "api_passes": 17,
     "checkpoint_passes": 2,
     "cache_passes": 5,
     "browser_passes": 2,
-    "scope": "Actual GitHub Actions on deployed canonical-session fix: PostgreSQL/RustFS real; Runner/Provider/workload execution mocked. Also passed duplicate run 41703348832. Fresh hosted execution, replacement and recovery evidence remain separately scoped."
+    "scope": "Actual GitHub Actions on deployed application source; real PostgreSQL/RustFS, mocked execution. Hosted Cloud/Pi proof recorded separately."
   },
   "deployed_service_commit_scope": "Runner and Provider infrastructure only; deployed_application_commit tracks the independently advanced application.",
   "completed_data_recovery": {
@@ -734,5 +734,19 @@
       }
     ],
     "forensic_manifest_binding_verified": true
+  },
+  "shared_candidate_ci": {
+    "commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+    "infrastructure_run": 41826416628,
+    "application_run": 41826416700,
+    "outcome": "passed",
+    "scope": "Real disposable PostgreSQL/RustFS with mocked runtimes and actual local supervisor subprocesses; no hosted Cloud/model call."
+  },
+  "shared_user_sandboxes": {
+    "status": "hosted_verification_in_progress",
+    "report": "docs/release/SHARED-SANDBOX.md",
+    "capacity_per_user": 2,
+    "runtime_version": "0.1.0-rc.3",
+    "stable_release": false
   }
 }

@@ -25,8 +25,31 @@ The generic [rc.3 extension](../contracts/shared-execution-v1.md) keeps capacity
 
 The application schema adds workspace and user-setting tables. Matching-source backup/restore covers seven tables and immutable application objects; historical five-table archives require their historical source and then a separately reviewed forward migration. A database backup or exported application object set is not a full Cloud disk backup.
 
-## Verification status
+## Deployed candidate
 
-Implementation and qualification are in progress. Existing production pins remain those in `DELIVERY.md` until a finished scoped deployment is recorded. Direct Cloud feasibility has demonstrated two overlapping supervised commands, cancellation of a detached descendant without killing the sibling, and retained sandbox liveness. This is separate from service/API, browser and model qualification. The new runtime passed reproducible builds and concurrent binary/Unicode/OfficeCLI checks in the pinned slim image, with model calls mocked in that check.
+The authenticated [application](https://workflow-agents.68.210.88.115.sslip.io) is live in the existing GCC Workflow Agents project/staging environment. Only that application is public; infrastructure APIs, three databases and RustFS remain private.
 
-Stable infrastructure readiness remains false. Broader network/escape/load testing, full Cloud guest-disk recovery and shared-host reboot remain open. Final exact commits, deployments, test evidence and PRs will be recorded here after integration.
+| Component | Exact deployed source | Finished deployment |
+| --- | --- | --- |
+| Provider | `0b816c4a127dd61a1704eac2bc8e7b1c9889adad` | `f3ynfn7t8mjedta8pmoesshw` |
+| Runner | `0b816c4a127dd61a1704eac2bc8e7b1c9889adad` | `qxdmf2udt1aotfbtkvjbyphf` |
+| Application | `73fc27fe8154dd14b7c74bdf1a726dee9c1266ac` | `jorlzdpk0c0ytxk3xnwuhque` |
+
+The application's initial replacement could not bootstrap because the download allowlist omitted the new rc3 asset. The deployed application fix adds the exact reviewed asset/checksum/size; public readiness now passes. No existing request was replayed. Four pre-upgrade request statuses, results and downloadable checksums survived the additive migration and replacement.
+
+The published [rc3 runtime](https://github.com/Ntrakiyski/workflow-agents/releases/tag/pi-document-runtime-v0.1.0-rc.3) is 95,978,009 bytes, SHA256 `2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc`. Profiles are `pi-document-cloud:v3`, `pi-document-prepare:v3` and `pi-document-agent:v3`. It contains Node24.22.2, Pi1.5.0, OfficeCLI1.0.160 and ICU72; the guest has2CPU/2048MiB RAM/2048MiB disk and hostname-only LiteLLM outbound policy. This archive is a tool bundle, not a VM clone.
+
+## Executed qualification
+
+- [Independent source review](../qa/SHARED-SANDBOX-REVIEW.md) found and verified four corrections: preparation limit, same-disk recovery after an observed stop, deadline recheck after lock contention, and checksum-bound completion classification. Its final focused Provider suite passed29 cases and Runner integration passed18. Earlier full Provider96, Runner18 integration plus5 unit, contracts7 and scope guards2 passed separately.
+- Application17 backend tests,2 desktop/mobile browser tests,2 encrypted backup/restore cases,5 runtime-cache tests and typecheck/format/build passed with real disposable PostgreSQL/RustFS and mocked execution. [Application CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41826416700) and [infrastructure CI](https://github.com/Ntrakiyski/workflow-agents/actions/runs/41826416628) passed on the deployed application source; CI does not call Cloud or the model.
+- Workload checks passed2 Node and15 Python cases, two reproducible builds and concurrent actual Node/Pi-version/OfficeCLI Unicode checks in the exact slim image. Model execution was mocked or absent in these local checks.
+- [Clean actual-Cloud service qualification](../../services/sandbox-provider/evidence/shared-cloud-local-services-2026-11-04.json) at source `9a08319` passed eight checks: concurrent jobs, scoped transfer while active, detached-descendant cancellation without sibling interruption, Provider SIGKILL/journal recovery at attempt1, guest deadline while Provider was down, independent deadline with sibling completion, same-sandbox liveness and unchanged source/runtime hashes. Services/PostgreSQL ran locally and workloads were synthetic Python. All owned fixtures were cleaned. This does not substitute for the GCC/Pi application journey.
+
+The hosted application journey is in progress. Both admitted requests are waiting for the same initial runtime upload. Final session overlap, exports, stop/resume and the fresh seven-table recovery set will be recorded after execution.
+
+## Review and remaining limits
+
+Generic infrastructure is [draft PR #4](https://github.com/Ntrakiyski/workflow-agents/pull/4), based on the previous application candidate; application/workload integration is [draft PR #5](https://github.com/Ntrakiyski/workflow-agents/pull/5), stacked on #4. No automatic merge is authorized. Later documentation commits do not change the deployed pins above.
+
+Stable infrastructure readiness remains false. Broader network/escape/load testing, full Cloud guest-disk recovery, shared-host reboot and general exclusive active-output recovery remain open. The bounded shared journal recovery qualifies its recorded profile/scenarios. Structural DOCX and exact synthetic markers do not establish rendered layout, pagination or general semantic accuracy.
