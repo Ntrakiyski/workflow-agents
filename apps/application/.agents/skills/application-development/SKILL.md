@@ -16,3 +16,5 @@ description: Build and verify the minimal authenticated request, list and result
 
 
 For user-workspace changes, retain one stable owner workspace, stage/prepare once before request admission to execution, snapshot owner-edited prompts, and preserve legacy request identities. Test concurrent dispatch, sibling export without stop, prepare acknowledgement loss, Provider recovery stop/start, and stop-versus-new-admission. Backups must include the seven-table migration-2 schema; old five-table archives require the matching historical source before forward migration. Mocked execution does not qualify hosted parallel Pi sessions.
+
+For a runtime release, update and verify the checksum/URL allowlist in `src/initialize.ts` together with the deployment profile, configured object key and independent backup runtime cache. Validate actual application startup; cached Coolify health alone does not establish that the new process is serving.
