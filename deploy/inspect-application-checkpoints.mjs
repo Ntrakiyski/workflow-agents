@@ -52,10 +52,13 @@
         if (bytes.length !== file.size_bytes || createHash('sha256').update(bytes).digest('hex') !== file.sha256) throw Error('object_integrity');
         const verified = {id:file.id,kind:file.kind,role:file.role,bytes:file.size_bytes,sha256:file.sha256,verified:true};
         if (row.workspace_id && file.role === 'session') {
-          const headers = bytes.toString('utf8').split('\n').filter(Boolean).map(line => JSON.parse(line)).filter(entry => entry.type === 'session');
+          const entries = bytes.toString('utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
+          const headers = entries.filter(entry => entry.type === 'session');
           if (headers.length !== 1 || headers[0].id !== row.id || headers[0].cwd !== '/opt/workflow-transfer/requests/' + row.id)
             throw Error('independent_session_identity');
-          verified.session = {id:headers[0].id,cwd:headers[0].cwd};
+          const times = entries.map(entry => new Date(entry.timestamp ?? entry.message?.timestamp).getTime()).filter(Number.isFinite);
+          if (times.length < 2) throw Error('session_times_unverified');
+          verified.session = {id:headers[0].id,cwd:headers[0].cwd,first_entry_at:new Date(Math.min(...times)).toISOString(),last_entry_at:new Date(Math.max(...times)).toISOString()};
         }
         checked.push(verified);
       }
