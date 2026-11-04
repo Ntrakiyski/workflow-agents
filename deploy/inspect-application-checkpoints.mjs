@@ -29,8 +29,8 @@
     for (let page = 0; page < 20; page++) {
       const value = await get(service, path + '?limit=100' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : ''), correlation);
       if (!Array.isArray(value.events)) throw Error('event_schema');
-      result.push(...value.events.map(({event_id,type,status,correlation_id,actor_id,job_id,sandbox_id,run_id}) =>
-        ({event_id,type,status,correlation_id,actor_id,job_id,sandbox_id,run_id})));
+      result.push(...value.events.map(({event_id,type,status,occurred_at,correlation_id,actor_id,job_id,sandbox_id,run_id}) =>
+        ({event_id,type,status,occurred_at,correlation_id,actor_id,job_id,sandbox_id,run_id})));
       if (!value.next_cursor) return result;
       if (value.next_cursor === cursor) throw Error('event_cursor');
       cursor = value.next_cursor;
@@ -39,7 +39,7 @@
   }
   try {
     const owner = config.users[0].owner_id;
-    const rows = await pool.query(`SELECT id,owner_id,status,correlation_id,sandbox_id,job_id,
+    const rows = await pool.query(`SELECT id,owner_id,status,correlation_id,sandbox_id,job_id,workspace_id,
       export_complete,sandbox_stopped,created_at,updated_at FROM application.requests WHERE owner_id=$1 ORDER BY created_at LIMIT 101`, [owner]);
     if (rows.rows.length > 100) throw Error('request_bound');
     const requests = [];
@@ -74,7 +74,9 @@
       }
       requests.push(record);
     }
-    console.log(JSON.stringify({version:1,operation:'read-only-application-checkpoint-inspection',outcome:'passed',
-      requests,scope:'Owning application database and immutable objects; published Runner/Provider APIs only. No workload replay or service database access.'}));
+    const workspaces = await pool.query(`SELECT id,owner_id,sandbox_id,prepare_job_id,runtime_sha256,status,uploaded_bytes,total_bytes,sandbox_stopped FROM application.user_workspaces WHERE owner_id=$1`, [owner]);
+    const workspaceAudit = await pool.query(`SELECT event_id::text,action,correlation_id,created_at FROM application.audit WHERE owner_id=$1 AND request_id IS NULL ORDER BY event_id LIMIT 1000`,[owner]);
+    console.log(JSON.stringify({version:2,operation:'read-only-application-checkpoint-inspection',outcome:'passed',
+      workspaces:workspaces.rows,workspace_audit:workspaceAudit.rows,requests,scope:'Owning application database and immutable objects; published Runner/Provider APIs only. No workload replay or service database access.'}));
   } finally { objects.close(); await pool.end(); }
 })().catch(error => { console.log(JSON.stringify({operation:'read-only-application-checkpoint-inspection',outcome:'failed',error_classification:/^[a-z_0-9]+$/.test(error.message) ? error.message : error.name, error_code:/^[A-Z_0-9]+$/.test(error.code??'') ? error.code : undefined})); process.exitCode = 1; });
