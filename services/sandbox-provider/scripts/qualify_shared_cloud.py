@@ -62,7 +62,7 @@ async def main(args):
         'started_at': datetime.now(timezone.utc).isoformat(), 'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),
         'source_dirty': bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=root)), 'owner_id': owner, 'checks': {}}
     proof_sources = [*provider_root.joinpath('provider').glob('*.py'), *provider_root.joinpath('migrations').glob('*.sql'),
-        *runner_root.joinpath('src').glob('*.ts'), *runner_root.joinpath('migrations').glob('*.sql'), Path(__file__).resolve()]
+        *runner_root.joinpath('src').glob('*.ts'), *runner_root.joinpath('dist').glob('*.js'), *runner_root.joinpath('migrations').glob('*.sql'), Path(__file__).resolve()]
     evidence['source_files_sha256'] = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(proof_sources)}
     processes, handles, jobs, sid = [], [], [], None
     async with httpx.AsyncClient(timeout=150) as client:
@@ -114,6 +114,7 @@ async def main(args):
             handle = (state / 'runner.log').open('wb');handles.append(handle)
             processes.append(subprocess.Popen(['node', 'dist/main.js'], cwd=runner_root, env=re, stdout=handle, stderr=subprocess.STDOUT))
             await ready(runner_url)
+            evidence['service_versions'] = {name: (await client.get(url + '/health/live')).json()['version'] for name, url in (('sandbox-provider', provider_url), ('job-runner', runner_url))}
             prepared = await wait(await submit(.01, ensure=True), {'completed'}, 240)
             sid = prepared['sandbox_id'];evidence['sandbox_id'] = sid
             a, b = await asyncio.gather(submit(90, 'descendant'), submit(18))
@@ -137,10 +138,34 @@ async def main(args):
             recovered = await asyncio.gather(wait(c, {'completed'}), wait(d, {'completed'}))
             evidence['checks']['provider_sigkill_journal_recovery_without_replay'] = all(j['attempt_count'] == 1 and j['result']['stdout'] == 'shared-proof-completed\n' for j in recovered)
             e, f = await asyncio.gather(submit(90, 'descendant', timeout=4), submit(12))
+            await asyncio.gather(wait(e, {'running'}), wait(f, {'running'}));await asyncio.sleep(1)
+            timed = await request(runner_url, 'GET', '/v1/jobs/' + e)
+            provider_process.kill();provider_process.wait(timeout=10)
+            await asyncio.sleep(6)
+            # Inspect the exact owned supervisor while Provider is still down.
+            # Its completed timeout journal is proof that guest enforcement did
+            # not depend on a live controller/native leader-only deadline.
+            import psycopg
+            from psycopg.rows import dict_row
+            from types import SimpleNamespace
+            sys.path.insert(0, str(provider_root))
+            from provider.cloud_runtime import BoxLiteCloudRuntime
+            async with await psycopg.AsyncConnection.connect(pe['DATABASE_URL'], row_factory=dict_row) as connection:
+                row = await (await connection.execute('SELECT r.run_id,r.runtime_nonce,s.runtime_id FROM runs r JOIN sandboxes s USING(sandbox_id) WHERE r.run_id=%s AND r.owner_id=%s', (timed['run_id'], owner))).fetchone()
+            runtime = BoxLiteCloudRuntime(SimpleNamespace(boxlite_rest_url=pe['BOXLITE_REST_URL'], boxlite_account_scope=pe['BOXLITE_ACCOUNT_SCOPE'],
+                boxlite_rest_path_prefix=None, boxlite_api_key=pe['BOXLITE_API_KEY'], runtime_request_timeout=30))
+            try:
+                state = await runtime._shared_control(runtime.shared_execution(row['runtime_id'], row['run_id'], row['runtime_nonce']))
+                runtime._verified_result(state['envelope'], row['runtime_nonce'], 32768)
+                evidence['checks']['guest_deadline_while_provider_down'] = state['status'] == 'finished' and state['envelope']['result']['exit_code'] == 124
+            finally:
+                await runtime.close()
+            provider_process = launch_provider();await ready(provider_url)
             timeout_job, timeout_sibling = await asyncio.gather(wait(e, {'timed_out'}), wait(f, {'completed'}))
             evidence['checks']['independent_deadline_and_descendant_reap'] = timeout_job['status'] == 'timed_out' and timeout_sibling['result']['stdout'] == 'shared-proof-completed\n'
             evidence['jobs'] = [{'job_id': j, **{k: (await request(runner_url, 'GET', '/v1/jobs/' + j))[k] for k in ('sandbox_id', 'run_id', 'status', 'attempt_count')}} for j in jobs]
             evidence['checks']['same_sandbox_retained_running'] = (await request(provider_url, 'GET', '/v1/sandboxes/' + sid))['status'] == 'running'
+            evidence['checks']['source_unchanged_during_proof'] = all(hashlib.sha256(path.read_bytes()).hexdigest() == evidence['source_files_sha256'][str(path.relative_to(root))] for path in proof_sources)
             evidence['passed'] = all(evidence['checks'].values())
         finally:
             if sid:

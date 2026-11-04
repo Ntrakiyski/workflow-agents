@@ -3,6 +3,7 @@ import asyncio
 import hashlib
 import json
 import secrets
+import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,6 +19,7 @@ class JournalExecution:
     runtime_reference: str | None = None
     result_reference: str | None = None
     shared: bool = False
+    deadline_at: float | None = None
 
     def id(self):
         return self.native.id() if self.native else self.result_reference
@@ -230,9 +232,9 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
         source = Path(__file__).with_name('guest_shared.py' if shared else 'guest_run.py').read_text()
         try:
             native = await self._request(box.exec('python3', args=['-c', source, *(['run'] if shared else []), nonce, result_reference,
-                str(min(profile['max_output_bytes'], 32768)), json.dumps(list(profile.get('secret_environment', {}))), *argv],
+                str(min(profile['max_output_bytes'], 32768)), json.dumps(list(profile.get('secret_environment', {}))), *([str(profile['_deadline_at'])] if shared else []), *argv],
                 env=list(profile.get('environment', {}).items()), cwd=profile['working_directory'], timeout_secs=None if shared else timeout))
-            return JournalExecution(native, nonce, reference, result_reference, shared)
+            return JournalExecution(native, nonce, reference, result_reference, shared, profile.get('_deadline_at'))
         except ServiceError as error:
             if error.retryable:
                 raise ServiceError(409, 'ambiguous_execution', 'Execution outcome is unknown. Environment requires recovery.') from None
@@ -248,7 +250,10 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
                 while True:
                     state = await self._shared_control(execution)
                     if state['status'] == 'finished':
-                        return self._verified_result(state['envelope'], execution.nonce, max_output)
+                        result = self._verified_result(state['envelope'], execution.nonce, max_output)
+                        if result['exit_code'] == 124 and execution.deadline_at is not None and time.time() >= execution.deadline_at:
+                            raise ServiceError(409, 'deadline_exceeded', 'Execution exceeded its permitted duration.')
+                        return result
                     await asyncio.sleep(.5)
             async def drain(stream):
                 data = bytearray()
@@ -262,7 +267,10 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
             if native_result.exit_code != 0 or getattr(native_result, 'error_message', None) or err:
                 raise ValueError('incomplete_wrapper')
             envelope = json.loads(out)
-            return self._verified_result(envelope, execution.nonce, max_output)
+            result = self._verified_result(envelope, execution.nonce, max_output)
+            if execution.shared and result['exit_code'] == 124 and execution.deadline_at is not None and time.time() >= execution.deadline_at:
+                raise ServiceError(409, 'deadline_exceeded', 'Execution exceeded its permitted duration.')
+            return result
         except ServiceError:
             raise
         except Exception:
@@ -311,8 +319,8 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
         except Exception:
             raise ServiceError(409, 'ambiguous_execution', 'Per-execution termination or output requires operator reconciliation.') from None
 
-    def shared_execution(self, reference, result_reference, nonce):
-        return JournalExecution(None, nonce, reference, result_reference, True)
+    def shared_execution(self, reference, result_reference, nonce, deadline_at=None):
+        return JournalExecution(None, nonce, reference, result_reference, True, deadline_at)
 
     async def cancel_reference(self, reference, result_reference, nonce):
         await self.cancel(self.shared_execution(reference, result_reference, nonce))

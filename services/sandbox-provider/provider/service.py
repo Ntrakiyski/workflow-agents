@@ -429,13 +429,14 @@ class ProviderService:
                                 raise ServiceError(503, 'workload_secret_unavailable', 'An approved workload runtime secret is unavailable.')
                             environment[name] = value
                         runtime_profile = p | {'environment': environment, '_result_reference': rid,
-                                              '_shared_execution': shared, '_execution_nonce': run['runtime_nonce']}
+                                              '_shared_execution': shared, '_execution_nonce': run['runtime_nonce'],
+                                              '_deadline_at': run['started_at'].timestamp() + run['request']['timeout_seconds']}
                         execution = await self.runtime.execute(self.runtime_reference(sb), p['resolved_argv'], runtime_profile, run['request']['timeout_seconds'])
                         async with c.transaction():
                             await c.execute('UPDATE runs SET runtime_execution_id=%s,updated_at=now() WHERE run_id=%s', (execution.id(), rid))
                     elif shared and run['runtime_nonce']:
                         await self.verify_runtime(sb)
-                        execution = self.runtime.shared_execution(self.runtime_reference(sb), rid, run['runtime_nonce'])
+                        execution = self.runtime.shared_execution(self.runtime_reference(sb), rid, run['runtime_nonce'], run['started_at'].timestamp() + run['request']['timeout_seconds'])
                         async with c.transaction():
                             await event(c, sb, identity, run['correlation_id'], 'run.recovered', run['status'], rid)
                     elif run['runtime_execution_id']:
@@ -500,7 +501,7 @@ class ProviderService:
                         else:
                             await self.runtime.stop(self.runtime_reference(sb))
                             await self._set_stopped(c, sb)
-                        await self.finish(c, run, sb, identity, 'failed', error=error_value(err, run['correlation_id']))
+                        await self.finish(c, run, sb, identity, 'timed_out' if err.code == 'deadline_exceeded' else 'failed', error=error_value(err, run['correlation_id']))
                     except Exception:
                         # Keep active ownership while unable to prove workload stopped.
                         async with c.transaction():
