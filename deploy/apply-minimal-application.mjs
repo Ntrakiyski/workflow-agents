@@ -113,7 +113,8 @@ if (process.env.INCLUDE_QA_ACCOUNT === 'true') providerAuth.push({ actor_id: 'wo
   owner_id: owner, token: secrets.qa_provider_operator_token, permissions: ['sandbox:read', 'sandbox:destroy'],
   workload_profiles: [], sandbox_profiles: ['pi-document-cloud:v1','pi-document-cloud:v2','pi-document-cloud:v3'] });
 await apply(providerId, 'sandbox-provider', { PROVIDER_AUTH_JSON: JSON.stringify(providerAuth),
-  PROVIDER_PROFILES_JSON: JSON.stringify(profiles), WORKLOAD_SECRET_LITELLM_API_KEY: liteKey }, { domains: '' });
+  PROVIDER_PROFILES_JSON: JSON.stringify(profiles), WORKLOAD_SECRET_LITELLM_API_KEY: liteKey,
+  MAX_CONCURRENT_RUNS: 2 }, { domains: '' });
 await apply(runnerId, 'job-runner', { RUNNER_AUTH_JSON: JSON.stringify(runnerAuth),
   RUNNER_PROFILES_JSON: JSON.stringify(profiles), QUEUE_CONCURRENCY: 2,
   MAX_GLOBAL_CONCURRENCY: 2 }, { domains: '' });
