@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "session": "ed7f83feb28a406fb7b2ff34148077e6",
+  "outcome": "passed",
+  "error_classification": null,
+  "checks": [
+    {
+      "scenario": "multichunk_upload_download_checksum_and_replay",
+      "outcome": "passed",
+      "sandbox_id": "sbx_f10fa1c4c44e43198c894de8338c88a3",
+      "size_bytes": 2097166,
+      "chunks": 3,
+      "sha256": "7016e16b4dc714fbbcdb37754f442cd5e7d515c3f5195ed72cc3231da1ac26fc",
+      "upload_id": "upl_d5a6dc59cdae4f0f904e57390aa92307"
+    },
+    {
+      "scenario": "crossowner_and_path_negatives",
+      "outcome": "passed",
+      "sandbox_id": "sbx_f10fa1c4c44e43198c894de8338c88a3",
+      "wrong_owner_http": 404,
+      "rejected_paths": 5
+    },
+    {
+      "scenario": "stop_start_and_provider_process_replacement",
+      "outcome": "passed",
+      "sandbox_id": "sbx_f10fa1c4c44e43198c894de8338c88a3",
+      "sha256": "7016e16b4dc714fbbcdb37754f442cd5e7d515c3f5195ed72cc3231da1ac26fc",
+      "retained_audit_event_ids": 6
+    },
+    {
+      "scenario": "actual_guest_symlink_rejected",
+      "outcome": "passed",
+      "sandbox_id": "sbx_f10fa1c4c44e43198c894de8338c88a3",
+      "http": 409,
+      "code": "file_transfer_rejected"
+    },
+    {
+      "scenario": "crosssandbox_absence_and_file_checkpoint_restore",
+      "outcome": "passed",
+      "source_sandbox_id": "sbx_f10fa1c4c44e43198c894de8338c88a3",
+      "restore_sandbox_id": "sbx_029f433b8f024e7cad0b3b44892be49c",
+      "distinct_sandbox_identity": true,
+      "size_bytes": 2097166,
+      "sha256": "7016e16b4dc714fbbcdb37754f442cd5e7d515c3f5195ed72cc3231da1ac26fc",
+      "strategy": "explicit application-selected guest-file export/reupload, not snapshot/VM clone"
+    },
+    {
+      "scenario": "cancellation_stops_delayed_descendant",
+      "outcome": "passed",
+      "sandbox_id": "sbx_f10fa1c4c44e43198c894de8338c88a3",
+      "run_id": "run_03d8ce78ed7a415faa314016b7c99d49",
+      "status": "cancelled",
+      "ready_marker_present": true,
+      "delayed_marker_present": false,
+      "post_restart_wait_seconds": 10
+    },
+    {
+      "scenario": "isolated_forensic_registry_restore",
+      "outcome": "passed",
+      "tables": {
+        "sandboxes": {
+          "rows": 2,
+          "sha256": "eff404710c9379caf9a6a727afacd44080dbfdfcd2dffed6b6bb652c990cf588"
+        },
+        "runs": {
+          "rows": 3,
+          "sha256": "e99d769e4572679b7b6866f06db79984c1ece41dfe757c01fb137ff3c8f543ba"
+        },
+        "file_uploads": {
+          "rows": 2,
+          "sha256": "f636b6ddcb628031fa06ff89fafed913ff8c268036338f6f85b784099bf07ced"
+        },
+        "idempotency": {
+          "rows": 7,
+          "sha256": "111d3826f7260669668a8c11798db40dcf77f82a34a368db4425b25d06916676"
+        },
+        "audit_events": {
+          "rows": 37,
+          "sha256": "0436b0d3ddb795241d99dd006e3a6164e967c00796b6f37d7d441b87327d553c"
+        },
+        "cancellation_fences": {
+          "rows": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "schema_migrations": {
+          "rows": 4,
+          "sha256": "f4ffc1791ce1e21b88c0e2a8d572adeb6fd1b428b0875b9aa16b07fffc387b90"
+        }
+      },
+      "dump_sha256": "4444431c4d6bcb17b7ad645873a7c03362362294aad7954b876ae7e866b62431",
+      "audit_event_identities_retained": true,
+      "restored_provider_started": false,
+      "scope": "forensic registry restore only; does not establish guest recovery"
+    }
+  ],
+  "cleanup_pending": [],
+  "runtime": "actual BoxLite Cloud",
+  "source": {
+    "git_commit": "909980bdc0851d2bea6f454ae8fddc43b48b4e4f",
+    "provider_files_sha256": {
+      "services/sandbox-provider/provider/__init__.py": "597408b1890e125e86df8a6130ac4ffa128f056a3b5f1e48d6fe9c1b6f1b463b",
+      "services/sandbox-provider/provider/app.py": "af8673a7f496dd40942e7f0fd4a52d133175085912611f51bf57e012f60666f1",
+      "services/sandbox-provider/provider/audit.py": "c881c3e80cd343bb13213e27ac5cd184e9438ee1503ac7c851e2592d0293f1b8",
+      "services/sandbox-provider/provider/cloud_runtime.py": "c0e46a090c2e915146dd08f2a9b82c9d2b3320d84a32a872c1168ab1f6e6e0c4",
+      "services/sandbox-provider/provider/config.py": "21f7feffe2304ee7131a963d6ac615750a4b10cf426a1af7d4ed5f4c1499ca7b",
+      "services/sandbox-provider/provider/db.py": "01fe70d11ac712a07324c8d58fe2abc7b31b2a083c9f64ac06b2ad714aaa3eda",
+      "services/sandbox-provider/provider/errors.py": "d1a88e89320d3da7c5f9e6a2ddb05aacc1eec36abcd72521cb152021c01445c7",
+      "services/sandbox-provider/provider/guest_files.py": "ff463cd6415aac83ea7760126dc21ab9acb0385e5ec62a7bbe481aa8dc987177",
+      "services/sandbox-provider/provider/guest_run.py": "48b23dac31812bcbe837d0674777ed269b014af4ecb189445dccc407f173c1ce",
+      "services/sandbox-provider/provider/runtime.py": "29cb755651c681724f39e57db4068982f05ba054463d453d0229b054999cb657",
+      "services/sandbox-provider/provider/service.py": "4245ce2a8d72201213714fcabab73c4c22c359fe05216ffaca7e0080372c6668",
+      "services/sandbox-provider/provider/transfers.py": "691b5a7555a2e069820872e5f57e433bb0c83d2c36cb52e8218a747cf2ee36f1"
+    },
+    "harness_sha256": "576b85d110fb12ecb714c70985e84dacc56c5bba945f9dfbbcfdd7c45f4fc0a2"
+  },
+  "provider": "local real source process, not GCC deployment proof",
+  "postgresql": "new isolated disposable PostgreSQL16",
+  "host_reboot": "not performed",
+  "vm_snapshot_clone_export": "not claimed",
+  "active_command_reattachment": "still nonretryable ambiguous_execution; no replay"
+}

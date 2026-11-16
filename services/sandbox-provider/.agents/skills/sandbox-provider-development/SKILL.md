@@ -5,6 +5,8 @@ description: Develop and validate the generic FastAPI BoxLite Sandbox Provider, 
 
 # Sandbox Provider development procedure
 
+For rc.2 file transfer/result completion work, read `docs/contracts/scoped-files-v1.md`. Test the actual guest helper filesystem boundary, chunk replay after partial writes/publication lost acknowledgement, durable pending-operation fencing and stale generation protection. Cloud public1 MiB chunks use64 KiB writes/32 KiB reads with fixed bounded argv. Test mutations even when file size/timestamps remain unchanged: rehash each public read before returning it. SDK loopback remains mocked evidence; consume its client's stdin EOF before closing WebSockets to avoid TCP resets. Keep strict result schemas unchanged. Workload secret references resolve only at dispatch. Use Python3 in approved guest images.
+
 1. Read `services/sandbox-provider/AGENTS.md` and `PHASE-1-REUSABLE-SERVICES.md`. Check the frozen generic API before writing code.
 2. Confirm the pinned BoxLite SDK version and actual persistent create/get/start/stop/exec/remove semantics; do not rely on auto-removing convenience wrappers.
 3. Implement generic `SandboxRuntime` boundaries, Provider-owned registry and idempotent authenticated HTTP handlers. Do not embed Pi/document business logic.
@@ -38,5 +40,6 @@ Match packaged `provider/openapi.json` to root contract JSON after reviewed cont
 - Cloud profile validation occurs on new creation, not globally: historical immutable profiles must stay available for reads. Cloud memory is whole GiB >=1024MiB, CPU<=16, disk whole GiB. Optional profile `entrypoint`/`cmd` are trusted operator argv only. Keep the packaged profile schema equal to the root contract.
 - Preserve migration003 backend binding and creation dispatch fence. Retained operations use persisted returned IDs; missing/ambiguous state must never create a fresh disk. A backend/account change must not reinterpret local or different-account records. Key rotation within the same explicitly bound account is supported.
 - Verify returned CPU/RAM, image string, lifecycle and both network directions before execution. SDK BoxInfo cannot attest disk size or resolved OCI digest. Tests of actual guest quotas/network remain separate from wire assertions.
+- Cloud allowlist entries accept hostname/wildcard-hostname or IPv4/CIDR rules, never `hostname:port` or URL schemes. Reject port/scheme rules in create preflight before DB intent. Do not silently drop restrictions: hostname rules have no per-port enforcement and DNS/UDP qualification remains separate.
 - `tests/test_cloud_runtime.py` executes the real SDK against a loopback HTTP stub; its PostgreSQL cases use the disposable `TEST_DATABASE_URL`. Such passes are mocked runtime evidence, not hosted execution. Full local regression command remains `python -m pytest -q -m 'not real_runtime'` with the dedicated DB.
 - Cloud active-execution attachment fails closed with nonretryable `ambiguous_execution` because output replay is not verified. Do not weaken this to an empty successful result. Provider stops the retained box and never resubmits that command. Native result `error_message` also prevents success.

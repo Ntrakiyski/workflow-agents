@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "outcome": "passed_bounded_https_hostname_policy",
+  "runtime": "actual BoxLite Cloud",
+  "sdk_version": "0.11.0",
+  "source_provider_commit": "72c2738",
+  "first_raw_tcp_probe": {
+    "session": "3c91e8c9bb6a4394ac4bbe5ed2ad51c2",
+    "name": "workflow-policy-qa-3c91e8c9bb6a4394ac4bbe5ed2ad51c2",
+    "profile": {
+      "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+      "cpus": 2,
+      "memory_mib": 2048,
+      "disk_mib": 2048,
+      "network": "allowlist",
+      "allowed_hosts": [
+        "litellm.gccssofia.com"
+      ],
+      "entrypoint": [
+        "/usr/local/bin/python3",
+        "-c",
+        "import time; time.sleep(31536000)"
+      ],
+      "cmd": []
+    },
+    "runtime_id": "lfJpuQuII2g4",
+    "cleanup": "confirmed_exact_id_absent",
+    "correction": {
+      "profile": {
+        "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+        "cpus": 2,
+        "memory_mib": 2048,
+        "disk_mib": 2048,
+        "network": "allowlist",
+        "allowed_hosts": [
+          "litellm.gccssofia.com"
+        ],
+        "entrypoint": [
+          "/usr/local/bin/python3",
+          "-c",
+          "import time; time.sleep(31536000)"
+        ],
+        "cmd": []
+      },
+      "authority": "new separately journaled root-authorized cached-slim network qualification; exact name absent before first dispatch",
+      "create_attempted": true,
+      "outcome": "created",
+      "duration_ms": 2570.882
+    },
+    "network_probe": {
+      "allowed_https": {
+        "outcome": "http",
+        "status": 401
+      },
+      "unrelated_tcp": {
+        "connected": true
+      },
+      "passed": false
+    },
+    "execution": {
+      "exit_code": 0,
+      "native_error_present": false,
+      "stderr_bytes": 0
+    }
+  },
+  "https_policy_probe": {
+    "session": "74737887446c42c6b44744674fc2f2e6",
+    "name": "workflow-policy-qa-74737887446c42c6b44744674fc2f2e6",
+    "profile": {
+      "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+      "cpus": 2,
+      "memory_mib": 2048,
+      "disk_mib": 2048,
+      "network": "allowlist",
+      "allowed_hosts": [
+        "litellm.gccssofia.com"
+      ],
+      "entrypoint": [
+        "/usr/local/bin/python3",
+        "-c",
+        "import time; time.sleep(31536000)"
+      ],
+      "cmd": []
+    },
+    "runtime_id": "4BVQTMk19X4W",
+    "cleanup": "confirmed_exact_id_absent",
+    "correction": {
+      "profile": {
+        "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+        "cpus": 2,
+        "memory_mib": 2048,
+        "disk_mib": 2048,
+        "network": "allowlist",
+        "allowed_hosts": [
+          "litellm.gccssofia.com"
+        ],
+        "entrypoint": [
+          "/usr/local/bin/python3",
+          "-c",
+          "import time; time.sleep(31536000)"
+        ],
+        "cmd": []
+      },
+      "authority": "new separately journaled root-authorized cached-slim network qualification; exact name absent before first dispatch",
+      "create_attempted": true,
+      "outcome": "created",
+      "duration_ms": 3119.448
+    },
+    "effective_metadata": {
+      "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+      "cpus": 2,
+      "memory_mib": 2048,
+      "state": "running",
+      "inbound_mode": "disabled",
+      "outbound_mode": "enabled",
+      "allow_net": [
+        "litellm.gccssofia.com"
+      ],
+      "auto_delete": 0,
+      "auto_stop": 0,
+      "auto_resume": false
+    },
+    "network_probe": {
+      "allowed_https": {
+        "outcome": "http",
+        "status": 401
+      },
+      "unrelated_tcp": {
+        "connected": true
+      },
+      "denied_example_https": {
+        "outcome": "error",
+        "class": "URLError",
+        "reason_class": "SSLEOFError",
+        "reason": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1011)"
+      },
+      "denied_direct_ip_https": {
+        "outcome": "error",
+        "class": "URLError",
+        "reason_class": "SSLEOFError",
+        "reason": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1011)"
+      },
+      "passed": true
+    },
+    "execution": {
+      "exit_code": 0,
+      "native_error_present": false,
+      "stderr_bytes": 0
+    }
+  },
+  "tested_fixture_source_sha256": "0d106320ad59ce5be9a27c5cba0ef5b386409df995873cd8c78784e93d6f603b",
+  "sdk_wire_observation": {
+    "network": {
+      "mode": "enabled",
+      "allow_net": [
+        "litellm.gccssofia.com"
+      ]
+    },
+    "scope": "actual pinned SDK against loopback; not hosted enforcement evidence"
+  },
+  "interpretation": "Raw TCP acceptance is insufficient to establish HTTPS egress. Positive approved HTTPS endpoint responds401; two unauthorized HTTPS destinations endTLS before HTTP.",
+  "limits": [
+    "No per-port enforcement is supported by allow_net hostname rules.",
+    "No complete TCP filter, UDP/DNS restriction, rebinding, airgap or comprehensive isolation proof.",
+    "Root application failedsandbox was not inspected or mutated.",
+    "No runtime bundle or model credentials used in network probes."
+  ],
+  "upstream_reference": {
+    "tag": "v0.11.0",
+    "hostname_routing": "https://github.com/boxlite-ai/boxlite/blob/v0.11.0/src/deps/libgvproxy-sys/gvproxy-bridge/egress_dialer.go",
+    "allow_net_matcher": "https://github.com/boxlite-ai/boxlite/blob/v0.11.0/src/deps/libgvproxy-sys/gvproxy-bridge/allow_net_filter.go"
+  },
+  "cleanup_pending": []
+}

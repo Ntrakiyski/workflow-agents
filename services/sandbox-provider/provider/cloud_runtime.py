@@ -1,13 +1,30 @@
 """Explicit hosted BoxLite SDK backend. Never falls back to local execution."""
 import asyncio
 import hashlib
+import json
+import secrets
+import uuid
+from dataclasses import dataclass
+from pathlib import Path
 
 from .errors import ServiceError, unavailable
 from .runtime import BoxLiteRuntime, RuntimeIdentity
 
 
+@dataclass
+class JournalExecution:
+    native: object
+    nonce: str
+    runtime_reference: str | None = None
+
+    def id(self):
+        return self.native.id()
+
+
 class BoxLiteCloudRuntime(BoxLiteRuntime):
     requires_create_fence = True
+    cancellation_stops_environment = True
+    file_transfer_input = 'argv'
 
     def __init__(self, settings):
         self.settings, self.runtime = settings, None
@@ -88,6 +105,8 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
     def validate_profile(profile):
         if profile['cpus'] > 16 or profile['memory_mib'] < 1024 or profile['memory_mib'] % 1024:
             raise ServiceError(422, 'runtime_policy_rejected', 'Cloud profiles require at most 16 CPUs and whole-GiB memory; rounding is forbidden.')
+        if any(':' in host for host in profile.get('allowed_hosts', [])):
+            raise ServiceError(422, 'runtime_policy_rejected', 'Cloud network allowlists accept hostnames or IPv4 rules without schemes or ports; port-level controls are unsupported.')
 
     @staticmethod
     def _verify_profile(info, profile):
@@ -193,18 +212,65 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
                         raise
                     await asyncio.sleep(.25)
                     await self._wait_settled(reference)
-            if await self.inspect(reference) is not None:
-                raise ServiceError(409, 'invalid_state', 'Execution backend did not confirm explicit deletion.')
+            try:
+                async with asyncio.timeout(self.settings.runtime_request_timeout):
+                    while await self.inspect(reference) is not None:
+                        await asyncio.sleep(.25)
+            except TimeoutError:
+                raise unavailable('runtime_transition_pending') from None
 
     async def execute(self, reference, argv, profile, timeout):
         box = await self._box(reference)
+        nonce = secrets.token_hex(32)
+        result_reference = profile.get('_result_reference', 'run_' + uuid.uuid4().hex)
+        source = Path(__file__).with_name('guest_run.py').read_text()
         try:
-            return await self._request(box.exec(argv[0], args=argv[1:],
+            native = await self._request(box.exec('python3', args=['-c', source, nonce, result_reference,
+                str(min(profile['max_output_bytes'], 32768)), json.dumps(list(profile.get('secret_environment', {}))), *argv],
                 env=list(profile.get('environment', {}).items()), cwd=profile['working_directory'], timeout_secs=timeout))
+            return JournalExecution(native, nonce, reference)
         except ServiceError as error:
             if error.retryable:
                 raise ServiceError(409, 'ambiguous_execution', 'Execution outcome is unknown. Environment requires recovery.') from None
             raise
+
+    async def collect(self, execution, max_output):
+        # A wrapper completion record is mandatory even for a child that emits
+        # no bytes. SDK exit0 with lost/empty streams is explicitly ambiguous.
+        if not isinstance(execution, JournalExecution):
+            raise ServiceError(409, 'ambiguous_execution', 'A complete workload result could not be verified. Environment requires recovery.')
+        try:
+            async def drain(stream):
+                data = bytearray()
+                async for part in stream:
+                    raw = part.encode() if isinstance(part, str) else bytes(part)
+                    if len(data) + len(raw) > 1048576:
+                        raise ValueError('wrapper_too_large')
+                    data.extend(raw)
+                return bytes(data)
+            out, err, native_result = await asyncio.gather(drain(execution.native.stdout()), drain(execution.native.stderr()), execution.native.wait())
+            if native_result.exit_code != 0 or getattr(native_result, 'error_message', None) or err:
+                raise ValueError('incomplete_wrapper')
+            envelope = json.loads(out)
+            result = envelope['result']
+            if (envelope['version'] != 1 or envelope['nonce'] != execution.nonce
+                    or set(result) != {'exit_code', 'stdout', 'stderr', 'output_truncated', 'artifacts'}
+                    or type(result['exit_code']) is not int or type(result['output_truncated']) is not bool
+                    or result['artifacts'] != [] or not isinstance(result['stdout'], str)
+                    or not isinstance(result['stderr'], str)):
+                raise ValueError('invalid_wrapper')
+            encoded = json.dumps(result, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
+            if hashlib.sha256(encoded.encode()).hexdigest() != envelope['sha256']:
+                raise ValueError('invalid_checksum')
+            for name in ('stdout', 'stderr'):
+                raw = result[name].encode()
+                result['output_truncated'] |= len(raw) > max_output
+                result[name] = raw[:max_output].decode(errors='replace')[:32768]
+            return result
+        except ServiceError:
+            raise
+        except Exception:
+            raise ServiceError(409, 'ambiguous_execution', 'A complete workload result could not be verified. Environment requires recovery.') from None
 
     async def attach(self, reference, execution_id):
         # SDK0.11 may recover a zero exit status after losing output, without
@@ -214,5 +280,12 @@ class BoxLiteCloudRuntime(BoxLiteRuntime):
         raise ServiceError(409, 'ambiguous_execution', 'Execution output cannot be safely recovered from this backend. Environment requires recovery.')
 
     async def cancel(self, execution):
-        await self._request(execution.kill())
-        await self._request(execution.wait())
+        # A wrapper kill alone cannot prove its subprocess tree terminated.
+        # Confirm same-box stop before reporting cancellation; retain the disk.
+        if not isinstance(execution, JournalExecution) or not execution.runtime_reference:
+            raise ServiceError(409, 'ambiguous_execution', 'Execution cancellation requires same-environment recovery.')
+        try:
+            await self._request(execution.native.kill())
+        except ServiceError:
+            pass  # Stop confirmation below is authoritative for descendants.
+        await self.stop(execution.runtime_reference)

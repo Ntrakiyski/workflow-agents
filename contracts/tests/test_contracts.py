@@ -78,6 +78,23 @@ class Contracts(unittest.TestCase):
    invalid(write,{'file':path,'text':'hello'})
   invalid(write,{'file':'file.txt','text':'hello','command':'evil'})
   invalid(write,{'file':'file.txt','text':'x'*4097})
+ def test_scoped_transfer_addition_preserves_existing_wire_shapes(self):
+  doc=load('provider-v1.openapi.json')
+  valid(validator(doc,'FileUploadRequest'),{'path':'requests/request-1/inputs/a.txt','size_bytes':1,'sha256':'a'*64})
+  valid(validator(doc,'FileChunkRequest'),{'offset':0,'data_base64':'YQ==','sha256':'a'*64})
+  valid(validator(doc,'FileReadRequest'),{'path':'outputs/a.docx','offset':0,'max_bytes':1048576})
+  for path in ('../secret','/etc/passwd','x//y','.uploads/private','https://host/file'):
+   invalid(validator(doc,'FileUploadRequest'),{'path':path,'size_bytes':1,'sha256':'a'*64})
+  invalid(validator(doc,'FileUploadRequest'),{'path':'a','size_bytes':268435457,'sha256':'a'*64})
+  invalid(validator(doc,'FileReadRequest'),{'path':'a','offset':0,'max_bytes':1048577})
+  # Existing strict Result remains consumable unchanged by Runner/application.
+  self.assertEqual(set(doc['components']['schemas']['Result']['properties']),{'exit_code','stdout','stderr','output_truncated','artifacts'})
+  schema=load('profiles.schema.json');template=load('profiles.template.json')
+  template['sandboxes']['minimal-linux:v1']['image']='example.invalid/test-fixture@sha256:'+'0'*64
+  template['workloads']['fixture-read-file:v1']['secret_environment']={'MODEL_KEY':'WORKLOAD_SECRET_MODEL_KEY'}
+  valid(Draft202012Validator(schema),template)
+  template['workloads']['fixture-read-file:v1']['secret_environment']['MODEL_KEY']='DATABASE_URL'
+  invalid(Draft202012Validator(schema),template)
  def test_response_and_error_fixtures(self):
   doc=load('provider-v1.openapi.json')
   valid(validator(doc,'Error'),{'code':'sandbox_busy','message':'Sandbox has an active run','retryable':True,'correlation_id':'corr_a'})

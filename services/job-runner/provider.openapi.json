@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Workflow Agents Sandbox Provider API",
-    "version": "1.0.0-rc.1",
-    "description": "Initial reviewed Phase 1 wire contract. Release candidate until all real-runtime gates pass. See docs/contracts/v1.md."
+    "version": "1.0.0-rc.2",
+    "description": "Additive scoped transfer and explicit Cloud result completion candidate. Release readiness still requires real hosted qualification; see docs/contracts/v1.md."
   },
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "security": [
@@ -12,6 +12,1055 @@
     }
   ],
   "paths": {
+    "/v1/sandboxes/{sandbox_id}/files/uploads": {
+      "post": {
+        "operationId": "createFileUpload",
+        "description": "Requires sandbox:file:write. Reserve an immutable relative path under /opt/workflow-transfer. Maximum256MiB per file. No DB blobs; metadata only. Running idle sandbox and approved Python3 image required.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/sandbox_id"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/OwnerId"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Current durable resource",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUpload"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON, query or header",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Denied profile, permission or delegation",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown or wrong-owner resource",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency conflict, busy resource or illegal transition",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds configured size bound",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported request media type",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Payload or approved workload schema invalid",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Configured quota exceeded",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database, runtime or dependency unavailable",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileUploadRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sandboxes/{sandbox_id}/files/uploads/{upload_id}": {
+      "patch": {
+        "operationId": "writeFileChunk",
+        "description": "Requires sandbox:file:write. Contiguous chunks of at most1MiB decoded bytes with SHA256. Retry identical offset/bytes after unknown outcome; conflicting bytes rejected. JSON body bound1500000 bytes. Busy sandboxes refuse transfer.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/sandbox_id"
+          },
+          {
+            "$ref": "#/components/parameters/upload_id"
+          },
+          {
+            "$ref": "#/components/parameters/OwnerId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current durable resource",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUpload"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON, query or header",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Denied profile, permission or delegation",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown or wrong-owner resource",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency conflict, busy resource or illegal transition",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds configured size bound",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported request media type",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Payload or approved workload schema invalid",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Configured quota exceeded",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database, runtime or dependency unavailable",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileChunkRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sandboxes/{sandbox_id}/files/uploads/{upload_id}/complete": {
+      "post": {
+        "operationId": "completeFileUpload",
+        "description": "Requires sandbox:file:write. Verify full size/checksum and publish without overwrite. Same upload replay is idempotent after lost acknowledgement. Parent directories and files reject symlinks, special files and hardlinks.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/sandbox_id"
+          },
+          {
+            "$ref": "#/components/parameters/upload_id"
+          },
+          {
+            "$ref": "#/components/parameters/OwnerId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current durable resource",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUpload"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON, query or header",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Denied profile, permission or delegation",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown or wrong-owner resource",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency conflict, busy resource or illegal transition",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds configured size bound",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported request media type",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Payload or approved workload schema invalid",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Configured quota exceeded",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database, runtime or dependency unavailable",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sandboxes/{sandbox_id}/files/read": {
+      "post": {
+        "operationId": "readFileChunk",
+        "description": "Requires sandbox:file:read. Read at most1MiB from one regular file relative to /opt/workflow-transfer. Return whole-file SHA256, size and EOF; consumer verifies all chunks and final checksum before delivery. No arbitrary host paths/URLs. Active runs refuse transfer.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/sandbox_id"
+          },
+          {
+            "$ref": "#/components/parameters/OwnerId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current durable resource",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileChunk"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON, query or header",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Denied profile, permission or delegation",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown or wrong-owner resource",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency conflict, busy resource or illegal transition",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds configured size bound",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported request media type",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Payload or approved workload schema invalid",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Configured quota exceeded",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database, runtime or dependency unavailable",
+            "headers": {
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "description": "Correlation identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileReadRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/sandboxes": {
       "post": {
         "operationId": "createSandbox",
@@ -2810,6 +3859,17 @@
           "maxLength": 128,
           "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
         }
+      },
+      "upload_id": {
+        "name": "upload_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+        }
       }
     },
     "schemas": {
@@ -3515,6 +4575,188 @@
           "execution_ref",
           "run_id",
           "status"
+        ],
+        "additionalProperties": false
+      },
+      "FileUploadRequest": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9][A-Za-z0-9_.-]{0,127}){0,15}$"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 268435456
+          },
+          "sha256": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "path",
+          "size_bytes",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "FileUpload": {
+        "type": "object",
+        "properties": {
+          "upload_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          },
+          "sandbox_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9][A-Za-z0-9_.-]{0,127}){0,15}$"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 268435456
+          },
+          "sha256": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 268435456
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "uploading",
+              "completed"
+            ]
+          }
+        },
+        "required": [
+          "upload_id",
+          "sandbox_id",
+          "path",
+          "size_bytes",
+          "sha256",
+          "offset",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "FileChunkRequest": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 268435456
+          },
+          "data_base64": {
+            "type": "string",
+            "maxLength": 1398104,
+            "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+          },
+          "sha256": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "offset",
+          "data_base64",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "FileReadRequest": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9][A-Za-z0-9_.-]{0,127}){0,15}$"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 268435456
+          },
+          "max_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1048576
+          }
+        },
+        "required": [
+          "path",
+          "offset",
+          "max_bytes"
+        ],
+        "additionalProperties": false
+      },
+      "FileChunk": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9][A-Za-z0-9_.-]{0,127}){0,15}$"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 268435456
+          },
+          "data_base64": {
+            "type": "string",
+            "maxLength": 1398104,
+            "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 268435456
+          },
+          "sha256": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "eof": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path",
+          "offset",
+          "data_base64",
+          "size_bytes",
+          "sha256",
+          "eof"
         ],
         "additionalProperties": false
       }

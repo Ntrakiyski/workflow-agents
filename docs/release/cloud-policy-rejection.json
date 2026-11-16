@@ -1,0 +1,62 @@
+{
+  "session": "1962ebddc7c54fb3914b3e0601163103",
+  "name": "workflow-policy-qa-1962ebddc7c54fb3914b3e0601163103",
+  "profile": {
+    "image": "docker.io/library/python@sha256:a5bab0ff300f91231c2e68bf73a8a8d60762ac39ce1c50eaf6803e4c38a9062b",
+    "cpus": 2,
+    "memory_mib": 2048,
+    "disk_mib": 2048,
+    "network": "allowlist",
+    "allowed_hosts": [
+      "litellm.gccssofia.com:443"
+    ],
+    "entrypoint": [
+      "/usr/local/bin/python3",
+      "-c",
+      "import time; time.sleep(31536000)"
+    ],
+    "cmd": []
+  },
+  "create_attempted": true,
+  "runtime_id": "lE27Omsvo1RP",
+  "cleanup": "confirmed_exact_id_absent",
+  "initial_exact_name_matches": 0,
+  "create_outcome": "rejected",
+  "native_error_class": "InvalidArgumentError",
+  "native_error_message": "invalid argument: invalid allow_net rule: \"litellm.gccssofia.com:443\"; expected a hostname, wildcard hostname, IPv4 or IPv4 CIDR",
+  "duration_ms": 0.885,
+  "post_attempt_exact_name_matches": 0,
+  "correction": {
+    "profile": {
+      "image": "docker.io/library/python@sha256:a5bab0ff300f91231c2e68bf73a8a8d60762ac39ce1c50eaf6803e4c38a9062b",
+      "cpus": 2,
+      "memory_mib": 2048,
+      "disk_mib": 2048,
+      "network": "allowlist",
+      "allowed_hosts": [
+        "litellm.gccssofia.com"
+      ],
+      "entrypoint": [
+        "/usr/local/bin/python3",
+        "-c",
+        "import time; time.sleep(31536000)"
+      ],
+      "cmd": []
+    },
+    "authority": "prior InvalidArgumentError proven before HTTP dispatch with actual pinned SDK loopback regression; exact name absent before correction",
+    "create_attempted": true,
+    "outcome": "failed_before_guest_execution",
+    "error_class": "InvalidArgumentError",
+    "error_message": "invalid argument: Box state transition failed: failed to start box: boxlite: storage error: Failed to pull image 'docker.io/library/python@sha256:a5bab0ff300f91231c2e68bf73a8a8d60762ac39ce1c50eaf6803e4c38a9062b' after trying 1 registry:\n  - docker.io/library/python@sha256:a5bab0ff300f91231c2e68bf73a8a8d60762ac39ce1c50eaf6803e4c38a9062b: storage error: failed to pull a registry token: error sending request for url (https://index.docker.io/v2/) (code=7)",
+    "duration_ms": 10704.108
+  },
+  "corrected_exact_name_matches": 1,
+  "state_before_cleanup": "unknown",
+  "outcome": "blocked_full_image_registry_token_transport",
+  "sdk_version": "0.11.0",
+  "provider_source_base": "9990892",
+  "network_probe": "not executed; guest did not start",
+  "root_application_failed_sandbox": "not inspected or mutated",
+  "port_enforcement": "unsupported by BoxLite host rules",
+  "udp_dns_qualification": "not performed"
+}

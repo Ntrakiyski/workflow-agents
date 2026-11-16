@@ -1,6 +1,8 @@
 """Actual pinned SDK against a loopback HTTP stub, never hosted Cloud/KVM."""
 import copy
 import asyncio
+import base64
+import hashlib
 import json
 import os
 import threading
@@ -37,6 +39,10 @@ class CloudStub:
     def __init__(self):
         self.boxes, self.requests = {}, []
         self.fail_create, self.unauthorized, self.mutate, self.pending_stops = False, False, None, {}
+        self.transfer_response, self.stdin_bytes = None, None
+        self.execution_request = None
+        self.pending_deletes,self.defer_delete_reads = {},0
+        self.execution_count = 0
 
     def box(self, payload):
         network = payload['network']
@@ -60,11 +66,60 @@ def cloud_server():
         def log_message(self, *_):
             pass
         def do_GET(self):
+            if '/executions/exec-' in self.path and self.path.endswith('/attach') and stub.transfer_response:
+                self.transfer_socket()
+                return
             self.respond('GET')
         def do_POST(self):
             self.respond('POST')
         def do_DELETE(self):
             self.respond('DELETE')
+        def transfer_socket(self):
+            # Minimal RFC6455 loopback peer, only for the actual pinned SDK.
+            # This tests transport framing/stdin, never hosted guest execution.
+            self.protocol_version = 'HTTP/1.1'
+            key = self.headers['Sec-WebSocket-Key']
+            accept = base64.b64encode(hashlib.sha1((key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode()
+            self.send_response(101)
+            self.send_header('Upgrade', 'websocket')
+            self.send_header('Connection', 'Upgrade')
+            self.send_header('Sec-WebSocket-Accept', accept)
+            self.end_headers()
+            self.connection.settimeout(10)
+            data = bytearray()
+            args = (stub.execution_request or {}).get('args', [])
+            argv_input = len(args)>2 and args[2]=='--json-args'
+            if argv_input:
+                data.extend(''.join(args[3:]).encode())
+            while True:
+                head = self.rfile.read(2)
+                if len(head) != 2:
+                    return
+                opcode, length = head[0] & 15, head[1] & 127
+                if length in (126,127):
+                    length = int.from_bytes(self.rfile.read(2 if length == 126 else 8), 'big')
+                assert length <= 1500000
+                mask = self.rfile.read(4) if head[1] & 128 else None
+                payload = self.rfile.read(length)
+                if mask:
+                    payload = bytes(byte ^ mask[index % 4] for index, byte in enumerate(payload))
+                if opcode in (0,2):
+                    if not argv_input:
+                        data.extend(payload)
+                elif opcode == 1 and json.loads(payload).get('type') == 'stdin_eof':
+                    break
+                elif opcode == 8:
+                    return
+            stub.stdin_bytes = bytes(data)
+            response = json.dumps(stub.transfer_response(json.loads(data)), separators=(',', ':')).encode()
+            def send(opcode, payload):
+                size = len(payload)
+                head = bytes([128 | opcode, size]) if size < 126 else bytes([128 | opcode,126 if size < 65536 else 127]) + size.to_bytes(2 if size < 65536 else 8,'big')
+                self.wfile.write(head + payload)
+                self.wfile.flush()
+            send(2, b'\x01' + response)
+            send(1, b'{"type":"exit","exit_code":0}')
+            self.close_connection = True
         def respond(self, method):
             length = int(self.headers.get('Content-Length', '0'))
             payload = json.loads(self.rfile.read(length) or b'{}')
@@ -85,13 +140,22 @@ def cloud_server():
             elif parts[0] in stub.boxes:
                 box = stub.boxes[parts[0]]
                 result = box
-                if len(parts) == 1 and method == 'GET' and parts[0] in stub.pending_stops:
+                if len(parts)==1 and method=='GET' and parts[0] in stub.pending_deletes:
+                    stub.pending_deletes[parts[0]]-=1
+                    if stub.pending_deletes[parts[0]]<=0:
+                        del stub.pending_deletes[parts[0]]
+                        del stub.boxes[parts[0]]
+                        code,result=404,{'message':'not found'}
+                elif len(parts) == 1 and method == 'GET' and parts[0] in stub.pending_stops:
                     stub.pending_stops[parts[0]] -= 1
                     if stub.pending_stops[parts[0]] <= 0:
                         box['status'] = 'stopped'
                         del stub.pending_stops[parts[0]]
                 elif len(parts) == 1 and method == 'DELETE':
-                    del stub.boxes[parts[0]]
+                    if stub.defer_delete_reads:
+                        stub.pending_deletes[parts[0]]=stub.defer_delete_reads
+                    else:
+                        del stub.boxes[parts[0]]
                     code, result = 204, None
                 elif parts[1:] == ['start'] and method == 'POST':
                     box['status'] = 'running'
@@ -99,7 +163,9 @@ def cloud_server():
                     box['status'] = 'stopping'
                     stub.pending_stops[parts[0]] = 2
                 elif parts[1:] == ['exec'] and method == 'POST':
-                    result = {'execution_id': 'exec-1'}
+                    stub.execution_request = payload
+                    stub.execution_count += 1
+                    result = {'execution_id': 'exec-' + str(stub.execution_count)}
                 elif len(parts) > 1:
                     code, result = 503, {'message': 'stub has no guest execution or WebSocket'}
             else:
@@ -153,6 +219,80 @@ async def test_real_sdk_wire_retention_policy_stop_settles_and_reconnect_uses_sa
         assert not stub.boxes
         assert sum(method == 'DELETE' for method, _, _ in stub.requests) == 1
         await replacement.close()
+
+
+async def test_real_sdk_loopback_transfers_large_stdin_and_output(tmp_path):
+    settings = configured(tmp_path)
+    with cloud_server() as (stub, url):
+        runtime = runtime_for(settings, url)
+        found = await runtime.ensure(NAME, settings.profiles['sandboxes']['minimal-linux:v1'])
+        raw = b'x' * 1048576
+        runtime.file_transfer_input = 'stdin'  # Explicitly test SDK stdin framing, not hosted policy.
+        encoded = base64.b64encode(raw).decode()
+        request = {'operation': 'chunk', 'path': 'inputs/large.bin', 'upload_id': 'upl_' + 'a' * 32,
+                   'size_bytes': len(raw), 'offset': 0, 'data_base64': encoded, 'sha256': hashlib.sha256(raw).hexdigest()}
+        stub.transfer_response = lambda value: {'ok': True, 'value': {'offset': len(base64.b64decode(value['data_base64']))}}
+        assert await runtime.transfer(found.runtime_id, request) == {'offset': len(raw)}
+        assert json.loads(stub.stdin_bytes) == request
+        returned = {'path': 'outputs/large.bin', 'offset': 0, 'data_base64': encoded,
+                    'size_bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest(), 'eof': True}
+        stub.transfer_response = lambda value: {'ok': True, 'value': returned}
+        assert await runtime.transfer(found.runtime_id, {'operation': 'read', 'path': returned['path'], 'offset': 0, 'max_bytes': 1048576}) == returned
+        await runtime.close()
+
+
+async def test_real_sdk_cloud_fragmented_transfer_preserves_public_one_mib_contract(tmp_path):
+    settings=configured(tmp_path)
+    with cloud_server() as (stub,url):
+        runtime=runtime_for(settings,url)
+        found=await runtime.ensure(NAME,settings.profiles['sandboxes']['minimal-linux:v1'])
+        data=b'x'*1048576
+        chunk={'operation':'chunk','path':'inputs/file.bin','upload_id':'upl_'+'a'*32,
+               'size_bytes':len(data),'offset':0,'data_base64':base64.b64encode(data).decode(),'sha256':hashlib.sha256(data).hexdigest()}
+        seen=[]
+        def upload(value):
+            raw=base64.b64decode(value['data_base64'],validate=True)
+            assert len(raw)<=65536 and hashlib.sha256(raw).hexdigest()==value['sha256']
+            seen.append(value['offset'])
+            return {'ok':True,'value':{'offset':value['offset']+len(raw)}}
+        stub.transfer_response=upload
+        assert await runtime.transfer(found.runtime_id,chunk)=={'offset':len(data)}
+        assert seen==list(range(0,len(data),65536))
+        checksum=hashlib.sha256(data).hexdigest()
+        def download(value):
+            start=value['offset'];part=data[start:start+value['max_bytes']]
+            assert value['max_bytes']<=32768
+            if start:
+                assert value['_expected_stat']==[1,2,len(data),3,4] and value['_expected_sha256']==checksum
+            return {'ok':True,'value':{'path':value['path'],'offset':start,
+                    'data_base64':base64.b64encode(part).decode(),'size_bytes':len(data),
+                    'sha256':checksum,'eof':start+len(part)==len(data),'_stat':[1,2,len(data),3,4]}}
+        stub.transfer_response=download
+        result=await runtime.transfer(found.runtime_id,{'operation':'read','path':'outputs/result.bin','offset':0,'max_bytes':1048576})
+        assert base64.b64decode(result['data_base64'])==data and result['sha256']==checksum and result['eof']
+        assert '_stat' not in result
+        executions=[payload for method,path,payload in stub.requests if method=='POST' and path.endswith('/exec')]
+        assert len(executions)==48 and all(sum(len(value) for value in p['args'])<131072 for p in executions)
+        await runtime.close()
+
+
+async def test_real_sdk_destroy_waits_for_same_id_absence_and_retains_retryable_pending(tmp_path):
+    settings=configured(tmp_path)
+    with cloud_server() as (stub,url):
+        runtime=runtime_for(settings,url)
+        found=await runtime.ensure(NAME,settings.profiles['sandboxes']['minimal-linux:v1'])
+        stub.defer_delete_reads=2
+        await runtime.destroy(found.runtime_id)
+        assert found.runtime_id not in stub.boxes
+        second=await runtime.ensure(NAME,settings.profiles['sandboxes']['minimal-linux:v1'])
+        stub.defer_delete_reads=1000
+        with pytest.raises(ServiceError) as error:
+            await runtime.destroy(second.runtime_id)
+        assert error.value.code=='runtime_transition_pending' and error.value.retryable
+        stub.defer_delete_reads=0
+        await runtime.destroy(second.runtime_id)
+        assert not stub.boxes
+        await runtime.close()
 
 
 async def test_create_transport_failure_is_not_replayed_and_fenced_retry_cannot_create(tmp_path):
@@ -210,6 +350,50 @@ async def test_legacy_small_profile_remains_readable_but_is_refused_before_cloud
         runtime = runtime_for(settings, url)
         with pytest.raises(ServiceError, match='runtime_policy_rejected'):
             await runtime.ensure(NAME, settings.profiles['sandboxes']['minimal-linux:v1'])
+        assert stub.requests == []
+
+
+@pytest.mark.integration
+async def test_cloud_host_port_policy_rejected_before_registry_intent_or_runtime_requests(tmp_path):
+    database_url = os.getenv('TEST_DATABASE_URL')
+    if not database_url:
+        pytest.skip('Requires a dedicated disposable PostgreSQL database.')
+    settings = configured(tmp_path)
+    settings.database_url = database_url
+    profile = settings.profiles['sandboxes']['minimal-linux:v1']
+    profile.update(network='allowlist', allowed_hosts=['model.example.com:443'])
+    with cloud_server() as (stub, url):
+        runtime = runtime_for(settings, url)
+        app = create_app(settings, runtime, dispatcher=False)
+        async with app.router.lifespan_context(app):
+            async with app.state.service.db.tx() as c:
+                await c.execute('TRUNCATE sandboxes,runs,idempotency,audit_events RESTART IDENTITY CASCADE')
+            stub.requests.clear()
+            async with AsyncClient(transport=ASGITransport(app=app), base_url='http://provider.test') as client:
+                response = await client.post('/v1/sandboxes',
+                    headers={'Authorization':'Bearer '+settings.auth[0]['token'],'Idempotency-Key':'invalid-port'},
+                    json={'owner_ref':'invalid-port','profile':'minimal-linux:v1','persistent':True})
+                assert response.status_code == 422 and response.json()['code'] == 'runtime_policy_rejected'
+                assert 'ports' in response.json()['message']
+                assert stub.requests == []
+                async with app.state.service.db.tx() as c:
+                    for table in ('sandboxes', 'idempotency', 'audit_events'):
+                        assert (await (await c.execute('SELECT count(*) AS count FROM '+table)).fetchone())['count'] == 0
+            profile['allowed_hosts'] = ['model.example.com']
+            runtime.validate_profile(profile)
+
+
+async def test_native_sdk_rejects_host_port_rule_before_http_dispatch(tmp_path):
+    import boxlite
+    with cloud_server() as (stub, url):
+        settings = configured(tmp_path)
+        runtime = runtime_for(settings, url)
+        native = await runtime._runtime()
+        options = boxlite.BoxOptions(image=settings.profiles['sandboxes']['minimal-linux:v1']['image'], cpus=1, memory_mib=1024, disk_size_gb=1,
+            network=boxlite.NetworkSpec(outbound=boxlite.OutboundNetworkSpec(mode='enabled',
+                allow_net=['model.example.com:443']), inbound=boxlite.InboundNetworkSpec(mode='disabled')))
+        with pytest.raises(boxlite.errors.InvalidArgumentError, match='invalid allow_net rule'):
+            await native.create(options, name=NAME)
         assert stub.requests == []
 
 

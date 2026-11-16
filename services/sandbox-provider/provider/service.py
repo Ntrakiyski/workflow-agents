@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import os
 import uuid
 from datetime import datetime, timezone
 from psycopg.types.json import Jsonb
@@ -157,7 +158,7 @@ class ProviderService:
                 self.runtime_reference(sb)
                 if sb['status'] == 'destroyed':
                     return sandbox_json(sb)
-                if sb['active_run_id']:
+                if sb['active_run_id'] or sb['file_operation_pending']:
                     raise ServiceError(409, 'sandbox_busy', 'Environment has an active execution.')
                 if sb['status'] != 'destroying':
                     await c.execute("UPDATE sandboxes SET status='destroying',updated_at=now() WHERE sandbox_id=%s", (sid,))
@@ -166,6 +167,8 @@ class ProviderService:
         async with self.db.tx() as c:
             sb = await self.get_sandbox(c, identity, sid, lock=True)
             self.runtime_reference(sb)
+            if sb['file_operation_pending'] and action != 'stop':
+                raise ServiceError(409, 'sandbox_busy', 'A file operation requires same-environment recovery before this operation.')
             if action == 'ensure' and sb['status'] not in ('creating',):
                 return sandbox_json(sb)
             if action == 'start' and sb['status'] == 'running':
@@ -193,7 +196,7 @@ class ProviderService:
                     kind, state = 'sandbox.resumed' if old == 'stopped' else 'sandbox.started', 'running'
                 elif action == 'stop':
                     await self.runtime.stop(self.runtime_reference(sb))
-                    await c.execute("UPDATE sandboxes SET status='stopped',error=NULL,updated_at=now() WHERE sandbox_id=%s", (sid,))
+                    await c.execute("UPDATE sandboxes SET status='stopped',file_operation_pending=false,file_operation_id=NULL,error=NULL,updated_at=now() WHERE sandbox_id=%s", (sid,))
                     kind, state = 'sandbox.stopped', 'stopped'
                 else:
                     # Only this explicit, separately-authorized operation calls remove.
@@ -232,7 +235,7 @@ class ProviderService:
                     fence = await one(c, 'SELECT execution_ref FROM cancellation_fences WHERE sandbox_id=%s AND execution_ref=%s', (sid, body['execution_ref']))
                     if fence:
                         raise ServiceError(409, 'execution_cancelled', 'Execution reference has been cancelled and cannot be started.')
-                    if sb['active_run_id']:
+                    if sb['active_run_id'] or sb['file_operation_pending']:
                         raise ServiceError(409, 'sandbox_busy', 'Environment has an active execution.')
                     if sb['status'] != 'running':
                         raise ServiceError(409, 'invalid_state', 'Environment must be running before execution.')
@@ -296,10 +299,15 @@ class ProviderService:
         if not await self.runtime.ready():
             return
         async with self.db.tx() as c:
-            rows = await all_rows(c, "SELECT * FROM sandboxes WHERE status IN ('running','stopped','destroying') AND active_run_id IS NULL FOR UPDATE")
+            rows = await all_rows(c, "SELECT * FROM sandboxes WHERE (status IN ('running','stopped','destroying') OR file_operation_pending) AND active_run_id IS NULL FOR UPDATE")
             for sb in rows:
                 identity = Identity('sandbox-provider-recovery', sb['owner_id'], {})
                 try:
+                    if sb['file_operation_pending']:
+                        await self.runtime.stop(self.runtime_reference(sb))
+                        await c.execute("UPDATE sandboxes SET status='stopped',file_operation_pending=false,file_operation_id=NULL,updated_at=now() WHERE sandbox_id=%s", (sb['sandbox_id'],))
+                        await event(c, sb, identity, 'provider-recovery', 'file.transfer_recovered', 'stopped')
+                        continue
                     found = await self.inspect_registered(sb)
                     if sb['status'] == 'destroying':
                         intent = await one(c, "SELECT actor_id,correlation_id FROM audit_events WHERE sandbox_id=%s AND type='sandbox.destruction_requested' ORDER BY sequence DESC LIMIT 1", (sb['sandbox_id'],))
@@ -385,7 +393,14 @@ class ProviderService:
                     if fresh:
                         p = run['profile_snapshot']
                         await self.verify_runtime(sb)
-                        execution = await self.runtime.execute(self.runtime_reference(sb), p['resolved_argv'], p, run['request']['timeout_seconds'])
+                        environment = dict(p.get('environment', {}))
+                        for name, reference in p.get('secret_environment', {}).items():
+                            value = os.environ.get(reference)
+                            if not value:
+                                raise ServiceError(503, 'workload_secret_unavailable', 'An approved workload runtime secret is unavailable.')
+                            environment[name] = value
+                        runtime_profile = p | {'environment': environment, '_result_reference': rid}
+                        execution = await self.runtime.execute(self.runtime_reference(sb), p['resolved_argv'], runtime_profile, run['request']['timeout_seconds'])
                         async with c.transaction():
                             await c.execute('UPDATE runs SET runtime_execution_id=%s,updated_at=now() WHERE run_id=%s', (execution.id(), rid))
                     elif run['runtime_execution_id']:
@@ -404,12 +419,16 @@ class ProviderService:
                             current = await one(c, 'SELECT status FROM runs WHERE run_id=%s', (rid,))
                         if current['status'] == 'cancelling':
                             await self.runtime.cancel(execution)
+                            if getattr(self.runtime, 'cancellation_stops_environment', False):
+                                await self._set_stopped(c, sb)
                             collect.cancel()
                             await asyncio.gather(collect, return_exceptions=True)
                             await self.finish(c, run, sb, identity, 'cancelled')
                             return
                         if asyncio.get_running_loop().time() >= end:
                             await self.runtime.cancel(execution)
+                            if getattr(self.runtime, 'cancellation_stops_environment', False):
+                                await self._set_stopped(c, sb)
                             collect.cancel()
                             await asyncio.gather(collect, return_exceptions=True)
                             err = ServiceError(409, 'deadline_exceeded', 'Execution exceeded its permitted duration.')
@@ -417,6 +436,11 @@ class ProviderService:
                             return
                         await asyncio.sleep(self.settings.poll_seconds)
                     result = await collect
+                    for reference in run['profile_snapshot'].get('secret_environment', {}).values():
+                        secret = os.environ.get(reference)
+                        if secret:
+                            for stream in ('stdout', 'stderr'):
+                                result[stream] = result[stream].replace(secret, '[redacted]')
                     if not fresh:
                         result['output_truncated'] = True
                     err = None if result['exit_code'] == 0 else error_value(ServiceError(409, 'execution_failed', 'Approved workload exited unsuccessfully.'), run['correlation_id'])
