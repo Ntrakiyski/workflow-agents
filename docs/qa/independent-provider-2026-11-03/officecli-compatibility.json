@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-03T18:14:08.620Z",
+  "fixture": "Fresh synthetic document created by actual pinned OfficeCLI1.0.160, paragraph added and OfficeCLI schema validation success:true;count:0;errors:[]",
+  "bytes": 5202,
+  "sha256": "ea512cc729efe15471b872bd1ab17f7b8ee91abdc577352dfcfa0c8476a75ccb",
+  "controller_validation": "passed",
+  "controller_source_sha256": "b83454a9314f067d1699be4d951e76ab285e59460f22ad83f8cd18b7235c003c",
+  "model_call": "not_performed",
+  "cloud_runtime": "not_performed",
+  "rendered_layout": "not_performed"
+}

@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "operation": "application-offhost-isolated-restore-verification",
+  "recorded_at": "2026-11-03T19:11:26.550Z",
+  "outcome": "passed",
+  "scope": "application logical rows and exported immutable objects in new local PostgreSQL/RustFS resources; no worker, Cloud guest or host recovery",
+  "checks": {
+    "envelope_authenticated": true,
+    "application_package_version": true,
+    "supplied_manifest_archive_hash": true,
+    "cached_runtime_reconstructed": true,
+    "isolated_new_resources": true,
+    "matching_schema_and_migration": true,
+    "exact_row_digests": true,
+    "audit_identifiers_and_history": true,
+    "object_sizes_and_checksums": true,
+    "sequence_values": true,
+    "repeated_restore": true
+  },
+  "cleanup": {
+    "database": true,
+    "bucket": true
+  },
+  "source_envelope_sha256": "e8982b640857861e3df9eae71cd5a15b6239e4c5335027972aa1d9976a39cc3c",
+  "source_envelope_bytes": 9553,
+  "application_version": "0.1.0-rc.1",
+  "source_migration_versions": [
+    1
+  ],
+  "source_manifest_sha256": "b810c90bf4d1dc63b4674eb969a7e8a13783366bfebe26824fb635d54c6d01c0",
+  "deployed_commit_from_manifest": "2f7820f619fe023b4278c2f97e43f7709d59d8cd",
+  "runtime": {
+    "sha256": "9ffbbd3ed2856013192049986f1062396e46461aa81998f607eaeda9acb3d033",
+    "bytes": 81639210,
+    "source": "independent host public runtime cache",
+    "isolated_object_reconstruction": true,
+    "download_verified": true
+  },
+  "tables": [
+    {
+      "table": "application.audit",
+      "rows": 2,
+      "rows_sha256": "a94587c4c577e58ff441b20f6ab5a2cbf66de67a5661d876da431e7ec3052fc2"
+    },
+    {
+      "table": "application.files",
+      "rows": 1,
+      "rows_sha256": "8883febca5fb998e0c87b5cb61dc7bd1fd77fddf02e1fab5366738545a8c1be4"
+    },
+    {
+      "table": "application.requests",
+      "rows": 1,
+      "rows_sha256": "9ad3f4e9fa1bdfa0af2337c0587dc4ecd8a03c0407728d1bf4eb3a069129a0cc"
+    },
+    {
+      "table": "application.runner_events",
+      "rows": 0,
+      "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "table": "application.schema_migrations",
+      "rows": 1,
+      "rows_sha256": "5bc619e915922905fd32cfd611f1f66c82c0f9a751beb73d9137107217b8f800"
+    }
+  ],
+  "objects": 1,
+  "object_bytes": 5205,
+  "audit_history_sha256": "a94587c4c577e58ff441b20f6ab5a2cbf66de67a5661d876da431e7ec3052fc2",
+  "sequences": 1
+}

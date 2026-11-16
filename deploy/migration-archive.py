@@ -130,7 +130,11 @@ def restore(connection, snapshot, *, allow_bootstrap_metadata=False, allow_retai
             raise ValueError("archive_snapshot_invalid")
         if table["name"] == "runs" and any(json.loads(row)["status"] in {"queued", "running", "cancelling"} for row in table["rows"]):
             raise ValueError("archive_source_not_quiescent")
-        if table["name"] == "sandboxes" and not allow_retained_runtime_records and any(json.loads(row).get("runtime_id") for row in table["rows"]):
+        # Destroyed identities are audit tombstones; no guest disk is expected
+        # to exist. Retained live identities still require a coordinated set.
+        if table["name"] == "sandboxes" and not allow_retained_runtime_records and any(
+                json.loads(row).get("runtime_id") and json.loads(row).get("status") != "destroyed"
+                for row in table["rows"]):
             raise ValueError("archive_requires_coordinated_runtime_volume")
     with connection.transaction():
         connection.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")

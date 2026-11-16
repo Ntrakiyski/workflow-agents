@@ -1,0 +1,204 @@
+{
+  "version": 1,
+  "operation": "final-completed-data-encrypted-offhost-capture",
+  "recorded_at": "2026-11-03T19:59:32.391256+00:00",
+  "outcome": "passed",
+  "capture_session": "20261103T195631749Z-4c8fd4ea-4b04-4f0b-b2e4-e57a22e3a80f",
+  "manifest_sha256": "ddc8c34e85c03677acf8a6b8b48ba81a72e1881c7e03d5ee7cc15bb3d919f580",
+  "independent_host": "autonomous",
+  "source_origin": "https://hosting.gccssofia.com",
+  "installed_operator": "/opt/workflow-agents-backup/284c650aa5dbfb84650af6583ecc9c89f2c484a9",
+  "timer_enabled": "enabled",
+  "timer_active": "active",
+  "service_state": {
+    "TimeoutStartUSec": "15min",
+    "Result": "success",
+    "ExecMainStatus": "0",
+    "ActiveState": "inactive",
+    "SubState": "dead"
+  },
+  "archives": [
+    {
+      "service": "job-runner",
+      "source_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "source_deployment": "wuvkf6x1owxobcarqjtd7wbk",
+      "encrypted_envelope_sha256": "36d7dcb41510f3142417e201a5dba726e02c5193678966c9e640a3d9b48150e5",
+      "authenticated": true,
+      "tables": [
+        {
+          "schema": "graphile_worker",
+          "name": "_private_job_queues",
+          "row_count": 0,
+          "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "schema": "graphile_worker",
+          "name": "_private_jobs",
+          "row_count": 0,
+          "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "schema": "graphile_worker",
+          "name": "_private_known_crontabs",
+          "row_count": 0,
+          "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "schema": "graphile_worker",
+          "name": "_private_tasks",
+          "row_count": 2,
+          "rows_sha256": "12712f51b8461734db3dea11eac1259d61bb7e153b5696b07006ba82b3172178"
+        },
+        {
+          "schema": "graphile_worker",
+          "name": "migrations",
+          "row_count": 20,
+          "rows_sha256": "971941d8bef98972d852767b1a108e1f0d0cdf0d530c2bd7e0420ed2cde47c2c"
+        },
+        {
+          "schema": "runner",
+          "name": "attempts",
+          "row_count": 7,
+          "rows_sha256": "154aac14df1ff8defc34a227435cb4c545a16dbf2e843ab6162290f866dc4b64"
+        },
+        {
+          "schema": "runner",
+          "name": "audit_events",
+          "row_count": 35,
+          "rows_sha256": "9c700d10610f1cc7dc6913086eac7de8010f162e3197f37e52ef4e6e36b73ed4"
+        },
+        {
+          "schema": "runner",
+          "name": "idempotency",
+          "row_count": 12,
+          "rows_sha256": "a754cb35f38224f643309069c4f001e67c5ced16b6908ec4c441ae633cc2773d"
+        },
+        {
+          "schema": "runner",
+          "name": "jobs",
+          "row_count": 10,
+          "rows_sha256": "3397a7f65fd16fbf42ca043a68ddc051f289f01b43192aed5d5a703acdadd2bc"
+        },
+        {
+          "schema": "runner",
+          "name": "schedules",
+          "row_count": 2,
+          "rows_sha256": "79a8c2681f3124a656643a978d40e228f21353174ba4cd57f2291db561ed8b8e"
+        },
+        {
+          "schema": "runner",
+          "name": "schema_migrations",
+          "row_count": 1,
+          "rows_sha256": "a1265e4306eede333854b7ce80985a37788682ccb8beaae9675c4e1294327189"
+        }
+      ],
+      "sequences": 4,
+      "objects": 0
+    },
+    {
+      "service": "sandbox-provider",
+      "source_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "source_deployment": "iaeiglup1n9zxypdzk2mglcr",
+      "encrypted_envelope_sha256": "82c0e13f188bc8303cd8d426256cbe91677a0ceb8ac51a262fb9258e8eb838d4",
+      "authenticated": true,
+      "tables": [
+        {
+          "schema": "public",
+          "name": "audit_events",
+          "row_count": 83,
+          "rows_sha256": "ddd8b8d50c8a2abf793b834e7f66e1cdad05b3e41c624aa170bfd2b2b5ea9ba8"
+        },
+        {
+          "schema": "public",
+          "name": "cancellation_fences",
+          "row_count": 1,
+          "rows_sha256": "a266b234857f868752f14a8e46367c9def9607d2517722e58132985491447b48"
+        },
+        {
+          "schema": "public",
+          "name": "file_uploads",
+          "row_count": 6,
+          "rows_sha256": "8da9ebcc56c2429c422aa1fca6c885adcd1ad072e02b7422c366cca799b75d96"
+        },
+        {
+          "schema": "public",
+          "name": "idempotency",
+          "row_count": 19,
+          "rows_sha256": "ef9c6d85e5ddd8b39612d2abe15c0e63aabac6ef1733112f41f18f1bd59593a6"
+        },
+        {
+          "schema": "public",
+          "name": "runs",
+          "row_count": 7,
+          "rows_sha256": "62ab22de31f8f0eae59c2c82e873f9a374d3f0fe8d3e0424829b9b84d2cbf42b"
+        },
+        {
+          "schema": "public",
+          "name": "sandboxes",
+          "row_count": 6,
+          "rows_sha256": "0aa8b201ce46a95627a6b3ef8557896cc21cae31d555ba0b68dfed26837c4781"
+        },
+        {
+          "schema": "public",
+          "name": "schema_migrations",
+          "row_count": 4,
+          "rows_sha256": "5de8af344ff5a376a14aca2a445905ae1a0e96b29d3c1fc2529c7208985bcc61"
+        }
+      ],
+      "sequences": 1,
+      "objects": 0
+    },
+    {
+      "service": "application",
+      "source_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+      "source_deployment": "uqgpm525dt5gaulngxrjsagb",
+      "encrypted_envelope_sha256": "c68884189a49e0ece75683c09a8946a2f84809d98e4dfb616ee825273dd9a424",
+      "authenticated": true,
+      "tables": [
+        {
+          "name": "audit",
+          "row_count": 15,
+          "rows_sha256": "5f8c425fc2dced2bc546abf8294d509fb1c13dcfb58101506d50599278ed6ae7"
+        },
+        {
+          "name": "files",
+          "row_count": 11,
+          "rows_sha256": "be57ba8e67cd9cc37e45b5b62fd88ddccb511fbdba55fda93afdaf2fa16a428d"
+        },
+        {
+          "name": "requests",
+          "row_count": 3,
+          "rows_sha256": "9939bd284123dfaab060dc20c3159d8e58166e08a3bcc064f89a31c71c7fce41"
+        },
+        {
+          "name": "runner_events",
+          "row_count": 6,
+          "rows_sha256": "5689dfbf6446b2379211902f4573c92940422cb43ae4be1d041eb2a303397511"
+        },
+        {
+          "name": "schema_migrations",
+          "row_count": 1,
+          "rows_sha256": "5bc619e915922905fd32cfd611f1f66c82c0f9a751beb73d9137107217b8f800"
+        }
+      ],
+      "sequences": 1,
+      "objects": 11
+    }
+  ],
+  "runtime_cache": {
+    "relative_path": "runtime/08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a/runtime-bundle.tar.gz",
+    "sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
+    "size_bytes": 95977914,
+    "url": "https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.2/runtime-bundle.tar.gz",
+    "relative_to": "parent of this session directory",
+    "contents": "approved already-public runtime only; no user documents, sessions or secrets"
+  },
+  "profile_inventory": {
+    "relative_path": "profiles.public.json",
+    "sha256": "2bb8dbb7dadab4352140546de3643b30870483bff0dfdff1c13f900d9cbf592e",
+    "operator_source_commit": "284c650aa5dbfb84650af6583ecc9c89f2c484a9",
+    "contents": "approved public profiles and secret reference names; no secret values"
+  },
+  "private_archive_modes_verified": true,
+  "scope": "Authenticated service-owned logical snapshots and all11 application referenced immutable input/output/manifest/session objects. Public approved rc2 runtime cached separately. Does not export Cloud guest disks."
+}

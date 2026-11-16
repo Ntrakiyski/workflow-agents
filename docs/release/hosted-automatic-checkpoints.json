@@ -1,0 +1,715 @@
+{
+  "script_commit": "d61f7e5a3b34c705324c368407c997c36a22da0b",
+  "deployed_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+  "task_status": "success",
+  "version": 1,
+  "operation": "read-only-application-checkpoint-inspection",
+  "outcome": "passed",
+  "requests": [
+    {
+      "id": "e4ce9738-c52d-4bb7-a862-93d18a2c2962",
+      "owner_id": "workflow-owner",
+      "status": "failed",
+      "correlation_id": "e4ce9738-c52d-4bb7-a862-93d18a2c2962",
+      "sandbox_id": null,
+      "job_id": null,
+      "export_complete": false,
+      "sandbox_stopped": false,
+      "created_at": "2026-11-03T18:41:34.357Z",
+      "updated_at": "2026-11-03T18:41:35.257Z",
+      "audit": [
+        {
+          "event_id": "1",
+          "action": "request.submitted",
+          "correlation_id": "e4ce9738-c52d-4bb7-a862-93d18a2c2962",
+          "actor_id": "workflow"
+        },
+        {
+          "event_id": "2",
+          "action": "request.failed",
+          "correlation_id": "e4ce9738-c52d-4bb7-a862-93d18a2c2962",
+          "actor_id": "application-worker"
+        }
+      ],
+      "files": [
+        {
+          "id": "22ff5d95-fcae-44e1-8841-2025c297ad42",
+          "kind": "input",
+          "role": "input",
+          "bytes": 5205,
+          "sha256": "8ea713e66ba55ac0ed017c48be1b54f72b72b5690bb9960f0c251171c42fffc9",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+      "owner_id": "workflow-owner",
+      "status": "completed",
+      "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+      "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+      "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+      "export_complete": true,
+      "sandbox_stopped": true,
+      "created_at": "2026-11-03T19:02:49.675Z",
+      "updated_at": "2026-11-03T19:29:22.124Z",
+      "audit": [
+        {
+          "event_id": "3",
+          "action": "request.submitted",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "actor_id": "workflow"
+        },
+        {
+          "event_id": "4",
+          "action": "sandbox.prepared",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "actor_id": "application-worker"
+        },
+        {
+          "event_id": "5",
+          "action": "request.dispatched",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "actor_id": "application-worker"
+        },
+        {
+          "event_id": "6",
+          "action": "request.failed",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "actor_id": "application-worker"
+        },
+        {
+          "event_id": "7",
+          "action": "sandbox.stopped",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "actor_id": "application-worker"
+        },
+        {
+          "event_id": "8",
+          "action": "request.output_recovery_authorized",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "actor_id": "release-operator"
+        },
+        {
+          "event_id": "9",
+          "action": "request.completed",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "actor_id": "application-worker"
+        },
+        {
+          "event_id": "10",
+          "action": "sandbox.stopped",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "actor_id": "application-worker"
+        }
+      ],
+      "files": [
+        {
+          "id": "3b49d888-c2e9-4ed1-baec-5179e9dcde06",
+          "kind": "input",
+          "role": "input",
+          "bytes": 5205,
+          "sha256": "8ea713e66ba55ac0ed017c48be1b54f72b72b5690bb9960f0c251171c42fffc9",
+          "verified": true
+        },
+        {
+          "id": "49e009d9-2f39-435d-a90d-3c054d171baa",
+          "kind": "checkpoint",
+          "role": "session",
+          "bytes": 11194,
+          "sha256": "ae1a30ce95ec63d78349fe2449af2fcfd7431764c740583582c0fff0e37c4178",
+          "verified": true
+        },
+        {
+          "id": "64facb40-e718-4f4e-8a1b-ef4a7e59ef4b",
+          "kind": "checkpoint",
+          "role": "request_manifest",
+          "bytes": 795,
+          "sha256": "766cd454b7a188e1101e05fbef1d8796df2ef422115753d19ebb5105def50fbc",
+          "verified": true
+        },
+        {
+          "id": "b723f16e-fe46-42a2-b615-047982a4b6f6",
+          "kind": "output",
+          "role": "output",
+          "bytes": 5282,
+          "sha256": "e5d9c571cd9743000170961c436f6580f0e4d3afa4a9e9e00739d2e734faa81e",
+          "verified": true
+        },
+        {
+          "id": "f0d4fc7a-e655-4e59-86c8-5f96dd915b77",
+          "kind": "checkpoint",
+          "role": "result_manifest",
+          "bytes": 1624,
+          "sha256": "adbac251cf3c241a276c3303530f646977bf0c3bff67164d1e855222b728cdbb",
+          "verified": true
+        }
+      ],
+      "runner": {
+        "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+        "status": "completed",
+        "attempt_count": 1,
+        "events": [
+          {
+            "event_id": "evt_6165466c-db89-4811-93f8-2f6910b796c8",
+            "type": "job.submitted",
+            "status": "queued",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_99bd13fe-d9da-4d98-bb47-519c7890e13f",
+            "type": "job.dispatched",
+            "status": "dispatching",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_1c9eed48-28a1-46d0-a817-c102fc9d1c42",
+            "type": "job.completed",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": "run_2a8128ce9ea742fab7dd96fb0d1b0c0f"
+          }
+        ]
+      },
+      "provider": {
+        "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+        "status": "stopped",
+        "events": [
+          {
+            "event_id": "evt_b377bdd224024295b78e63ec0417b0f7",
+            "type": "sandbox.creation_requested",
+            "status": "creating",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_b248630d18a8448e87156314f8f20c7b",
+            "type": "sandbox.created",
+            "status": "running",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_9bf7e85954c045a98bc21754d579d039",
+            "type": "file.upload_created",
+            "status": "uploading",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_c986618f78484ae8964dac00ec0c91f4",
+            "type": "file.upload_completed",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_0d6847396d7a41b7a3911a1935612ebb",
+            "type": "file.upload_created",
+            "status": "uploading",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_eb31d6c165594fd5b8e5320977ea3c6e",
+            "type": "file.upload_completed",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_e95596053bac4f1f99fd53620f9b6b29",
+            "type": "file.upload_created",
+            "status": "uploading",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_d8b76f56513c4db9b5493b545cca0963",
+            "type": "file.upload_completed",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_08f6967e07ec4a80afd3772f1b2547b5",
+            "type": "run.queued",
+            "status": "queued",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "job-runner",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": "run_2a8128ce9ea742fab7dd96fb0d1b0c0f"
+          },
+          {
+            "event_id": "evt_28392be584b1466e9085577d72c658b1",
+            "type": "run.started",
+            "status": "running",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "job-runner",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": "run_2a8128ce9ea742fab7dd96fb0d1b0c0f"
+          },
+          {
+            "event_id": "evt_d01d10c9dfbf4d199f75702b3b69f00f",
+            "type": "run.completed",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "job-runner",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": "run_2a8128ce9ea742fab7dd96fb0d1b0c0f"
+          },
+          {
+            "event_id": "evt_73e66335eb9b41c19978ab60a5de1642",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_5783ea7eb83a4aa992deb344caf4d1da",
+            "type": "sandbox.stopped",
+            "status": "stopped",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_59ed20acb48845e68a34e070ed54aa51",
+            "type": "sandbox.resumed",
+            "status": "running",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_7f6a2f0403a04a0d9f386cb0ee208afe",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_8f192df673b34b49945bc1d3a8835fb3",
+            "type": "sandbox.stopped",
+            "status": "stopped",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_aa1ec68998b74580bc564aa56c7608de",
+            "type": "sandbox.resumed",
+            "status": "running",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_39813662b9bb43c78014059d32440c15",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_08b29e33fd8746909319226acdea5f0d",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_00a3b954d19948bea16e2c47128c5f85",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_d1b481888fa04bc5b376f8bbef888c39",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_6af83fd4dddc497e86525eacbfcbeecd",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_28efed06821f462f9b45b081b4d1d9d1",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_012e4e2793244b31986ea408c3782980",
+            "type": "sandbox.stopped",
+            "status": "stopped",
+            "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+            "run_id": null
+          }
+        ]
+      },
+      "completed_checkpoint_verified": true
+    },
+    {
+      "id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+      "owner_id": "workflow-owner",
+      "status": "completed",
+      "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+      "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+      "job_id": "job_c28141c3-1008-4539-a041-6141b01ee45b",
+      "export_complete": true,
+      "sandbox_stopped": true,
+      "created_at": "2026-11-03T19:31:52.560Z",
+      "updated_at": "2026-11-03T19:50:30.010Z",
+      "audit": [
+        {
+          "event_id": "11",
+          "action": "request.submitted",
+          "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+          "actor_id": "workflow"
+        },
+        {
+          "event_id": "12",
+          "action": "sandbox.prepared",
+          "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+          "actor_id": "application-worker"
+        },
+        {
+          "event_id": "13",
+          "action": "request.dispatched",
+          "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+          "actor_id": "application-worker"
+        },
+        {
+          "event_id": "14",
+          "action": "request.completed",
+          "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+          "actor_id": "application-worker"
+        },
+        {
+          "event_id": "15",
+          "action": "sandbox.stopped",
+          "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+          "actor_id": "application-worker"
+        }
+      ],
+      "files": [
+        {
+          "id": "097469e7-188d-4af1-a8cd-8f19ac8cc796",
+          "kind": "checkpoint",
+          "role": "session",
+          "bytes": 11189,
+          "sha256": "5b8460af81a44f10198effe6a243f84631897af4642a10395193f84701db5faa",
+          "verified": true
+        },
+        {
+          "id": "3624e244-0d58-4bb3-bcbb-c6d7ed645dfb",
+          "kind": "output",
+          "role": "output",
+          "bytes": 5281,
+          "sha256": "9011e87907218c2d988827ca019c90cbb93abf2c2171c8b23fb1ecb990663260",
+          "verified": true
+        },
+        {
+          "id": "4efb5901-c40b-436c-ba21-4599e02199b9",
+          "kind": "input",
+          "role": "input",
+          "bytes": 5205,
+          "sha256": "8ea713e66ba55ac0ed017c48be1b54f72b72b5690bb9960f0c251171c42fffc9",
+          "verified": true
+        },
+        {
+          "id": "8277f38e-569c-405e-9476-dc77133a578a",
+          "kind": "checkpoint",
+          "role": "request_manifest",
+          "bytes": 795,
+          "sha256": "65cb5b1d136953d0c617c0d42315ef087d880a6bfa48f9ee58e543f9d3585f37",
+          "verified": true
+        },
+        {
+          "id": "d6595e98-26ba-4617-8ae3-361769766400",
+          "kind": "checkpoint",
+          "role": "result_manifest",
+          "bytes": 1619,
+          "sha256": "d77fd5f5e301591731ba9527a93e0b04ea77234173884d32974331f2c7a6cc7c",
+          "verified": true
+        }
+      ],
+      "runner": {
+        "job_id": "job_c28141c3-1008-4539-a041-6141b01ee45b",
+        "status": "completed",
+        "attempt_count": 1,
+        "events": [
+          {
+            "event_id": "evt_30b14634-c4b2-486e-b28a-23b03edb916a",
+            "type": "job.submitted",
+            "status": "queued",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": "job_c28141c3-1008-4539-a041-6141b01ee45b",
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_7b1f6f25-f0bb-489c-928b-220ca206e282",
+            "type": "job.dispatched",
+            "status": "dispatching",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": "job_c28141c3-1008-4539-a041-6141b01ee45b",
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_fac92510-7fbd-4078-bb9c-4a517257444c",
+            "type": "job.completed",
+            "status": "completed",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": "job_c28141c3-1008-4539-a041-6141b01ee45b",
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": "run_08ef722652fc4acb8b4ceb5d3e7904bb"
+          }
+        ]
+      },
+      "provider": {
+        "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+        "status": "stopped",
+        "events": [
+          {
+            "event_id": "evt_aef67d4c18c34410953e66df7b3c4d23",
+            "type": "sandbox.creation_requested",
+            "status": "creating",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_e263b6dd979c4a4e9d3eb235b9cc4ebb",
+            "type": "sandbox.created",
+            "status": "running",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_0bdfd3cd414348b5b4db061227c2c796",
+            "type": "file.upload_created",
+            "status": "uploading",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_c16f5370f23645aab79ed1d3f52dc41e",
+            "type": "file.upload_completed",
+            "status": "completed",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_e31a31c4cc0c426da6f2698d0a4ec870",
+            "type": "file.upload_created",
+            "status": "uploading",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_151238b3b9884e75a6bd7c44335ba491",
+            "type": "file.upload_completed",
+            "status": "completed",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_382bbd55ff9d406abd0fd2ae5ff5f2ca",
+            "type": "file.upload_created",
+            "status": "uploading",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_64ce690f2c5847fdba216e9134f262d1",
+            "type": "file.upload_completed",
+            "status": "completed",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_435feb54dc524fd3b9aa96e74cce1add",
+            "type": "run.queued",
+            "status": "queued",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "job-runner",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": "run_08ef722652fc4acb8b4ceb5d3e7904bb"
+          },
+          {
+            "event_id": "evt_5caa581b4e744af7925597dd5e0a5769",
+            "type": "run.started",
+            "status": "running",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "job-runner",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": "run_08ef722652fc4acb8b4ceb5d3e7904bb"
+          },
+          {
+            "event_id": "evt_fdcaaf81c15548228d44fa2a59a87bf2",
+            "type": "run.completed",
+            "status": "completed",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "job-runner",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": "run_08ef722652fc4acb8b4ceb5d3e7904bb"
+          },
+          {
+            "event_id": "evt_8cdb92867d37411d985abf5a243632de",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_dd8ea8967f59482cb1b8dfe0fbbbe97d",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_be338aeb63dc4584832db65e79fa70d0",
+            "type": "file.download_started",
+            "status": "completed",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          },
+          {
+            "event_id": "evt_1340cb15c98b4c279be73482e2cda416",
+            "type": "sandbox.stopped",
+            "status": "stopped",
+            "correlation_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+            "actor_id": "<REDACTED>",
+            "job_id": null,
+            "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+            "run_id": null
+          }
+        ]
+      },
+      "completed_checkpoint_verified": true
+    }
+  ],
+  "scope": "Owning application database and immutable objects; published Runner/Provider APIs only. No workload replay or service database access."
+}

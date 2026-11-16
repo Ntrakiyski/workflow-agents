@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "session": "11e9c609a13548c6869fc0479ff136a7",
+  "outcome": "incomplete",
+  "runtime": "actual BoxLite Cloud, SDK0.11.0",
+  "scope": "runtime adapter only; no Provider HTTP/PostgreSQL/GCC deployment proof",
+  "bounds": {
+    "cpus": 1,
+    "memory_mib": 1024,
+    "disk_mib": 1024,
+    "cpu_workers": 2,
+    "cpu_worker_seconds": 2,
+    "disk_max_write_mib": 1228,
+    "disk_deadline_seconds": 18,
+    "memory_max_touch_mib": 1536,
+    "memory_child_deadline_seconds": 24
+  },
+  "checks": [
+    {
+      "scenario": "approved_metadata",
+      "outcome": "passed",
+      "observations": {
+        "cpus": 1,
+        "memory_mib": 1024,
+        "network_inbound": "disabled",
+        "network_outbound": "disabled",
+        "disk_size_attestation": "SDK BoxInfo unavailable; guest filesystem observed below"
+      }
+    },
+    {
+      "scenario": "network_denied_fixed_ip_probes",
+      "outcome": "failed",
+      "observations": {
+        "interfaces": [
+          "dummy0",
+          "lo"
+        ],
+        "attempts": [
+          {
+            "host": "1.1.1.1",
+            "connected": false,
+            "errno": 101
+          },
+          {
+            "host": "8.8.8.8",
+            "connected": false,
+            "errno": 101
+          }
+        ],
+        "scope": "two external TCP endpoints only; no universal egress or allowed-host proof"
+      }
+    },
+    {
+      "scenario": "bounded_two_worker_cpu",
+      "outcome": "passed",
+      "observations": {
+        "cpu_count": 1,
+        "workers": 2,
+        "worker_samples": [
+          {
+            "cpu_seconds": 0.998146656,
+            "wall_seconds": 2.001103092
+          },
+          {
+            "cpu_seconds": 0.999081348,
+            "wall_seconds": 2.000025786
+          }
+        ],
+        "elapsed_wall_seconds": 2.0672727440000003,
+        "aggregate_cpu_seconds": 1.9972280040000001,
+        "cpu_to_wall_ratio": 0.9661173204148817,
+        "memory": {
+          "MemTotal": 1070071808,
+          "MemAvailable": 955461632,
+          "SwapTotal": 0
+        },
+        "rootfs_capacity_bytes": 1039155200,
+        "rootfs_available_bytes": 886657024,
+        "interfaces": [
+          "dummy0",
+          "lo"
+        ],
+        "external_tcp_attempts": [
+          {
+            "host": "1.1.1.1",
+            "connected": false,
+            "errno": 101
+          },
+          {
+            "host": "8.8.8.8",
+            "connected": false,
+            "errno": 101
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "bounded_rootfs_capacity",
+      "outcome": "passed",
+      "observations": {
+        "written_bytes": 886632448,
+        "maximum_probe_bytes": 1287651328,
+        "reason": "enospc",
+        "errno": 28,
+        "elapsed_seconds": 5.693477193,
+        "filesystem_capacity_bytes": 1039155200,
+        "available_before_bytes": 886636544,
+        "available_after_bytes": 886636544,
+        "temporary_fill_removed": true
+      }
+    }
+  ],
+  "cleanup": "confirmed stopped and removed by exact name/id",
+  "host_reboot": "not performed",
+  "full_escape_qualification": "not performed",
+  "vendor_host_claims": "not established",
+  "profile": {
+    "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+    "cpus": 1,
+    "memory_mib": 1024,
+    "disk_mib": 1024,
+    "network": "denied",
+    "allowed_hosts": [],
+    "entrypoint": [
+      "/usr/local/bin/python3",
+      "-c",
+      "import time; time.sleep(31536000)"
+    ],
+    "cmd": []
+  },
+  "runtime_id": "deyyGNQQgKQj",
+  "error_classification": "RuntimeError"
+}

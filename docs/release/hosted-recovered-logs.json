@@ -1,0 +1,1751 @@
+{
+  "operation": "bounded-structured-log-inspection",
+  "request_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+  "recorded_at": "2026-11-03T19:30:33.410Z",
+  "scope": "Matching records in at most10000 recent lines per owning app, safe field allowlist only; no exhaustive logging/secrecy guarantee",
+  "services": [
+    {
+      "name": "application",
+      "records": [
+        {
+          "action": "request.completed",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "request_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "name": "provider",
+      "records": [
+        {
+          "action": "sandbox.creation_requested",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "creating",
+          "duration_ms": 0
+        },
+        {
+          "action": "sandbox.created",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "running",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "201",
+          "duration_ms": 2814.537,
+          "method": "POST"
+        },
+        {
+          "action": "file.upload_created",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "uploading",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "201",
+          "duration_ms": 10.011,
+          "method": "POST"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12646.86,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11831.626,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12103.464,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11957.623,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11930.493,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12064.782,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11758.998,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12191.562,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11597.427,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12150.514,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11990.812,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11949.927,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11733.086,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11916.829,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11928.174,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11461.375,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11812.496,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11665.197,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11135.484,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11773.64,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11677.582,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.963,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 3.999,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11659.747,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11054.856,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11740.406,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11864.601,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11453.846,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11875.254,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11577.04,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 10681.782,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12461.494,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11462.492,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11912.371,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12094.839,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12187.021,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11430.874,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11383.414,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11264.804,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11700.716,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 10933.834,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11729.476,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12151.031,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11901.529,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11208.756,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 13669.159,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11683.074,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11663.429,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11614.8,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11564.577,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11225.583,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11458.092,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11419.315,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11763.173,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12025.608,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12408.741,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12304.459,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11781.258,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12250.079,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11690.772,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11233.118,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12147.38,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12107.182,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11351.015,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11950.024,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12051.549,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12273.943,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11217.678,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11627.013,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12180.802,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11261.933,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11704.934,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12062.215,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12173.367,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11868.756,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12152.42,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11361.243,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11385.024,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11142.492,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11139.639,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11577.429,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11408.598,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 10818.183,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12202.921,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12116.503,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12210.286,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12143.87,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11825.581,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11852.165,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12087.452,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12027.323,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 11868.753,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 12136.348,
+          "method": "PATCH"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 7017.547,
+          "method": "PATCH"
+        },
+        {
+          "action": "file.upload_completed",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1010.645,
+          "method": "POST"
+        },
+        {
+          "action": "file.upload_created",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "uploading",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "201",
+          "duration_ms": 5.672,
+          "method": "POST"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 932.811,
+          "method": "PATCH"
+        },
+        {
+          "action": "file.upload_completed",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 974.439,
+          "method": "POST"
+        },
+        {
+          "action": "file.upload_created",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "uploading",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "201",
+          "duration_ms": 5.467,
+          "method": "POST"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 977.135,
+          "method": "PATCH"
+        },
+        {
+          "action": "file.upload_completed",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 953.559,
+          "method": "POST"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.818,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.363,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 5.679,
+          "method": "POST"
+        },
+        {
+          "action": "run.queued",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "run_id": "run_2a8128ce9ea742fab7dd96fb0d1b0c0f",
+          "outcome": "queued",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "202",
+          "duration_ms": 10.86,
+          "method": "POST"
+        },
+        {
+          "action": "run.started",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "run_id": "run_2a8128ce9ea742fab7dd96fb0d1b0c0f",
+          "outcome": "running",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.548,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.234,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.217,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.621,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.444,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.176,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.82,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.245,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.953,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.813,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.302,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.88,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.261,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.559,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.416,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.721,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.965,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.759,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.752,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.859,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.778,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.724,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.034,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.196,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.669,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.802,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.238,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.928,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.857,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.996,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.974,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.016,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.422,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.892,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.125,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.14,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.003,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.943,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.992,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.832,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.781,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.071,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.079,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.087,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.087,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.999,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.037,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.105,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.855,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.949,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.864,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.017,
+          "method": "GET"
+        },
+        {
+          "action": "run.completed",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "run_id": "run_2a8128ce9ea742fab7dd96fb0d1b0c0f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.648,
+          "method": "GET"
+        },
+        {
+          "action": "file.download_started",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 946.964,
+          "method": "POST"
+        },
+        {
+          "action": "sandbox.stopped",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "stopped",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2947.371,
+          "method": "POST"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.871,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 4.084,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.501,
+          "method": "GET"
+        },
+        {
+          "action": "sandbox.resumed",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "running",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2495.329,
+          "method": "POST"
+        },
+        {
+          "action": "file.download_started",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1287.699,
+          "method": "POST"
+        },
+        {
+          "action": "sandbox.stopped",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "stopped",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2976.111,
+          "method": "POST"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.399,
+          "method": "GET"
+        },
+        {
+          "action": "sandbox.resumed",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "running",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2231.338,
+          "method": "POST"
+        },
+        {
+          "action": "file.download_started",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1087.769,
+          "method": "POST"
+        },
+        {
+          "action": "file.download_started",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1012.517,
+          "method": "POST"
+        },
+        {
+          "action": "file.download_started",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1103.105,
+          "method": "POST"
+        },
+        {
+          "action": "file.download_started",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1030.263,
+          "method": "POST"
+        },
+        {
+          "action": "file.download_started",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1017.583,
+          "method": "POST"
+        },
+        {
+          "action": "file.download_started",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1012.329,
+          "method": "POST"
+        },
+        {
+          "action": "sandbox.stopped",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "stopped",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 3404.028,
+          "method": "POST"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 1.383,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "200",
+          "duration_ms": 2.561,
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "runner",
+      "records": [
+        {
+          "action": "job.submitted",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "queued",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 104,
+          "method": "POST"
+        },
+        {
+          "action": "job.dispatched",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "outcome": "dispatching",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 62,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 2,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 3,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 2,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 2,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 0,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 2,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 2,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 0,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 2,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 2,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 2,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 0,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "job.completed",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "job_id": "job_127d48d9-eb51-44d1-8213-9e99f12e6a28",
+          "sandbox_id": "sbx_ed9a6d3c16a7432aa5d0f06236fa0c5f",
+          "run_id": "run_2a8128ce9ea742fab7dd96fb0d1b0c0f",
+          "outcome": "completed",
+          "duration_ms": 0
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 2,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 0,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        },
+        {
+          "action": "http.request",
+          "correlation_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+          "outcome": "ok",
+          "duration_ms": 1,
+          "method": "GET"
+        }
+      ]
+    }
+  ]
+}

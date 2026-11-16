@@ -1,0 +1,8 @@
+node_modules
+dist
+public
+private
+.env*
+tests
+test-results
+playwright-report

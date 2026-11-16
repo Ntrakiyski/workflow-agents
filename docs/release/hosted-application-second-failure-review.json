@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "operation": "read-only-hosted-second-failure-authorization-review",
+  "recorded_at_utc": "2026-11-03T19:23:29.873Z",
+  "outcome": "passed_bounded_failure_scope",
+  "deployed_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+  "request_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+  "request_status": "failed",
+  "failed_request_retained_in_list": true,
+  "final_text_exposed": false,
+  "output_files_exposed": false,
+  "failure_message_sha256": "f9824398e9b2e627660fd0f7e65b8a88f175d431e1039ff15b2c6fefd2214bb6",
+  "original_download": {
+    "file_id": "3b49d888-c2e9-4ed1-baec-5179e9dcde06",
+    "http": 200,
+    "bytes": 5205,
+    "sha256": "8ea713e66ba55ac0ed017c48be1b54f72b72b5690bb9960f0c251171c42fffc9",
+    "matches_uploaded_bytes": true
+  },
+  "negative_checks": [
+    {
+      "resource": "request",
+      "identity": "anonymous",
+      "http": 401
+    },
+    {
+      "resource": "request",
+      "identity": "authenticated_foreign_owner",
+      "http": 404
+    },
+    {
+      "resource": "original_attachment",
+      "identity": "anonymous",
+      "http": 401
+    },
+    {
+      "resource": "original_attachment",
+      "identity": "authenticated_foreign_owner",
+      "http": 404
+    }
+  ],
+  "screenshot": "/tmp/workflow-hosted-app-second-failure.png",
+  "limits": "No completed output delivered; full browser-to-Pi success and protected result download remain unproved. Read-only GETs only; no request, database, deployment, replay or Cloud mutation."
+}

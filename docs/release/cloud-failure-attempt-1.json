@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "session": "08794fa52f28411298df2c349d644b35",
+  "outcome": "failed",
+  "checks": [],
+  "reason": "Harness expected200/202 on Provider create; actual201. Corrected response tracking.",
+  "exact_fixture_cleanup_verified": true,
+  "cleanup": "Only exact name from own creation log stopped/deleted; after-transition absence verified",
+  "unrelated_mutations": false
+}

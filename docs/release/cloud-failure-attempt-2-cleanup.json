@@ -1,0 +1,21 @@
+{
+  "operation": "cloud-failure-attempt-owned-cleanup",
+  "session": "74a6b9f1d1044584a6a0fa12dc24a7e6",
+  "outcome": "passed",
+  "explicit_replay_tombstone": "sbx_2d421c0fff144d94a89b3c822f47aa9e",
+  "cloud_id_absent": true,
+  "registry_rows": [
+    {
+      "sandbox_id": "sbx_2d421c0fff144d94a89b3c822f47aa9e",
+      "status": "destroyed"
+    },
+    {
+      "sandbox_id": "sbx_b5e09c43a6d74b40a8c9dacd59a3ffa4",
+      "status": "destroyed"
+    }
+  ],
+  "containers_removed": [
+    "workflow-cloud-qa-runner-74a6b9f1d1",
+    "workflow-cloud-qa-provider-74a6b9f1d1"
+  ]
+}

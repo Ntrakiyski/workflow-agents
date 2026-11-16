@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "operation": "final-scoped-release-state-readback",
+  "recorded_at": "2026-11-03T19:59:33.850Z",
+  "outcome": "passed",
+  "trusted_https": true,
+  "services": [
+    {
+      "name": "provider",
+      "uuid": "b4safsmcuzzqdmgn7jqt7m8d",
+      "status": "running:healthy",
+      "configured_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "public_origin": null,
+      "host_ports": null,
+      "latest_deployment": {
+        "uuid": "iaeiglup1n9zxypdzk2mglcr",
+        "status": "finished",
+        "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd"
+      },
+      "temporary_tasks_remaining": 0
+    },
+    {
+      "name": "runner",
+      "uuid": "yf0aaiivjr9k3qqaiawnlz8d",
+      "status": "running:healthy",
+      "configured_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "public_origin": null,
+      "host_ports": null,
+      "latest_deployment": {
+        "uuid": "wuvkf6x1owxobcarqjtd7wbk",
+        "status": "finished",
+        "commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd"
+      },
+      "temporary_tasks_remaining": 0
+    },
+    {
+      "name": "application",
+      "uuid": "7vdsilhnu96tifz7yosm61j1",
+      "status": "running:healthy",
+      "configured_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+      "public_origin": "https://workflow-agents.68.210.88.115.sslip.io",
+      "host_ports": null,
+      "latest_deployment": {
+        "uuid": "uqgpm525dt5gaulngxrjsagb",
+        "status": "finished",
+        "commit": "1d21e27a571388484774e401cc5d5a5a3cec0973"
+      },
+      "temporary_tasks_remaining": 0
+    },
+    {
+      "name": "storage",
+      "uuid": "qd41pkivqrnkwwsj1nr52s0k",
+      "status": "running:healthy",
+      "configured_commit": "HEAD",
+      "public_origin": null,
+      "host_ports": null,
+      "latest_deployment": {
+        "uuid": "n79eilpg37gjlq7ye4wasl7x",
+        "status": "finished",
+        "commit": "HEAD"
+      },
+      "temporary_tasks_remaining": 0
+    }
+  ],
+  "authentication": [
+    {
+      "identity": "anonymous",
+      "http": 401,
+      "expected": 401
+    },
+    {
+      "identity": "primary",
+      "http": 200,
+      "expected": 200
+    },
+    {
+      "identity": "removed_qa",
+      "http": 401,
+      "expected": 401
+    }
+  ]
+}

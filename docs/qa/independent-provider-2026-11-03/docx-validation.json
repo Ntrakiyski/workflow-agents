@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-03T18:14:13.810Z",
+  "source": "apps/application/src/validate.ts",
+  "source_sha256": "b83454a9314f067d1699be4d951e76ab285e59460f22ad83f8cd18b7235c003c",
+  "execution": "Independent process against application controller; no runtime or database involved",
+  "results": [
+    {
+      "name": "valid_minimal_docx",
+      "expected": "accepted",
+      "actual": "accepted",
+      "passed": true,
+      "reason": null
+    },
+    {
+      "name": "duplicate_document_part",
+      "expected": "rejected",
+      "actual": "rejected",
+      "passed": true,
+      "reason": "unsafe_docx_archive"
+    },
+    {
+      "name": "wrong_word_namespace",
+      "expected": "rejected",
+      "actual": "rejected",
+      "passed": true,
+      "reason": "invalid_docx_structure"
+    },
+    {
+      "name": "external_file_relationship",
+      "expected": "rejected",
+      "actual": "rejected",
+      "passed": true,
+      "reason": "invalid_docx_structure"
+    },
+    {
+      "name": "encoded_absolute_relationship",
+      "expected": "rejected",
+      "actual": "rejected",
+      "passed": true,
+      "reason": "invalid_docx_structure"
+    },
+    {
+      "name": "traversal_relationship",
+      "expected": "rejected",
+      "actual": "rejected",
+      "passed": true,
+      "reason": "invalid_docx_structure"
+    },
+    {
+      "name": "unused_malformed_xml_part",
+      "expected": "rejected",
+      "actual": "rejected",
+      "passed": true,
+      "reason": "invalid_docx_structure"
+    },
+    {
+      "name": "dtd_entity_part",
+      "expected": "rejected",
+      "actual": "rejected",
+      "passed": true,
+      "reason": "invalid_docx_structure"
+    },
+    {
+      "name": "missing_relationship_target",
+      "expected": "rejected",
+      "actual": "rejected",
+      "passed": true,
+      "reason": "missing_docx_parts"
+    },
+    {
+      "name": "symlink_entry",
+      "expected": "rejected",
+      "actual": "rejected",
+      "passed": true,
+      "reason": "unsafe_docx_archive"
+    },
+    {
+      "name": "crc_corruption_in_unused_binary",
+      "expected": "rejected",
+      "actual": "rejected",
+      "passed": true,
+      "reason": "invalid_docx_structure"
+    }
+  ]
+}

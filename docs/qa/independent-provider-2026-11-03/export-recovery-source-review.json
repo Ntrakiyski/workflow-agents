@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "operation": "independent-export-only-recovery-source-review",
+  "recorded_at_utc": "2026-11-03T19:28:32.744148+00:00",
+  "source_commit": "dc35cee",
+  "script_sha256": "f57348f1a610a3e5aae3c6263ad0dcd722698c4976000f51591a8423bfa951c6",
+  "request_id": "598c30fa-e0d0-4d36-96d7-16d75bd675e7",
+  "outcome": "no_further_actionable_source_findings",
+  "reviewed_guards": [
+    "fixed request/job/sandbox/manifest checksum",
+    "owner-scoped request and retained identities",
+    "failed stopped request; same completed job exit zero",
+    "stopped same-box owner reference",
+    "bounded manifest/artifact/session download and actual DOCX validation",
+    "original object/session/artifact size/checksum validation",
+    "same worker advisory lock and conditional state transition",
+    "append-only explicit recovery authorization audit; failed audit retained",
+    "no submit or execute call",
+    "ambiguous start triggers same-box stop attempt; nested resource cleanup"
+  ],
+  "resolved_findings": [
+    "start intent marked before awaiting acknowledgement",
+    "stop failure cannot skip database/object cleanup",
+    "clear stale failure metadata while preserving audit history"
+  ],
+  "limits": [
+    "Source review only; operator execution/re-export/stop and browser validation require separate evidence",
+    "A process/host crash during this one-off operator script was not injected"
+  ]
+}

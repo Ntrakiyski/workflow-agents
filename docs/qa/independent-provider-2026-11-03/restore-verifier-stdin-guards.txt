@@ -1,0 +1,10 @@
+test_applied_runner_tree_mismatch_fails_before_docker (test_verify_offhost_restore.VerifierGuards.test_applied_runner_tree_mismatch_fails_before_docker) ... ok
+test_cleanup_attempts_both_owned_volumes_and_failure_overrides_restore_pass (test_verify_offhost_restore.VerifierGuards.test_cleanup_attempts_both_owned_volumes_and_failure_overrides_restore_pass) ... ok
+test_invalid_missing_duplicate_and_conflicting_identities_fail_before_commands (test_verify_offhost_restore.VerifierGuards.test_invalid_missing_duplicate_and_conflicting_identities_fail_before_commands) ... ok
+test_large_inert_envelope_uses_stdin_beyond_environment_string_limit (test_verify_offhost_restore.VerifierGuards.test_large_inert_envelope_uses_stdin_beyond_environment_string_limit) ... ok
+test_stale_envelope_and_oversize_fail_before_commands (test_verify_offhost_restore.VerifierGuards.test_stale_envelope_and_oversize_fail_before_commands) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.052s
+
+OK

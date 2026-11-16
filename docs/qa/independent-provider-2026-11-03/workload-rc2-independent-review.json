@@ -1,0 +1,36 @@
+{
+  "operation": "independent-rc2-static-and-archive-review",
+  "recorded_at_utc": "2026-11-03T18:58:56Z",
+  "outcome": "passed",
+  "bundle": {
+    "filename": "runtime-bundle.tar.gz",
+    "architecture": "x86_64",
+    "sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
+    "size_bytes": 95977914,
+    "expanded_bytes": 313357336
+  },
+  "regular_archive_members": 15371,
+  "icu_libraries_verified": [
+    {
+      "filename": "lib/libicudata.so.72",
+      "sha256": "5f572a055d6410ab50fc45770d529109dcc4fe8888f3b2834f76730ff19ebf58"
+    },
+    {
+      "filename": "lib/libicuuc.so.72",
+      "sha256": "6ae74e03d74c29774be16f877aeba4b8c347ea83d8cb43b730fd283e205b375e"
+    },
+    {
+      "filename": "lib/libicui18n.so.72",
+      "sha256": "6ff8ea51aebfa7b77587a4ac3b691e894263e08a2e9d93b636f0d276e4dcaeb2"
+    }
+  ],
+  "profile_checks": [
+    "v2 pins exact current bootstrap and published archive SHA256",
+    "only v2 sandbox approved by v2 workload",
+    "cached immutable guest image matches locally qualified image",
+    "2CPU/2GiB RAM/2GiB disk",
+    "HTTPS endpoint selects443; network rule exact hostname without port",
+    "literal model key absent from profile; only runtime secret reference"
+  ],
+  "limits": "Read-only source/archive review, no new model/runtime/browser invocation. Existing v1 failure profile retained as immutable history. Hostname rule has no port enforcement."
+}

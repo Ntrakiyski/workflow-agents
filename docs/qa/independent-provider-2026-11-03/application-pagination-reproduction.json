@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-03T19:15:50.647Z",
+  "scope": "Independent API injection, actual isolated disposable PostgreSQL16. No object storage or execution services used; GET listing only.",
+  "fixtures": {
+    "count": 3,
+    "stored_creation_timestamps": [
+      "2026-11-03T18:00:00.123900Z",
+      "2026-11-03T18:00:00.123800Z",
+      "2026-11-03T18:00:00.123700Z"
+    ]
+  },
+  "first": {
+    "status": 200,
+    "ids": [
+      "b883badf-65df-40da-9576-975e70d5d05d"
+    ],
+    "cursor": {
+      "created_at": "2026-11-03T18:00:00.123Z",
+      "id": "b883badf-65df-40da-9576-975e70d5d05d"
+    }
+  },
+  "second": {
+    "status": 200,
+    "ids": [],
+    "next_cursor": null
+  },
+  "expected_remaining_rows": 2,
+  "actual_remaining_rows": 0,
+  "confirmed_missing_rows": true
+}

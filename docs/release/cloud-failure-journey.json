@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "session": "1329f5b2b63a4d2eb97770818dc9edab",
+  "outcome": "passed",
+  "error_classification": null,
+  "checks": [
+    {
+      "scenario": "duplicate",
+      "outcome": "passed",
+      "job_id": "job_395d0913-c999-4e96-9e20-bacdf80db2fd",
+      "sandbox_id": "sbx_10004c2142cb4e3da3772ac36488cca4",
+      "status": "completed",
+      "attempt_count": 1,
+      "admitted_runs": 1,
+      "durable_effect_count": 1,
+      "runner_audit_events": 3,
+      "provider_audit_events": 5
+    },
+    {
+      "scenario": "transient_before_effect",
+      "outcome": "passed",
+      "job_id": "job_dff840ff-94e9-440f-9e54-07e91ed0b1b2",
+      "sandbox_id": "sbx_490849abb50f44e2ab5056a0da3e477b",
+      "status": "completed",
+      "attempt_count": 1,
+      "admitted_runs": 1,
+      "durable_effect_count": 1,
+      "runner_audit_events": 3,
+      "provider_audit_events": 5
+    },
+    {
+      "scenario": "timeout_after_effect",
+      "outcome": "passed",
+      "job_id": "job_9e6b7c7e-180e-4b9f-8efe-22ce827a5b72",
+      "sandbox_id": "sbx_09a49a3e3e02433fb8a2ef32ea7b1dd1",
+      "status": "completed",
+      "attempt_count": 1,
+      "admitted_runs": 1,
+      "durable_effect_count": 1,
+      "runner_audit_events": 3,
+      "provider_audit_events": 5
+    },
+    {
+      "scenario": "worker_crash",
+      "outcome": "passed",
+      "job_id": "job_be972ca4-ae28-4ff8-bcfa-7138037d1458",
+      "sandbox_id": "sbx_72f12e94a0884501930d121bf9afec86",
+      "status": "completed",
+      "attempt_count": 1,
+      "admitted_runs": 1,
+      "durable_effect_count": 1,
+      "runner_audit_events": 4,
+      "provider_audit_events": 5
+    },
+    {
+      "scenario": "provider_crash",
+      "outcome": "passed",
+      "job_id": "job_5039f169-b0cb-4f7a-85c7-b4b6ac09129f",
+      "sandbox_id": "sbx_51d408d2c8544071b70a7eb6112e95a0",
+      "status": "failed",
+      "attempt_count": 1,
+      "admitted_runs": 1,
+      "durable_effect_count": 1,
+      "runner_audit_events": 3,
+      "provider_audit_events": 5
+    },
+    {
+      "scenario": "cancellation_race",
+      "outcome": "passed",
+      "job_id": "job_e59552ac-1f75-4881-a261-eeaad038d899",
+      "sandbox_id": "sbx_6236feed7a5740668a8a6e993b36d8a1",
+      "status": "cancelled",
+      "attempt_count": 1,
+      "admitted_runs": 1,
+      "durable_effect_count": 1,
+      "runner_audit_events": 4,
+      "provider_audit_events": 6
+    }
+  ],
+  "cleanup_pending_sandboxes": [],
+  "runtime": "real BoxLite Cloud",
+  "databases": "isolated real PostgreSQL 16",
+  "services": "local real processes from current source; not GCC deployment proof",
+  "faults": "controlled local HTTP proxy and SIGKILL of owned service processes",
+  "host_reboot": "not performed"
+}

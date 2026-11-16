@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "session": "8462f2927bfb4785877f9e5af26cc335",
+  "outcome": "incomplete",
+  "runtime": "actual BoxLite Cloud, SDK0.11.0",
+  "scope": "runtime adapter only; no Provider HTTP/PostgreSQL/GCC deployment proof",
+  "bounds": {
+    "cpus": 1,
+    "memory_mib": 1024,
+    "disk_mib": 1024,
+    "cpu_workers": 2,
+    "cpu_worker_seconds": 2,
+    "disk_max_write_mib": 1228,
+    "disk_deadline_seconds": 18,
+    "memory_max_touch_mib": 1536,
+    "memory_child_deadline_seconds": 24
+  },
+  "checks": [
+    {
+      "scenario": "approved_metadata",
+      "outcome": "passed",
+      "observations": {
+        "cpus": 1,
+        "memory_mib": 1024,
+        "network_inbound": "disabled",
+        "network_outbound": "disabled",
+        "disk_size_attestation": "SDK BoxInfo unavailable; guest filesystem observed below"
+      }
+    },
+    {
+      "scenario": "network_denied_fixed_ip_probes",
+      "outcome": "passed",
+      "observations": {
+        "interfaces": [
+          {
+            "name": "dummy0",
+            "operstate": "down",
+            "flags": "0x82"
+          },
+          {
+            "name": "lo",
+            "operstate": "unknown",
+            "flags": "0x9"
+          }
+        ],
+        "ipv4_routes": [],
+        "attempts": [
+          {
+            "host": "1.1.1.1",
+            "connected": false,
+            "errno": 101
+          },
+          {
+            "host": "8.8.8.8",
+            "connected": false,
+            "errno": 101
+          }
+        ],
+        "scope": "two external TCP endpoints only; no universal egress or allowed-host proof"
+      }
+    },
+    {
+      "scenario": "bounded_two_worker_cpu",
+      "outcome": "passed",
+      "observations": {
+        "cpu_count": 1,
+        "workers": 2,
+        "worker_samples": [
+          {
+            "cpu_seconds": 0.998648823,
+            "wall_seconds": 2.00436664
+          },
+          {
+            "cpu_seconds": 1.000512279,
+            "wall_seconds": 2.0000072939999995
+          }
+        ],
+        "elapsed_wall_seconds": 2.071664898,
+        "aggregate_cpu_seconds": 1.999161102,
+        "cpu_to_wall_ratio": 0.9650021603059473,
+        "memory": {
+          "MemTotal": 1070071808,
+          "MemAvailable": 955793408,
+          "SwapTotal": 0
+        },
+        "rootfs_capacity_bytes": 1039155200,
+        "rootfs_available_bytes": 886657024,
+        "interfaces": [
+          {
+            "name": "dummy0",
+            "operstate": "down",
+            "flags": "0x82"
+          },
+          {
+            "name": "lo",
+            "operstate": "unknown",
+            "flags": "0x9"
+          }
+        ],
+        "ipv4_routes": [],
+        "external_tcp_attempts": [
+          {
+            "host": "1.1.1.1",
+            "connected": false,
+            "errno": 101
+          },
+          {
+            "host": "8.8.8.8",
+            "connected": false,
+            "errno": 101
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "bounded_rootfs_capacity",
+      "outcome": "passed",
+      "observations": {
+        "written_bytes": 886632448,
+        "maximum_probe_bytes": 1287651328,
+        "reason": "enospc",
+        "errno": 28,
+        "elapsed_seconds": 5.309101907999999,
+        "filesystem_capacity_bytes": 1039155200,
+        "available_before_bytes": 886636544,
+        "available_after_bytes": 886636544,
+        "temporary_fill_removed": true
+      }
+    }
+  ],
+  "cleanup": "confirmed stopped and removed by exact name/id",
+  "host_reboot": "not performed",
+  "full_escape_qualification": "not performed",
+  "vendor_host_claims": "not established",
+  "profile": {
+    "image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+    "cpus": 1,
+    "memory_mib": 1024,
+    "disk_mib": 1024,
+    "network": "denied",
+    "allowed_hosts": [],
+    "entrypoint": [
+      "/usr/local/bin/python3",
+      "-c",
+      "import time; time.sleep(31536000)"
+    ],
+    "cmd": []
+  },
+  "runtime_id": "WFFxM3Q543cd",
+  "incomplete_probes": [
+    {
+      "scenario": "memory",
+      "exit_code": 1,
+      "output_truncated": false,
+      "stdout_bytes": 0,
+      "stderr_bytes": 130,
+      "stderr_classification": "StopIteration"
+    }
+  ],
+  "error_classification": "RuntimeError"
+}
