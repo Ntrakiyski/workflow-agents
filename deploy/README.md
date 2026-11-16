@@ -8,6 +8,8 @@ Create **one** project `workflow-agents-phase1`, environment `staging`, applicat
 
 Set application build context to its own service directory, Dockerfile `/Dockerfile`, and exact Git commit SHA. Disable automatic deployment and domain generation. There are no public domains or host port mappings; consumers connect from the private Docker network. Shared bridge reachability is not tenant isolation: credentials, per-owner access and allowed profiles remain required.
 
+`main` contains the integrated application and infrastructure work. Use `main` as the Coolify Git branch while retaining each application's explicit verified commit pin. Branch consolidation does not change deployed sources or release-readiness gates.
+
 Generate distinct database passwords and client/service tokens securely; put them in Coolify runtime-only locked variables. The provider delegate credential authorizes only the explicitly configured Runner owner IDs. Client tokens cannot choose delegated ownership. Applications never receive the other database's credentials. Required service-specific variables and verified migration/start commands are in each service README.
 
 Active Cloud mode sets `SANDBOX_RUNTIME_MODE=cloud`, HTTPS `BOXLITE_REST_URL`, stable `BOXLITE_ACCOUNT_SCOPE`, bounded runtime requests and secret `BOXLITE_API_KEY` on Provider only. Apply checked-in nonsecret configuration with `apply-coolify.mjs --commit FULL_SHA`; it refuses secret values in Git configuration and does not deploy automatically. SDK0.11.0 follows the reviewed canonical guide and passed real Cloud tests. Keep both networking directions disabled and do not add preview tunnels. No KVM mapping/group or host policy change is required. Cloud disks are external; the local volume cannot back them up.

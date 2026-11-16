@@ -7,7 +7,7 @@
   "release_version": "1.0.0-rc.3",
   "stable_release": false,
   "repository": "https://github.com/Ntrakiyski/workflow-agents",
-  "integration_branch": "feat/user-sandboxes",
+  "integration_branch": "main",
   "deployed_service_commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
   "api_version": "v1",
   "contracts": [

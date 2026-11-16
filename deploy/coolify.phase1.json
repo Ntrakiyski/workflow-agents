@@ -5,7 +5,7 @@
   },
   "environment": "staging",
   "repository": "https://github.com/Ntrakiyski/workflow-agents",
-  "branch": "phase1/integration",
+  "branch": "main",
   "applications": {
     "job-runner": {
       "base_directory": "/services/job-runner",

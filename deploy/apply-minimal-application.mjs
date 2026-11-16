@@ -37,7 +37,7 @@ async function api(method, path, body) {
   if (!response.ok) throw Error('Configuration HTTP ' + response.status);
   return await response.json();
 }
-const common = { git_branch: 'feat/user-sandboxes', git_commit_sha: commit,
+const common = { git_branch: 'main', git_commit_sha: commit,
   is_auto_deploy_enabled: false, redact_all_env_values_in_logs: true };
 async function apply(uuid, expectedName, variables, settings) {
   const sourceCommit = expectedName === 'workflow-application' ? applicationCommit : commit;
