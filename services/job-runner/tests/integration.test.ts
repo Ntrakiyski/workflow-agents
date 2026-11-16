@@ -248,6 +248,107 @@ test(
         },
       );
       await t.test(
+        "opt-in shared sandbox dispatch overlaps two runs, queues the third and cancels independently",
+        async () => {
+          const prepared = await terminal((await submit(submission())).job_id);
+          cfg.profiles.sandboxes["minimal-linux:v1"]!.max_concurrent_runs = 2;
+          provider.stats.maxRunsPerSandbox = 2;
+          provider.stats.holdRuns = true;
+          const body = () => ({
+            ...submission(),
+            sandbox: { mode: "reuse", sandbox_id: prepared.sandbox_id },
+          });
+          try {
+            const a = await submit(body());
+            const b = await submit(body());
+            await until(
+              () => job(a.job_id),
+              (j) => j.status === "running",
+            );
+            await until(
+              () => job(b.job_id),
+              (j) => j.status === "running",
+            );
+            await migrate(pool, (r) => logs.push(r)); // Active shared rows survive migration replay.
+            const third = await submit(body());
+            await wait(100);
+            assert.equal((await job(third.job_id)).status, "queued");
+            await send("POST", "/v1/jobs/" + a.job_id + "/cancel", {});
+            assert.equal((await terminal(a.job_id)).status, "cancelled");
+            assert.equal((await job(b.job_id)).status, "running");
+            assert.equal(
+              provider.sandboxes.get(prepared.sandbox_id).status,
+              "running",
+            );
+            await until(
+              () => job(third.job_id),
+              (j) => j.status === "running",
+            );
+            for (const j of [b, third]) {
+              await send("POST", "/v1/jobs/" + j.job_id + "/cancel", {});
+              assert.equal((await terminal(j.job_id)).status, "cancelled");
+            }
+          } finally {
+            delete cfg.profiles.sandboxes["minimal-linux:v1"]!
+              .max_concurrent_runs;
+            provider.stats.maxRunsPerSandbox = 1;
+            provider.stats.holdRuns = false;
+          }
+        },
+      );
+      await t.test(
+        "a proven completed failure keeps its result after late deadline reconciliation",
+        async () => {
+          provider.stats.holdRuns = true;
+          try {
+            const body = submission();
+            body.limits.max_duration_seconds = 1;
+            const admitted = await submit(body);
+            const active = await until(
+              () => job(admitted.job_id),
+              (j) => j.status === "running",
+            );
+            await worker.stop();
+            const external = provider.runs.get(active.run_id);
+            external.status = "failed";
+            external.result = {
+              exit_code: 124,
+              stdout: "",
+              stderr: "",
+              output_truncated: false,
+              artifacts: [],
+            };
+            external.error = {
+              code: "execution_failed",
+              message: "Completed child exit",
+              retryable: false,
+              correlation_id: "corr_mock",
+            };
+            external.finished_at = external.updated_at =
+              new Date().toISOString();
+            provider.sandboxes.get(active.sandbox_id).active_run_id = null;
+            provider.stats.active--;
+            await pool.query(
+              "UPDATE runner.jobs SET attempt_started_at=now()-interval '2 seconds' WHERE job_id=$1",
+              [admitted.job_id],
+            );
+            worker = new Worker(service);
+            await worker.start();
+            const final = await terminal(admitted.job_id);
+            assert.equal(final.status, "failed");
+            assert.equal(final.result.exit_code, 124);
+            assert.equal(final.error.code, "execution_failed");
+            assert.equal(final.attempt_count, 1);
+          } finally {
+            provider.stats.holdRuns = false;
+            if (!worker.active) {
+              worker = new Worker(service);
+              await worker.start();
+            }
+          }
+        },
+      );
+      await t.test(
         "active cancellation waits for Provider terminal state and preserves sandbox",
         async () => {
           provider.stats.holdRuns = true;

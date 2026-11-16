@@ -13,6 +13,7 @@ export type ProfileConfig = {
       memory_mib: number;
       disk_mib: number;
       network: string;
+      max_concurrent_runs?: number;
     }
   >;
   workloads: Record<

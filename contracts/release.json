@@ -1,7 +1,7 @@
 {
   "api_version": "v1",
-  "contract_version": "1.0.0-rc.2",
-  "status": "candidate-additive-transfer",
+  "contract_version": "1.0.0-rc.3",
+  "status": "candidate-opt-in-shared-execution",
   "release_ready": false,
   "services": ["job-runner", "sandbox-provider"],
   "compatibility_policy": "docs/contracts/v1.md"

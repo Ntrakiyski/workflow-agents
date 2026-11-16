@@ -1,0 +1,21 @@
+{
+  "scope": "actual BoxLite Cloud SDK, synthetic Python descendants, no deployed service",
+  "fixture_name": "workflow-shared-proof-3a757f52ee32dac1",
+  "runtime_id": "4RINlI3ASap0",
+  "two_running": true,
+  "cancel_ack": {
+    "status": "running"
+  },
+  "cancel_exit": -9,
+  "sibling_result": {
+    "exit_code": 0,
+    "stdout": "sibling-completed\n",
+    "stderr": "",
+    "output_truncated": false,
+    "artifacts": []
+  },
+  "cancel_finished": true,
+  "sandbox_still_running": true,
+  "passed": true,
+  "destroyed": true
+}

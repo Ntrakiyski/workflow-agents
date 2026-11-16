@@ -1,1 +1,13 @@
-{"service":"sandbox-provider","version":"1.0.0-rc.2","api_version":"v1","contract":"provider/openapi.json","runtime_sdk":{"boxlite":"0.11.0"},"status":"candidate","compatibility":"Additive scoped file transfer endpoints and secret environment references. Existing v1 response schemas remain unchanged. Cloud completion wrapper requires Python3 in approved images. Hosted qualification incomplete."}
+{
+  "service": "sandbox-provider",
+  "version": "1.0.0-rc.3",
+  "api_version": "v1",
+  "contract": "provider/openapi.json",
+  "runtime_sdk": {
+    "boxlite": "0.11.0"
+  },
+  "status": "candidate",
+  "compatibility": "Additive opt-in shared sandbox capacity; default one remains exclusive. Shared Linux supervisors use nonce-bound descendant termination and journals. Migration rollback to an exclusive binary requires drained shared runs and a separately verified schema restore. Stable readiness remains false.",
+  "contract_version": "1.0.0-rc.3",
+  "release_ready": false
+}

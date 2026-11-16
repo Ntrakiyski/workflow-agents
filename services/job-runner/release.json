@@ -1,1 +1,8 @@
-{"service":"job-runner","version":"1.0.0-rc.1","api_version":"v1","contract_version":"1.0.0-rc.1","release_ready":false,"compatibility":"Additive v1 changes only. Breaking changes require a new major API; see ../../docs/contracts/v1.md."}
+{
+  "service": "job-runner",
+  "version": "1.0.0-rc.3",
+  "api_version": "v1",
+  "contract_version": "1.0.0-rc.3",
+  "release_ready": false,
+  "compatibility": "Additive opt-in shared sandbox capacity; default one remains exclusive. Shared Linux supervisors use nonce-bound descendant termination and journals. Migration rollback to an exclusive binary requires drained shared runs and a separately verified schema restore. Stable readiness remains false."
+}

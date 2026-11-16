@@ -14,8 +14,11 @@ class Database:
         async with self.pool.connection() as conn:
             async with conn.transaction():
                 await conn.execute('SELECT pg_advisory_xact_lock(720119451)')
+                exists = await one(conn, "SELECT to_regclass('schema_migrations') IS NOT NULL AS present")
+                applied = {row['version'] for row in await all_rows(conn, 'SELECT version FROM schema_migrations')} if exists['present'] else set()
                 for migration in sorted(Path(__file__).parent.parent.joinpath('migrations').glob('*.sql')):
-                    await conn.execute(migration.read_text())
+                    if int(migration.name.split('_', 1)[0]) not in applied:
+                        await conn.execute(migration.read_text())
 
     async def close(self):
         await self.pool.close()

@@ -72,6 +72,13 @@
               "maxLength": 4096
             },
             "description": "Optional trusted operator-owned image CMD override, executed directly. Never substituted from request data."
+          },
+          "max_concurrent_runs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8,
+            "default": 1,
+            "description": "Operator-owned durable per-sandbox execution capacity. Omitted means one. Values above one require a new immutable Cloud profile, independently verified per-run cancellation and shared-transfer safety; no implicit change to retained profiles."
           }
         },
         "required": [

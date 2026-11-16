@@ -45,6 +45,7 @@ class Execution:
 
 class FakeRuntime:
     kind = 'fake-test-only'
+    shared_execution_supported = True
     def __init__(self):
         self.boxes, self.executions, self.active, self.max_active = {}, {}, {}, {}
         self.creates, self.executes, self.removes = 0, 0, 0
@@ -86,7 +87,14 @@ class FakeRuntime:
             raise RuntimeError('sensitive runtime failure must not leak')
         execution = Execution(self, name, argv)
         self.executions[execution.key] = execution
+        execution.result_reference = profile.get('_result_reference')
         return execution
+    def shared_execution(self, reference, result_reference, nonce):
+        return next(e for e in self.executions.values() if e.name == reference and e.result_reference == result_reference)
+    async def cancel_reference(self, reference, result_reference, nonce):
+        for execution in self.executions.values():
+            if execution.name == reference and execution.result_reference == result_reference:
+                await self.cancel(execution)
     async def attach(self, name, execution_id):
         return self.executions[execution_id]
     async def collect(self, execution, max_output):

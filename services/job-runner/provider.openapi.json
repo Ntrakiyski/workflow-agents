@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Workflow Agents Sandbox Provider API",
-    "version": "1.0.0-rc.2",
+    "version": "1.0.0-rc.3",
     "description": "Additive scoped transfer and explicit Cloud result completion candidate. Release readiness still requires real hosted qualification; see docs/contracts/v1.md."
   },
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
@@ -15,7 +15,7 @@
     "/v1/sandboxes/{sandbox_id}/files/uploads": {
       "post": {
         "operationId": "createFileUpload",
-        "description": "Requires sandbox:file:write. Reserve an immutable relative path under /opt/workflow-transfer. Maximum256MiB per file. No DB blobs; metadata only. Running idle sandbox and approved Python3 image required.",
+        "description": "Requires sandbox:file:write. Reserve an immutable relative path under /opt/workflow-transfer. Maximum256MiB per file. No DB blobs; metadata only. Running sandbox and approved Python3 image required. Active runs refuse transfer unless its immutable profile opts into bounded shared execution.",
         "parameters": [
           {
             "$ref": "#/components/parameters/CorrelationId"
@@ -278,7 +278,7 @@
     "/v1/sandboxes/{sandbox_id}/files/uploads/{upload_id}": {
       "patch": {
         "operationId": "writeFileChunk",
-        "description": "Requires sandbox:file:write. Contiguous chunks of at most1MiB decoded bytes with SHA256. Retry identical offset/bytes after unknown outcome; conflicting bytes rejected. JSON body bound1500000 bytes. Busy sandboxes refuse transfer.",
+        "description": "Requires sandbox:file:write. Contiguous chunks of at most1MiB decoded bytes with SHA256. Retry identical offset/bytes after unknown outcome; conflicting bytes rejected. JSON body bound1500000 bytes. Lifecycle/file-operation conflicts refuse transfer; single-run profiles also refuse transfer during execution.",
         "parameters": [
           {
             "$ref": "#/components/parameters/CorrelationId"
@@ -804,7 +804,7 @@
     "/v1/sandboxes/{sandbox_id}/files/read": {
       "post": {
         "operationId": "readFileChunk",
-        "description": "Requires sandbox:file:read. Read at most1MiB from one regular file relative to /opt/workflow-transfer. Return whole-file SHA256, size and EOF; consumer verifies all chunks and final checksum before delivery. No arbitrary host paths/URLs. Active runs refuse transfer.",
+        "description": "Requires sandbox:file:read. Read at most1MiB from one regular file relative to /opt/workflow-transfer. Return whole-file SHA256, size and EOF; consumer verifies all chunks and final checksum before delivery. No arbitrary host paths/URLs. Single-run profiles refuse transfer during active execution.",
         "parameters": [
           {
             "$ref": "#/components/parameters/CorrelationId"
@@ -2350,7 +2350,7 @@
     "/v1/sandboxes/{sandbox_id}/execute": {
       "post": {
         "operationId": "executeWorkload",
-        "description": "Start only an approved configured workload; sandbox must be running. Atomically claim one active run per sandbox. Durable idempotency and execution_ref allow recovery after unknown HTTP outcome. No shell is built from caller input. Unsupported artifact transfer gives 422 before execution.",
+        "description": "Start only an approved configured workload; sandbox must be running. Atomically claim capacity under the sandbox lock: one by default, or its explicitly configured max_concurrent_runs. Durable idempotency and execution_ref allow recovery after unknown HTTP outcome. No shell is built from caller input. Unsupported artifact transfer gives 422 before execution.",
         "parameters": [
           {
             "$ref": "#/components/parameters/CorrelationId"

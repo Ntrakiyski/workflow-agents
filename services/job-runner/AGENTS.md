@@ -2,7 +2,7 @@
 
 This service is **Phase 1 reusable infrastructure**. Read `PHASE-1-REUSABLE-SERVICES.md` from the repository root before changes.
 
-Read the root [AGENTS.md](../../AGENTS.md) first. This file adds Runner-specific instructions. Current version is `1.0.0-rc.1`; [readiness](../../docs/phase1/readiness.json) remains false for Phase 2.
+Read the root [AGENTS.md](../../AGENTS.md) first. This file adds Runner-specific instructions. Current candidate version is `1.0.0-rc.3`; [readiness](../../docs/phase1/readiness.json) remains false for Phase 2.
 
 ## Stack and source map
 
@@ -48,7 +48,7 @@ Inject the environment before `npm run migrate` and `npm start`. Startup repeats
 
 - Commit job admission, owner-scoped idempotency, audits and queue insertion atomically. Authenticate and authorize before replay; changed payloads return conflict.
 - Persist the attempt's exact execute request, timeout, execution reference and key before HTTP. Transport retries preserve that identity. Only proven terminal transient failures permit a new workload attempt.
-- Preserve database locks and unique indexes enforcing global/owner capacity and one active job per sandbox. Graphile delivery is at least once; do not claim unconditional exactly-once execution.
+- Preserve database locks and capacity triggers enforcing global/owner capacity and the approved immutable sandbox profile capacity (default one). Graphile delivery is at least once; do not claim unconditional exactly-once execution.
 - Cancellation is durable intent. Reconcile the Provider's run or cancellation-by-reference fence before reporting physical termination. An unreachable Provider can leave a job `cancelling`.
 - Delayed and idle-stop actions recheck state and newer activity. Stop must never become destroy. Resume creates a new job and preserves the previous result.
 - Keep JSON logs safe and event audits append-only. A retention setting is not permission to erase deduplication mappings or audit history.

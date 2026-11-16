@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from "pg";
-export const VERSION = "1.0.0-rc.1";
+export const VERSION = "1.0.0-rc.3";
 export const TERMINAL = new Set([
   "completed",
   "failed",

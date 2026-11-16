@@ -1,5 +1,5 @@
 import pg from "pg";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { runMigrations } from "graphile-worker";
 import type { Sql } from "./types.js";
@@ -30,14 +30,32 @@ export async function migrate(pool: pg.Pool, sink: LogSink = stdoutSink) {
     await client.query(
       "SELECT pg_advisory_xact_lock(hashtextextended('runner:migrations',0))",
     );
-    await client.query(
-      await readFile(
-        fileURLToPath(
-          new URL("../migrations/001_initial.sql", import.meta.url),
-        ),
-        "utf8",
-      ),
+    const exists = (
+      await client.query(
+        "SELECT to_regclass('runner.schema_migrations') IS NOT NULL AS present",
+      )
+    ).rows[0].present;
+    const applied = new Set<number>(
+      exists
+        ? (
+            await client.query("SELECT version FROM runner.schema_migrations")
+          ).rows.map((row) => row.version)
+        : [],
     );
+    const directory = fileURLToPath(new URL("../migrations/", import.meta.url));
+    for (const migration of (await readdir(directory))
+      .filter((name) => /^[0-9]+_.+[.]sql$/.test(name))
+      .sort()) {
+      if (!applied.has(Number(migration.split("_", 1)[0])))
+        await client.query(
+          await readFile(
+            fileURLToPath(
+              new URL("../migrations/" + migration, import.meta.url),
+            ),
+            "utf8",
+          ),
+        );
+    }
     await client.query("COMMIT");
   } catch (e) {
     await client.query("ROLLBACK");

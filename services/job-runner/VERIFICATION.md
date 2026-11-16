@@ -1,5 +1,11 @@
 # Runner service verification — 2026-11-03
 
+## Shared execution candidate rc.3 (2026-11-04)
+
+Strict typecheck/build/Prettier passed. Five unit tests and18 integration TAP tests passed with a dedicated disposable PostgreSQL16 database and actual Graphile queue. The added shared scenario runs two jobs in the same retained sandbox, queues a third, cancels one independently, preserves the sibling and replays migrations while both jobs remain active. Provider HTTP in that suite is a schema-checking mock. Default single-run serialization coverage remains.
+
+A separate actual Cloud test launches local Runner/Provider processes with two isolated real databases: shared active transfer, detached-descendant cancellation, ProviderSIGKILL and journal recovery with attempt1, and independent deadlines passed. See `../sandbox-provider/evidence/shared-cloud-local-services-2026-11-04.json`. This qualifies local service source and actual Cloud execution, not deployed GCC behavior or Pi/OfficeCLI concurrency. Stable readiness remains false.
+
 Scope: implementation branch `phase1/job-runner`, release candidate `1.0.0-rc.1`. This record distinguishes actual executed tests from mock runtime behavior. The final integration commit and independent reviewer reports supersede this developer record.
 
 ## Executed
@@ -30,3 +36,7 @@ Follow-up regressions also passed in the same 21-test suite: a job scheduled 60 
 Coolify healthcheck compatibility follow-up: the final image now installs `curl` and `ca-certificates` with apt recommendations disabled and removes package indexes. The platform replaces image healthchecks with its own curl probe. Rebuilt the image successfully, reran strict typecheck and all five unit tests, then ran a disposable read-only/all-capabilities-dropped container: UID 1000, curl request to an internal HTTP fixture returned `ok`, CA bundle present. No database or application logic changed in this follow-up, so the existing 20-test database/queue evidence was not needlessly rerun.
 
 Staging-discovered setup-timeout regression: a Provider HTTP fixture repeatedly returns 503 for sandbox creation until the one-second setup deadline. The Runner terminates as `timed_out` with safe `deadline_exceeded` error/correlation and immutable audit error classification, zero attempts, no box creation and no execute call. Central terminal-state handling also supplies this safe error when a cancelled Provider run maps to a timed-out job. Reran the full 21-test suite, typecheck, formatting check and build; all passed.
+
+Late collection regression: a Provider failed state with a verified completed Result remains failed/execution_failed even if Runner's deadline elapsed before reconciliation. One conditional preserves that result instead of a later cancellation target; real PostgreSQL/Graphile stop/restart regression passed.
+
+Final bounded actual Cloud proof ran from clean9a08319 with unchanged source/compiled Runner file hashes; both service versions1.0.0-rc.3. All8 shared execution/transfer/cancel/recovery/offline-deadline checks passed. Exact owned Cloud fixture and all6 disposable service databases were removed. The evidence above contains safe identities and verification scope.

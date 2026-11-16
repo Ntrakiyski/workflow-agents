@@ -10,7 +10,7 @@ For rc.2 file transfer/result completion work, read `docs/contracts/scoped-files
 1. Read `services/sandbox-provider/AGENTS.md` and `PHASE-1-REUSABLE-SERVICES.md`. Check the frozen generic API before writing code.
 2. Confirm the pinned BoxLite SDK version and actual persistent create/get/start/stop/exec/remove semantics; do not rely on auto-removing convenience wrappers.
 3. Implement generic `SandboxRuntime` boundaries, Provider-owned registry and idempotent authenticated HTTP handlers. Do not embed Pi/document business logic.
-4. Enforce one active execution per sandbox, allowed workload profiles, validated args/paths, CPU/RAM/network limits and distinct stop/destroy permissions.
+4. Enforce durable approved per-sandbox capacity (default one; opt-in shared Cloud profiles), allowed workload profiles, validated args/paths, CPU/RAM/network limits and distinct stop/destroy permissions.
 5. Unit-test state machine, API schemas, authentication, owner isolation and invalid requests.
 6. With a real BoxLite image, create Box A, write a marker, stop without removal, reattach/start, verify marker, and create Box B to prove separation.
 7. Restart Provider and repeat; test host restart when available, otherwise report persistence as unverified.
@@ -43,3 +43,9 @@ Match packaged `provider/openapi.json` to root contract JSON after reviewed cont
 - Cloud allowlist entries accept hostname/wildcard-hostname or IPv4/CIDR rules, never `hostname:port` or URL schemes. Reject port/scheme rules in create preflight before DB intent. Do not silently drop restrictions: hostname rules have no per-port enforcement and DNS/UDP qualification remains separate.
 - `tests/test_cloud_runtime.py` executes the real SDK against a loopback HTTP stub; its PostgreSQL cases use the disposable `TEST_DATABASE_URL`. Such passes are mocked runtime evidence, not hosted execution. Full local regression command remains `python -m pytest -q -m 'not real_runtime'` with the dedicated DB.
 - Cloud active-execution attachment fails closed with nonretryable `ambiguous_execution` because output replay is not verified. Do not weaken this to an empty successful result. Provider stops the retained box and never resubmits that command. Native result `error_message` also prevents success.
+
+## Shared execution candidate rc.3
+
+Read `docs/contracts/shared-execution-v1.md`. Test two active runs, third admission blocking, exact replay, representative-pointer replacement, cancellation/deadline without sibling termination, migration replay over active shared rows, and unsupported-adapter rejection. Shared Linux supervisors use nonce-bound journals plus child-subreaper descendant cleanup; never substitute a sandbox-wide stop on shared exceptions. Reconcile retained journals with the original start time and nonce after service death; do not reset deadlines or create a fresh workload. Interrupted transfer fences wait for all siblings before same-box stop/recovery. Run `scripts/qualify_shared_cloud.py` only with fresh local `workflow_shared_probe_*` databases and private credential files; it qualifies local service processes against actual Cloud, not GCC deployment.
+
+Shared supervisors also enforce the original absolute registry deadline inside the guest, including while Provider is offline. Expired delayed dispatch never starts the workload; deadline cleanup reaps descendants and returns exit124. Shared internal journal envelopev2 checksum-binds `termination_reason` to the Result, so an ordinary early child exit124 remains an execution failure even when collected after its deadline. Exclusive envelopev1 and the strict HTTP Result remain unchanged. The deadline is rechecked under the control lock immediately before child launch, after state fsync.
