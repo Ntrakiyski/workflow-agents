@@ -4,14 +4,16 @@ Read root `AGENTS.md`, the current readiness record, this README and local devel
 
 Own only `apps/application/**`. React/TypeScript + Fastify, its own PostgreSQL schema/credentials and application-owned S3 storage. Never import service source, BoxLite or infrastructure database credentials. Submit work through the published Runner API; Provider HTTP APIs prepare the retained sandbox and transfer bounded files. External clients never receive service credentials.
 
-Use the local development skill for changes and operations skill before deployment/recovery. Root owns integration, generic contract review, release gating and GCC resource mutations. Current version is `0.1.0-rc.1`, not a stable Phase 2 release.
+Use the local development skill for changes and operations skill before deployment/recovery. Root owns integration, generic contract review, release gating and GCC resource mutations. Current version is `0.2.0-rc.1`, not a stable Phase 2 release.
 
 - Identity comes from server-configured authenticated accounts. Browser input never chooses the owner. Every request, attachment and result download is owner scoped; missing and foreign resources return 404.
 - Mutations require the configured Origin to protect ambient Basic credentials. Expose only HTTPS application; keep APIs, databases and storage private.
 - Request row, owner-scoped submission key, attachment assignment and audit commit together. The row is the durable dispatch outbox. Stable Runner/Provider keys survive ambiguous responses. Never blindly replay uncertain work with fresh execution identity.
 - Originals, final artifacts and required session checkpoints use immutable object keys and conditional S3 writes. DB stores metadata, never file bodies. Output downloads remain hidden until validated export completes.
 - Exit zero is insufficient. Verify transferred manifest request identity, bytes/checksums/types and actual ZIP/XML DOCX structure; require a saved session with canonical `application/x-ndjson` media type. Structural checks do not prove content accuracy or rendered layout.
-- Stop only the same retained sandbox after all successful output/session exports are durable. A stop failure retries independently and cannot revoke a delivered result. No automatic destroy exists.
+- Queue a durable workspace on authenticated page load; one sandbox per stable owner and one independent Pi session/request folder per UUID. Upload and prepare shared tools once before dispatch. Preserve legacy per-request identities during schema migration.
+- Prompt defaults are owner scoped and editable, but each request snapshots its system prompt into admission/idempotency and checkpoint JSON. Never log prompt contents. Prompts are guidance, not a filesystem isolation mechanism.
+- Stop only the same retained shared sandbox when every request is terminal and exports are durable. Persist stop intent before external HTTP; new submissions can queue but cannot dispatch until same-disk restart. Never stop a running sibling. A stop failure retries independently and cannot revoke a delivered result. No automatic destroy exists.
 - Do not add dashboards, chat, approval/clarification screens, feedback/revision flows, account administration, skill management, editors or infrastructure controls.
 - Logs/audits contain safe identifiers, action and outcome; never instructions, document text, secrets or native dependency errors.
 

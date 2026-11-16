@@ -13,3 +13,8 @@ description: Build and verify the minimal authenticated request, list and result
 8. Use disposable `workflow_app_test` PostgreSQL and isolated RustFS: `node scripts/test-services.mjs up`, `npm test`. Tests drop only the explicit local test schema. Never target retained environments.
 9. Run `npm run typecheck`, `npm run format:check`, `npm run build`, `npm run test:browser`. Browser plugin is absent here; Playwright verifies desktop/mobile submission → list → result/download with real DB/storage and test-only execution mocks.
 10. Inspect diffs/secrets, update README/VERIFICATION, commit verified changes and hand off exact evidence. Separate mocked execution from hosted acceptance.
+
+
+For user-workspace changes, retain one stable owner workspace, stage/prepare once before request admission to execution, snapshot owner-edited prompts, and preserve legacy request identities. Test concurrent dispatch, sibling export without stop, prepare acknowledgement loss, Provider recovery stop/start, and stop-versus-new-admission. Backups must include the seven-table migration-2 schema; old five-table archives require the matching historical source before forward migration. Mocked execution does not qualify hosted parallel Pi sessions.
+
+For a runtime release, update and verify the checksum/URL allowlist in `src/initialize.ts` together with the deployment profile, configured object key and independent backup runtime cache. Validate actual application startup; cached Coolify health alone does not establish that the new process is serving.

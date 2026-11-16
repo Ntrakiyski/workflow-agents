@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "operation": "hosted-request-timeline-and-total-time",
+  "commit": "b9ba897348ebaf93c16505f50ccf926f5094a70b",
+  "started_at": "2026-11-04T13:33:40.125Z",
+  "outcome": "passed",
+  "checks": {
+    "existing_requests_have_recorded_history_and_fixed_end": true,
+    "served_assets_match_built_source": true,
+    "live_counter_advances": true,
+    "validated_protected_output_original_and_marker": true,
+    "timeline_updates_newest_first_seconds_and_reopen": true,
+    "duration_matches_submission_to_completion_and_stays_fixed": true,
+    "desktop_mobile_no_overflow": true,
+    "browser_console_clean": true,
+    "shared_tools_uploaded_bytes_unchanged": true
+  },
+  "observations": [
+    {
+      "observed_at": "2026-11-04T13:33:43.568Z",
+      "status": "pending",
+      "event": {
+        "id": "102",
+        "message": "Starting your saved workspace.",
+        "created_at": "2026-11-04T13:33:43.051Z"
+      }
+    },
+    {
+      "observed_at": "2026-11-04T13:33:49.615Z",
+      "status": "pending",
+      "event": {
+        "id": "103",
+        "message": "Preparing this request\u2019s input files.",
+        "created_at": "2026-11-04T13:33:47.008Z"
+      }
+    },
+    {
+      "observed_at": "2026-11-04T13:33:52.639Z",
+      "status": "running",
+      "event": {
+        "id": "105",
+        "message": "Your request is queued. It will start when a session slot is available.",
+        "created_at": "2026-11-04T13:33:51.088Z"
+      }
+    },
+    {
+      "observed_at": "2026-11-04T13:33:55.662Z",
+      "status": "running",
+      "event": {
+        "id": "106",
+        "message": "Pi is working on this request in its own session.",
+        "created_at": "2026-11-04T13:33:53.012Z"
+      }
+    },
+    {
+      "observed_at": "2026-11-04T13:34:53.127Z",
+      "status": "running",
+      "event": {
+        "id": "107",
+        "message": "Saving and validating the result files.",
+        "created_at": "2026-11-04T13:34:51.027Z"
+      }
+    },
+    {
+      "observed_at": "2026-11-04T13:34:56.151Z",
+      "status": "completed",
+      "event": {
+        "id": "108",
+        "message": "Result files saved and ready.",
+        "created_at": "2026-11-04T13:34:54.830Z"
+      }
+    }
+  ],
+  "request_id": "22189a66-31c2-4542-8530-230cd918b447",
+  "timeline": [
+    {
+      "id": "108",
+      "message": "Result files saved and ready.",
+      "created_at": "2026-11-04T13:34:54.830Z"
+    },
+    {
+      "id": "107",
+      "message": "Saving and validating the result files.",
+      "created_at": "2026-11-04T13:34:51.027Z"
+    },
+    {
+      "id": "106",
+      "message": "Pi is working on this request in its own session.",
+      "created_at": "2026-11-04T13:33:53.012Z"
+    },
+    {
+      "id": "105",
+      "message": "Your request is queued. It will start when a session slot is available.",
+      "created_at": "2026-11-04T13:33:51.088Z"
+    },
+    {
+      "id": "104",
+      "message": "Request sent for execution.",
+      "created_at": "2026-11-04T13:33:51.068Z"
+    },
+    {
+      "id": "103",
+      "message": "Preparing this request\u2019s input files.",
+      "created_at": "2026-11-04T13:33:47.008Z"
+    },
+    {
+      "id": "102",
+      "message": "Starting your saved workspace.",
+      "created_at": "2026-11-04T13:33:43.051Z"
+    },
+    {
+      "id": "101",
+      "message": "Request submitted.",
+      "created_at": "2026-11-04T13:33:42.020Z"
+    }
+  ],
+  "created_at": "2026-11-04T13:33:42.020Z",
+  "finished_at": "2026-11-04T13:34:54.830Z",
+  "elapsed_seconds": 72,
+  "finished_check_at": "2026-11-04T13:34:59.795Z",
+  "retention": {
+    "requests": 16,
+    "input_output_files": 26,
+    "statuses_result_hashes_file_ids_bytes_and_checksums": "passed"
+  },
+  "deployment": {
+    "application_uuid": "7vdsilhnu96tifz7yosm61j1",
+    "deployment_uuid": "tx9xvettt4bhn6unr5jkllxb",
+    "status": "finished",
+    "infrastructure_replaced": false
+  },
+  "verification": {
+    "backend_tests": 18,
+    "browser_tests": 2,
+    "application_ci": 41839008428,
+    "infrastructure_ci": 41839008737,
+    "ci_execution": "mocked",
+    "hosted_execution": "actual Cloud/Pi/LiteLLM/OfficeCLI",
+    "typecheck": "passed",
+    "format": "passed",
+    "build": "passed"
+  },
+  "scope": "Application status timeline and elapsed-time UI, existing data retention and one synthetic hosted request; no broader infrastructure readiness claim. Earlier requests show recorded milestones only."
+}

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "operation": "actual-pi-combined-prompt-local-controller-check",
+  "recorded_at": "2026-11-04T12:42:55.844474+00:00",
+  "outcome": "passed",
+  "image": "python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+  "tool_bundle_sha256": "2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc",
+  "controller_source_sha256": "30ec761dc160c31c417db46a549f81d39b35cb94e2ec9c22287e8b64663376a0",
+  "request_id": "e02ae568-49b5-44ed-badb-397c4165a02b",
+  "checks": {
+    "actual_pi_litellm_officecli": true,
+    "combined_default_and_instructions_in_one_user_message": true,
+    "exact_marker_count": 1,
+    "original_text_preserved": true,
+    "independent_session_id_and_cwd": true,
+    "controller_validations_passed": true,
+    "prepared_tools_mounted_readonly": true
+  },
+  "output": {
+    "bytes": 1566,
+    "sha256": "e544fb6faefdd94a2cf9ed7b25fc8fef0c4d797bcabed8dc2cc0135ea293bde5"
+  },
+  "probe_note": "Corrected independent marker extraction and decoded message-text assertions against the same completed output/session; no request rerun.",
+  "scope": "Actual local Docker/Pi/LiteLLM/OfficeCLI with current profile controller and unchanged rc3 tools. No hosted concurrency, rendered-layout or general content-accuracy claim."
+}

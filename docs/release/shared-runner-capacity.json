@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operation": "hosted-runner-capacity-correction",
+  "recorded_at": "2026-11-04T12:58:09.803188+00:00",
+  "outcome": "passed",
+  "source_commit": "3ebbcb2a9c210acbd41794fc1fd3c27d468c1ae3",
+  "deployed_code_commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+  "deployment_uuid": "cnjp6nm35djame2lrygqs990",
+  "before": {
+    "QUEUE_CONCURRENCY": 1,
+    "MAX_GLOBAL_CONCURRENCY": 1,
+    "MAX_OWNER_CONCURRENCY": 1,
+    "application_principal_max_concurrency": 2
+  },
+  "after": {
+    "queue": "2",
+    "global": "2",
+    "owner": "1",
+    "actors": [
+      [
+        "staging-client",
+        null
+      ],
+      [
+        "staging-other-client",
+        null
+      ],
+      [
+        "workflow-application",
+        2
+      ]
+    ]
+  },
+  "scope": "Live nonsecret environment and actor capacity read inside the owning Runner; scoped queue/global configuration only; default owner limit and other actors unchanged. Actual hosted Pi session overlap is checked separately."
+}

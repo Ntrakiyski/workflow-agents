@@ -11,6 +11,8 @@ export const APPROVED_RUNTIME_URLS = Object.freeze({
     'https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.1/runtime-bundle.tar.gz',
   '08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a':
     'https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.2/runtime-bundle.tar.gz',
+  '2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc':
+    'https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.3/runtime-bundle.tar.gz',
 });
 const MAX_BYTES = 256 * 1024 * 1024;
 const fail = code => { throw Error('runtime_cache_' + code); };

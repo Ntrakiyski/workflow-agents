@@ -1,0 +1,528 @@
+{
+  "version": 1,
+  "operation": "initial-hosted-system-only-prompt-journey",
+  "recorded_at": "2026-11-04T12:43:44.781356+00:00",
+  "outcome": "failed",
+  "requests": [
+    {
+      "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+      "marker": "WORKFLOW_SHARED_A_6595081a-d549-4b19-b736-8f3987110e1b"
+    },
+    {
+      "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+      "marker": "WORKFLOW_SHARED_B_b9e576e1-4eb2-437f-ba9c-137f2432156a"
+    }
+  ],
+  "workspace_preparation_completed": true,
+  "shared_sandbox_id": "sbx_90cbc75fdd2c405cab2ffff81fee921c",
+  "failed_manifest_checks": [
+    {
+      "request_id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+      "job_id": "job_ab7ec4ba-f292-4b76-9337-4e42bfd4fda8",
+      "sandbox_id": "sbx_90cbc75fdd2c405cab2ffff81fee921c",
+      "manifest_sha256": "d565294e17236a47a49d576eace45ee8c8180ba29b04c74609de3e1bb2fa51d8",
+      "exit_code": 1,
+      "validation_codes": [
+        "document_validation_failed"
+      ]
+    },
+    {
+      "request_id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+      "job_id": "job_ddc13d41-33d7-4035-b2bd-7ee8c3f81c2c",
+      "sandbox_id": "sbx_90cbc75fdd2c405cab2ffff81fee921c",
+      "manifest_sha256": "14151907a2d6e09842226b2b13d52965a62a166ba6dd7e936bc3e5b6b111eeab",
+      "exit_code": 1,
+      "validation_codes": [
+        "document_validation_failed"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2026-11-04T12:08:55.144Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 6291456,
+      "total_bytes": 95978009,
+      "percent": 6,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (6%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (6%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:09:36.730Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 10485760,
+      "total_bytes": 95978009,
+      "percent": 10,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (10%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (10%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:10:28.003Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 14680064,
+      "total_bytes": 95978009,
+      "percent": 15,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (15%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (15%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:11:29.114Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 19922944,
+      "total_bytes": 95978009,
+      "percent": 20,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (20%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (20%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:12:19.453Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 24117248,
+      "total_bytes": 95978009,
+      "percent": 25,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (25%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (25%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:13:20.832Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 29360128,
+      "total_bytes": 95978009,
+      "percent": 30,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (30%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (30%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:14:22.605Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 34603008,
+      "total_bytes": 95978009,
+      "percent": 36,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (36%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (36%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:15:13.079Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 38797312,
+      "total_bytes": 95978009,
+      "percent": 40,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (40%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (40%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:16:14.484Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 44040192,
+      "total_bytes": 95978009,
+      "percent": 45,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (45%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (45%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:16:55.319Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 48234496,
+      "total_bytes": 95978009,
+      "percent": 50,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (50%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (50%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:17:56.994Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 53477376,
+      "total_bytes": 95978009,
+      "percent": 55,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (55%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (55%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:18:48.034Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 57671680,
+      "total_bytes": 95978009,
+      "percent": 60,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (60%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (60%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:19:48.999Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 62914560,
+      "total_bytes": 95978009,
+      "percent": 65,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (65%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (65%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:20:49.559Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 68157440,
+      "total_bytes": 95978009,
+      "percent": 71,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (71%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (71%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:21:41.130Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 72351744,
+      "total_bytes": 95978009,
+      "percent": 75,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (75%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (75%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:22:42.927Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 77594624,
+      "total_bytes": 95978009,
+      "percent": 80,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (80%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (80%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:23:24.073Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 81788928,
+      "total_bytes": 95978009,
+      "percent": 85,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (85%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (85%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:24:25.428Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 87031808,
+      "total_bytes": 95978009,
+      "percent": 90,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (90%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (90%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:25:17.643Z",
+      "workspace": "uploading",
+      "uploaded_bytes": 91226112,
+      "total_bytes": 95978009,
+      "percent": 95,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (95%). This happens once.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: uploading shared tools (95%). This happens once.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:26:08.828Z",
+      "workspace": "preparing",
+      "uploaded_bytes": 95978009,
+      "total_bytes": 95978009,
+      "percent": 100,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing your workspace: installing and checking shared tools.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing your workspace: installing and checking shared tools.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:26:19.470Z",
+      "workspace": "ready",
+      "uploaded_bytes": 95978009,
+      "total_bytes": 95978009,
+      "percent": 100,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "pending",
+          "progress": "Preparing this request\u2019s input files.",
+          "failure": null
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "pending",
+          "progress": "Preparing this request\u2019s input files.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:26:29.534Z",
+      "workspace": "ready",
+      "uploaded_bytes": 95978009,
+      "total_bytes": 95978009,
+      "percent": 100,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "failed",
+          "progress": "Pi is working on this request in its own session.",
+          "failure": "The request could not finish. Check your inputs and submit a new request."
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "running",
+          "progress": "Pi is working on this request in its own session.",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "at": "2026-11-04T12:26:39.603Z",
+      "workspace": "ready",
+      "uploaded_bytes": 95978009,
+      "total_bytes": 95978009,
+      "percent": 100,
+      "requests": [
+        {
+          "id": "a1bfaa28-08f7-433d-9f86-9dd54c729eee",
+          "status": "failed",
+          "progress": "Pi is working on this request in its own session.",
+          "failure": "The request could not finish. Check your inputs and submit a new request."
+        },
+        {
+          "id": "74552e43-e64b-41fb-84f4-a4ff6e688642",
+          "status": "failed",
+          "progress": "Pi is working on this request in its own session.",
+          "failure": "The request could not finish. Check your inputs and submit a new request."
+        }
+      ]
+    }
+  ],
+  "root_cause": "The configured gateway Chat Completions route drops system messages. Pi received only the short user instruction referring to the absent system prompt; document controller rejected delivery. Direct gateway probes and a local exact-runtime reproduction confirmed this.",
+  "resolution": "Owner requested combining default policy and request instructions into one text prompt on the existing endpoint. New v4 immutable controller profile reuses prepared rc3 tools. Failed request identities and fences remain unchanged.",
+  "scope": "Failed fixture evidence, not hosted feature acceptance."
+}

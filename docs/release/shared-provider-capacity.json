@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "operation": "hosted-provider-capacity-correction",
+  "recorded_at": "2026-11-04T13:04:24.216958+00:00",
+  "outcome": "passed",
+  "configuration_source_commit": "0e62bfc859c12385f06afe9d02d6d73dfbdda70a",
+  "deployed_code_commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+  "deployment_uuid": "eqzxxyzt4pmspla9u31xgwue",
+  "before": {
+    "max_concurrent_runs": 1
+  },
+  "after": {
+    "max_concurrent_runs": "2"
+  },
+  "single_provider_process": true,
+  "previous_process_confirmed_exited_before_replacement": true,
+  "scope": "Live nonsecret dispatch-slot environment inside owning Provider; existing per-sandbox profile remains capacity two. No Provider source, guest identity or secret change. Saved Pi session overlap is verified separately."
+}

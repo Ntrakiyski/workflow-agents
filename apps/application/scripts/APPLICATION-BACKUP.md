@@ -2,7 +2,7 @@
 
 `application-backup.mjs` runs inside the application image with its own PostgreSQL and S3 credentials. It does not import infrastructure services, query their databases, invoke BoxLite, alter Coolify backup destinations or access another application's storage.
 
-Export includes all five application tables, exact raw PostgreSQL JSON rows, column/constraint metadata, sequence state and every object referenced by `application.files`: originals, delivered files and exported Pi session checkpoints. Raw row strings preserve bigint audit identifiers without JavaScript number conversion. Per-table hashes verify all retained audit records and request identities.
+Export includes all seven application tables (schema migrations 1 and 2, requests, files, audit, Runner events, user workspaces and user prompt settings), exact raw PostgreSQL JSON rows, column/constraint metadata, sequence state and every object referenced by `application.files`: originals, delivered files and exported Pi session checkpoints. Raw row strings preserve bigint audit identifiers without JavaScript number conversion. Per-table hashes verify all retained audit records and request identities.
 
 The immutable runtime archive is excluded. Its object key/checksum are recorded from `RUNTIME_BUNDLE_OBJECT_KEY` and `RUNTIME_BUNDLE_SHA256`; reconstruct it from the approved published runtime release or independent-host immutable public runtime cache and verify that checksum separately before application use. The project puller retains that public bundle separately from this encrypted private checkpoint. Unreferenced orphan uploads are excluded. This checkpoint is not a full S3 inventory, guest disk image, Cloud clone or coordinated infrastructure registry restore.
 
@@ -14,7 +14,7 @@ Required variables are the application's `DATABASE_URL`, `S3_ENDPOINT`, `S3_REGI
 
 ## Export
 
-Run during a quiet window with `--quiescent`. The flag is an operator assertion; the helper also takes PostgreSQL SHARE locks on all application tables before reading the repeatable snapshot. Those locks prevent concurrent admission/worker metadata writes while row and immutable object bytes are collected. Pending/running requests and retained sandboxes without confirmed stopping are rejected. Concurrent uncommitted S3 uploads without committed file rows are safely outside the checkpoint.
+Run during a quiet window with `--quiescent`. The flag is an operator assertion; the helper also takes PostgreSQL SHARE locks on all application tables before reading the repeatable snapshot. Those locks prevent concurrent admission/worker metadata writes while row and immutable object bytes are collected. Pending/running requests, workspace provisioning/stopping, and retained sandboxes without confirmed stopping are rejected. Concurrent uncommitted S3 uploads without committed file rows are safely outside the checkpoint.
 
 ```sh
 umask 077
@@ -99,3 +99,8 @@ Credential and local test configuration files must be private mode 600 (or stric
 The verifier was exercised with a synthetic encrypted snapshot containing three real local RustFS objects and real PostgreSQL rows, including a bigint audit ID. It passed restore/replay/cleanup, rejected a different authenticated source package version before resource creation, and checked that evidence excludes fixture text, owners and secrets. Actual downloaded deployed archives require a separate executed report; this synthetic check does not claim that journey.
 
 When a recovery set includes the independent-host public runtime cache, add `--runtime-cache /ABSOLUTE/CACHE/runtime-bundle.tar.gz`. The verifier checks the authenticated excluded-runtime SHA256, conditionally publishes those exact bytes into the newly created isolated bucket and hashes a fresh download. A supplied manifest also verifies its public profile inventory when present. This remains file reconstruction with the saved identities; it does not start a worker, resume Pi or recreate a Cloud VM.
+
+
+## Shared-workspace schema compatibility
+
+Application `0.2.0-rc.1` adds migration 2 without rewriting retained requests. The checkpoint now contains seven exact tables, including `user_workspaces` and `user_settings`, request system-prompt snapshots and workspace identities. The authenticated envelope format remains version 1, but exact source package, table shape and migration versions must match for restore. Historical five-table checkpoints are deliberately rejected by this helper. Restore those with the matching historical source/helper into isolation, then apply a separately reviewed forward migration. Do not describe a five-table restore as proof of the new workspace schema.

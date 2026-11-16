@@ -1,4 +1,8 @@
-# Minimal application delivery candidate
+# Workflow Agents delivery candidate
+
+The current shared-workspace candidate is described in [Per-user workspaces](SHARED-SANDBOX.md). Runner and Provider are deployed at `0b816c4a127dd61a1704eac2bc8e7b1c9889adad`; application `73fc27fe8154dd14b7c74bdf1a726dee9c1266ac` is live. Both CI workflows passed on the application source. Current hosted acceptance and restore status are recorded in that report; the evidence below preserves the 3 November release history. Stable readiness remains false.
+
+## Previous release — 3 November 2026
 
 The initial release contains instructions/attachments, an authorized persistent request list, and a request detail with status, text/downloads, validation or actionable failure. The [narrowed scope](MINIMAL-SCOPE.md) defers the broader Phase 2 screens. Infrastructure and document logic remain independently owned.
 

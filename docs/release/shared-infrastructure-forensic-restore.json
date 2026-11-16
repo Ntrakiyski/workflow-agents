@@ -1,0 +1,273 @@
+{
+  "version": 1,
+  "operation": "isolated-offhost-forensic-registry-restore",
+  "source_session": "20261104T131307662Z-ae916641-4be5-4aa4-9561-f9178fc0ba21",
+  "outcome": "passed",
+  "services": [
+    {
+      "service": "job-runner",
+      "deployed_commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+      "migration_tree": "73dac28eedb40b399a41a818c647b0579d6e42b6",
+      "applied_migration_tree": "73dac28eedb40b399a41a818c647b0579d6e42b6",
+      "envelope_transport": "stdin; exact manifest-checked bytes",
+      "first_restore": {
+        "operation": "logical-database-restore",
+        "service": "job-runner",
+        "outcome": "passed",
+        "tables": [
+          {
+            "table": "graphile_worker._private_job_queues",
+            "rows": 0,
+            "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "table": "graphile_worker._private_jobs",
+            "rows": 0,
+            "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "table": "graphile_worker._private_known_crontabs",
+            "rows": 0,
+            "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "table": "graphile_worker._private_tasks",
+            "rows": 2,
+            "rows_sha256": "12712f51b8461734db3dea11eac1259d61bb7e153b5696b07006ba82b3172178"
+          },
+          {
+            "table": "graphile_worker.migrations",
+            "rows": 20,
+            "rows_sha256": "971941d8bef98972d852767b1a108e1f0d0cdf0d530c2bd7e0420ed2cde47c2c"
+          },
+          {
+            "table": "runner.audit_events",
+            "rows": 71,
+            "rows_sha256": "d0bfabff74f2449094380ebeb00c4db883eb9861ad4ca48c223899ea6fb01f60"
+          },
+          {
+            "table": "runner.idempotency",
+            "rows": 24,
+            "rows_sha256": "6fb6dd0c6984570b37cb62059f3a308c5ada6fa3428cac5bf33ff90bf54df66f"
+          },
+          {
+            "table": "runner.jobs",
+            "rows": 22,
+            "rows_sha256": "d1a7fd410f50e1184714cadff8871792896ad1321626aee0fe8a698caab1d7d9"
+          },
+          {
+            "table": "runner.schedules",
+            "rows": 2,
+            "rows_sha256": "79a8c2681f3124a656643a978d40e228f21353174ba4cd57f2291db561ed8b8e"
+          },
+          {
+            "table": "runner.schema_migrations",
+            "rows": 2,
+            "rows_sha256": "8c4a5c0a6513fd88f6b8cf5c377cb3cb04bfc09e6f55318e48982b55aa676538"
+          },
+          {
+            "table": "runner.attempts",
+            "rows": 19,
+            "rows_sha256": "6f0837cf6341658e68cccb95d07ee400df569b62622a75cf987da61afc5e1dc3"
+          }
+        ],
+        "sequences": 4,
+        "bootstrap_timestamp_rows_reconciled": 22,
+        "scope": "logical rows only; no VM disk or host recovery proof"
+      },
+      "idempotent_replay": {
+        "operation": "logical-database-restore",
+        "service": "job-runner",
+        "outcome": "passed",
+        "tables": [
+          {
+            "table": "graphile_worker._private_job_queues",
+            "rows": 0,
+            "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "table": "graphile_worker._private_jobs",
+            "rows": 0,
+            "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "table": "graphile_worker._private_known_crontabs",
+            "rows": 0,
+            "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "table": "graphile_worker._private_tasks",
+            "rows": 2,
+            "rows_sha256": "12712f51b8461734db3dea11eac1259d61bb7e153b5696b07006ba82b3172178"
+          },
+          {
+            "table": "graphile_worker.migrations",
+            "rows": 20,
+            "rows_sha256": "971941d8bef98972d852767b1a108e1f0d0cdf0d530c2bd7e0420ed2cde47c2c"
+          },
+          {
+            "table": "runner.audit_events",
+            "rows": 71,
+            "rows_sha256": "d0bfabff74f2449094380ebeb00c4db883eb9861ad4ca48c223899ea6fb01f60"
+          },
+          {
+            "table": "runner.idempotency",
+            "rows": 24,
+            "rows_sha256": "6fb6dd0c6984570b37cb62059f3a308c5ada6fa3428cac5bf33ff90bf54df66f"
+          },
+          {
+            "table": "runner.jobs",
+            "rows": 22,
+            "rows_sha256": "d1a7fd410f50e1184714cadff8871792896ad1321626aee0fe8a698caab1d7d9"
+          },
+          {
+            "table": "runner.schedules",
+            "rows": 2,
+            "rows_sha256": "79a8c2681f3124a656643a978d40e228f21353174ba4cd57f2291db561ed8b8e"
+          },
+          {
+            "table": "runner.schema_migrations",
+            "rows": 2,
+            "rows_sha256": "8c4a5c0a6513fd88f6b8cf5c377cb3cb04bfc09e6f55318e48982b55aa676538"
+          },
+          {
+            "table": "runner.attempts",
+            "rows": 19,
+            "rows_sha256": "6f0837cf6341658e68cccb95d07ee400df569b62622a75cf987da61afc5e1dc3"
+          }
+        ],
+        "sequences": 4,
+        "bootstrap_timestamp_rows_reconciled": 0,
+        "scope": "logical rows only; no VM disk or host recovery proof"
+      }
+    },
+    {
+      "service": "sandbox-provider",
+      "deployed_commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+      "migration_tree": "b0a8e79a6ccbbc01784501f1f0b4684a16bcfe2c",
+      "applied_migration_tree": "b0a8e79a6ccbbc01784501f1f0b4684a16bcfe2c",
+      "envelope_transport": "stdin; exact manifest-checked bytes",
+      "first_restore": {
+        "operation": "logical-database-restore",
+        "service": "sandbox-provider",
+        "outcome": "passed",
+        "tables": [
+          {
+            "table": "public.idempotency",
+            "rows": 57,
+            "rows_sha256": "416aec96c2011db183ebe86701ffe839ab8948478eed1007a79533d63544b942"
+          },
+          {
+            "table": "public.sandboxes",
+            "rows": 8,
+            "rows_sha256": "87c29f4a6cc417c6c70511d4d174fa361b6ea286e20b0be54582b41c1396fa21"
+          },
+          {
+            "table": "public.schema_migrations",
+            "rows": 5,
+            "rows_sha256": "867777ce0c814743070a9fc46dbc1f93d79ef66dbc9dd1007407f7ea4e7b50f4"
+          },
+          {
+            "table": "public.audit_events",
+            "rows": 226,
+            "rows_sha256": "75ae729aa4f96626ecec4fbd4c0dda3db1b163bc299e837bb872cf15aca13fde"
+          },
+          {
+            "table": "public.cancellation_fences",
+            "rows": 1,
+            "rows_sha256": "a266b234857f868752f14a8e46367c9def9607d2517722e58132985491447b48"
+          },
+          {
+            "table": "public.file_uploads",
+            "rows": 30,
+            "rows_sha256": "584a2435d366e863a08b4b7f37eddce1a0ecc8ecd19db7c66aa0b140c5de17d3"
+          },
+          {
+            "table": "public.runs",
+            "rows": 19,
+            "rows_sha256": "8d9229d2b15db3081b1f0c871bae065e65b3e832fdb48deb5b80274e4cf20746"
+          }
+        ],
+        "sequences": 1,
+        "bootstrap_timestamp_rows_reconciled": 5,
+        "scope": "logical rows only; no VM disk or host recovery proof"
+      },
+      "idempotent_replay": {
+        "operation": "logical-database-restore",
+        "service": "sandbox-provider",
+        "outcome": "passed",
+        "tables": [
+          {
+            "table": "public.idempotency",
+            "rows": 57,
+            "rows_sha256": "416aec96c2011db183ebe86701ffe839ab8948478eed1007a79533d63544b942"
+          },
+          {
+            "table": "public.sandboxes",
+            "rows": 8,
+            "rows_sha256": "87c29f4a6cc417c6c70511d4d174fa361b6ea286e20b0be54582b41c1396fa21"
+          },
+          {
+            "table": "public.schema_migrations",
+            "rows": 5,
+            "rows_sha256": "867777ce0c814743070a9fc46dbc1f93d79ef66dbc9dd1007407f7ea4e7b50f4"
+          },
+          {
+            "table": "public.audit_events",
+            "rows": 226,
+            "rows_sha256": "75ae729aa4f96626ecec4fbd4c0dda3db1b163bc299e837bb872cf15aca13fde"
+          },
+          {
+            "table": "public.cancellation_fences",
+            "rows": 1,
+            "rows_sha256": "a266b234857f868752f14a8e46367c9def9607d2517722e58132985491447b48"
+          },
+          {
+            "table": "public.file_uploads",
+            "rows": 30,
+            "rows_sha256": "584a2435d366e863a08b4b7f37eddce1a0ecc8ecd19db7c66aa0b140c5de17d3"
+          },
+          {
+            "table": "public.runs",
+            "rows": 19,
+            "rows_sha256": "8d9229d2b15db3081b1f0c871bae065e65b3e832fdb48deb5b80274e4cf20746"
+          }
+        ],
+        "sequences": 1,
+        "bootstrap_timestamp_rows_reconciled": 0,
+        "scope": "logical rows only; no VM disk or host recovery proof"
+      }
+    }
+  ],
+  "cloud_guest_restore": "not exercised; retained external bindings are forensic records only, without attached guest disks",
+  "runtime_client_started": false,
+  "operational_provider_cutover_permitted": false,
+  "forensic_registry_only": true,
+  "excluded_services": [
+    "application"
+  ],
+  "source_envelopes": [
+    {
+      "service": "job-runner",
+      "sha256": "9c6948be2e7bc1f12a86a1eb37b6dc4243f86d4899cd7e98e55b49b91c50f5a2",
+      "bytes": 153357,
+      "manifest_bound": true
+    },
+    {
+      "service": "sandbox-provider",
+      "sha256": "75a84c2681719f0f619f95291b909d477fddbe0e7f079a435e23307a5be0cd6c",
+      "bytes": 750955,
+      "manifest_bound": true
+    }
+  ],
+  "cleanup": [
+    {
+      "container": "workflow-offhost-restore-bd60ff6c4341",
+      "outcome": "passed"
+    },
+    {
+      "container": "workflow-offhost-restore-f42edb47bb76",
+      "outcome": "passed"
+    }
+  ]
+}

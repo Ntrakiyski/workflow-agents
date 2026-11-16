@@ -10,9 +10,9 @@ from unittest.mock import patch
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from bootstrap import install
+from bootstrap import install, prepare, require_prepared
 from guest import answer_from_events, office_schema_passed, read_request
-from guest import collect_process, run
+from guest import collect_process, prompts, run
 from render_profile import profile
 from validation import file_manifest, validate_delivery, validate_docx
 
@@ -110,10 +110,12 @@ class WorkloadTests(unittest.TestCase):
             digest = hashlib.sha256(archive.read_bytes()).hexdigest()
             install(archive, runtime, digest)
             install(archive, runtime, digest)
+            (runtime / 'file').chmod(0o644)
             (runtime / 'file').write_text('edited')
             with self.assertRaises(ValueError):
                 install(archive, runtime, digest)
             (runtime / 'file').write_text('test')
+            runtime.chmod(0o755)
             (runtime / 'unexpected.pyc').write_bytes(b'unapproved code')
             with self.assertRaisesRegex(ValueError, 'unexpected'):
                 install(archive, runtime, digest)
@@ -132,7 +134,7 @@ class WorkloadTests(unittest.TestCase):
             path = root / 'inputs/source.docx'
             make_docx(path)
             request_id = 'b86c005c-3cbf-4879-b06c-6856567f20c1'
-            request = {'schema_version': 1, 'request_id': request_id, 'instructions': 'Review',
+            request = {'schema_version': 2, 'request_id': request_id, 'system_prompt': 'Work within the request folder.', 'instructions': 'Review',
                        'inputs': [file_manifest(path, DOCX)]}
             (root / 'request.json').write_text(json.dumps(request))
             self.assertEqual(len(read_request(root, request_id)[2]), 1)
@@ -144,8 +146,8 @@ class WorkloadTests(unittest.TestCase):
     def test_profile_contains_no_secret_and_narrow_https_host(self):
         value = profile({'sha256': 'a' * 64}, 'docker.io/library/python@sha256:' + 'b' * 64,
                         'https://litellm.example.com/v1', 'approved-alias')
-        self.assertEqual(value['sandboxes']['pi-document-cloud:v2']['allowed_hosts'], ['litellm.example.com'])
-        self.assertNotIn('LITELLM_API_KEY', value['workloads']['pi-document-agent:v2']['environment'])
+        self.assertEqual(value['sandboxes']['pi-document-cloud:v3']['allowed_hosts'], ['litellm.example.com'])
+        self.assertNotIn('LITELLM_API_KEY', value['workloads']['pi-document-agent:v4']['environment'])
         for endpoint in ('http://litellm.example.com/v1', 'https://litellm.example.com:8443/v1'):
             with self.assertRaises(ValueError):
                 profile({'sha256': 'a' * 64}, 'docker.io/library/python@sha256:' + 'b' * 64, endpoint, 'model')

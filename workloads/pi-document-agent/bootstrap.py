@@ -1,10 +1,14 @@
 """Fixed trusted profile bootstrap; the SHA256 comes from the operator, never a request."""
+import fcntl
 import hashlib
+import json
 import os
 from pathlib import Path, PurePosixPath
 import platform
 import re
+import runpy
 import shutil
+import stat
 import sys
 import tarfile
 
@@ -65,21 +69,122 @@ def install(archive, target, expected_sha256):
                     raise ValueError('Runtime file missing')
                 with path.open('xb') as target_file:
                     shutil.copyfileobj(data, target_file)
-                path.chmod(0o755 if item.mode & 0o111 else 0o644)
-        (temp / '.bundle-sha256').write_text(expected_sha256)
+                path.chmod(0o555 if item.mode & 0o111 else 0o444)
+        marker = temp / '.bundle-sha256'
+        with marker.open('x') as stream:
+            stream.write(expected_sha256)
+            stream.flush()
+            os.fsync(stream.fileno())
+        marker.chmod(0o444)
+        for directory in sorted((path for path in temp.rglob('*') if path.is_dir()), reverse=True):
+            directory.chmod(0o555)
+        temp.chmod(0o555)
         temp.rename(target)
+        descriptor = os.open(target.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
     except BaseException:
-        shutil.rmtree(temp)
+        if temp.exists():
+            temp.chmod(0o700)
+            for directory in temp.rglob('*'):
+                if directory.is_dir():
+                    directory.chmod(0o700)
+            shutil.rmtree(temp)
         raise
 
 
+def require_prepared(runtime, expected_sha256):
+    """Check the atomically published identity without rescanning shared tools per request."""
+    if (not re.fullmatch('[a-f0-9]{64}', expected_sha256)
+            or runtime.name != expected_sha256 or runtime.is_symlink()
+            or not runtime.is_dir() or runtime.resolve() != runtime
+            or runtime.stat().st_mode & 0o222):
+        raise ValueError('Prepared runtime identity mismatch')
+    marker = runtime / '.bundle-sha256'
+    descriptor = os.open(marker, os.O_RDONLY | os.O_NOFOLLOW)
+    with os.fdopen(descriptor, 'r') as source:
+        info = os.fstat(source.fileno())
+        if (not stat.S_ISREG(info.st_mode) or info.st_mode & 0o222
+                or source.read(65) != expected_sha256):
+            raise ValueError('Prepared runtime marker mismatch')
+    for name in ('guest.py', 'runtime-lock.json', 'node', 'officecli'):
+        path = runtime / name
+        info = path.lstat()
+        if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o222:
+            raise ValueError('Prepared runtime is not immutable')
+
+
+def prepare(root, expected_sha256):
+    if not re.fullmatch('[a-f0-9]{64}', expected_sha256):
+        raise ValueError('Pinned runtime checksum required')
+    directory = root / 'runtime'
+    if directory.is_symlink() or directory.resolve() != directory:
+        raise ValueError('Unsafe runtime directory')
+    runtime = directory / expected_sha256
+    # Preparation is a distinct tracked job. Never expose a half-installed runtime.
+    descriptor = os.open(directory / (expected_sha256 + '.prepare.lock'),
+                         os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(descriptor, 'r+') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        install(directory / 'runtime-bundle.tar.gz', runtime, expected_sha256)
+        require_prepared(runtime, expected_sha256)
+    return {'schema_version': 1, 'prepared': True, 'runtime_sha256': expected_sha256}
+
+
+def run_controller(runtime, request_id, source):
+    """Publish the profile-pinned small controller inside this request, reusing tools."""
+    root = ROOT / 'requests' / request_id
+    if (not re.fullmatch('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', request_id)
+            or root.is_symlink() or root.resolve() != root or not root.is_dir()
+            or not isinstance(source, str) or len(source.encode()) > 128 * 1024):
+        raise ValueError('Controller request identity mismatch')
+    config = root / 'config'
+    if config.is_symlink():
+        raise ValueError('Unsafe controller directory')
+    config.mkdir(mode=0o700, exist_ok=True)
+    encoded = source.encode()
+    path = config / ('controller-' + hashlib.sha256(encoded).hexdigest() + '.py')
+    try:
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o400)
+    except FileExistsError:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        with os.fdopen(descriptor, 'rb') as current:
+            info = os.fstat(current.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o222 or current.read(len(encoded) + 1) != encoded:
+                raise ValueError('Controller identity mismatch')
+    else:
+        with os.fdopen(descriptor, 'wb') as target:
+            target.write(encoded)
+            target.flush()
+            os.fsync(target.fileno())
+        descriptor = os.open(config, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, str(runtime))
+    module = runpy.run_path(str(path), init_globals={'PREPARED_RUNTIME_PATH': str(runtime)},
+                            run_name='workflow_document_controller')
+    return module['run'](request_id)
+
+
 def main():
-    digest, request_id = sys.argv[1:]
-    if platform.machine() != 'x86_64' or not re.fullmatch('[a-f0-9-]{36}', request_id):
-        raise ValueError('Architecture or request identity mismatch')
+    digest, operation = sys.argv[1:]
+    if platform.machine() != 'x86_64':
+        raise ValueError('Architecture mismatch')
+    if operation == '--prepare':
+        print(json.dumps(prepare(ROOT, digest), separators=(',', ':')), flush=True)
+        return
+    if not re.fullmatch('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', operation):
+        raise ValueError('Request identity mismatch')
     runtime = ROOT / 'runtime' / digest
-    install(ROOT / 'runtime/runtime-bundle.tar.gz', runtime, digest)
-    os.execv(sys.executable, [sys.executable, '-B', str(runtime / 'guest.py'), request_id])
+    require_prepared(runtime, digest)
+    if globals().get('CONTROLLER_SOURCE') is not None:
+        raise SystemExit(run_controller(runtime, operation, CONTROLLER_SOURCE))
+    os.execv(sys.executable, [sys.executable, '-B', str(runtime / 'guest.py'), operation])
 
 
 if __name__ == '__main__':

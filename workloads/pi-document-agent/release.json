@@ -1,16 +1,17 @@
 {
   "workload": "pi-document-agent",
-  "version": "0.1.0-rc.2",
-  "status": "candidate",
+  "version": "0.1.0-rc.4",
+  "status": "candidate-hosted-shared-combined-prompt",
   "stable_release": false,
   "hosted_qualified": true,
   "result_schema_version": 1,
   "runtime_bundle": {
-    "filename": "runtime-bundle.tar.gz",
     "architecture": "x86_64",
-    "sha256": "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
-    "size_bytes": 95977914,
-    "expanded_bytes": 313357336
+    "sha256": "2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc",
+    "size_bytes": 95978009,
+    "expanded_bytes": 313358734,
+    "filename": "runtime-bundle.tar.gz",
+    "version": "0.1.0-rc.3"
   },
   "versions": {
     "node": "24.22.2",
@@ -18,63 +19,107 @@
     "officecli": "1.0.160",
     "icu": "72.1-3+deb12u1"
   },
-  "package_lock_sha256": "7f1e79769a2954df9d9b5a8f63e3fc3f8117a3af909991196a72c3843fc3742c",
+  "package_lock_sha256": "3971628eb639785cdaf10ed1647d75c86b0e5dfbc2e1d26b34b84703c6f8fc2d",
   "requires": {
     "runner_api": "v1",
     "provider_capabilities": [
       "scoped-files-v1",
-      "secret-environment-reference"
+      "secret-environment-reference",
+      "shared-execution-v1"
     ]
   },
   "evidence": "VERIFICATION.md",
   "icu_source_image": "docker.io/library/python@sha256:a5bab0ff300f91231c2e68bf73a8a8d60762ac39ce1c50eaf6803e4c38a9062b",
   "local_qualified_image": "docker.io/library/python@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
-  "sandbox_profile": "pi-document-cloud:v2",
-  "workload_profile": "pi-document-agent:v2",
+  "sandbox_profile": "pi-document-cloud:v3",
+  "workload_profile": "pi-document-agent:v4",
   "local_qualification": {
     "reproducible_builds": 2,
     "binary_unicode_guest_validation": "passed",
-    "no_tools_litellm_preflight": "passed",
+    "concurrent_actual_binary_sessions": 2,
+    "shared_runtime_unchanged": true,
+    "concurrent_guest_processes_with_mocked_pi": 2,
+    "model_calls": "not_performed",
     "cloud_policy": "not_qualified",
     "rendered_layout": "not_performed",
-    "content_accuracy": "not_performed",
-    "full_guest_docx_preflight": "passed"
+    "content_accuracy": "not_performed"
+  },
+  "prepare_workload_profile": "pi-document-prepare:v4",
+  "request_schema_version": 2,
+  "previous_version_hosted_qualification": {
+    "version": "0.1.0-rc.2",
+    "qualification": {
+      "recorded_at_utc": "2026-11-03T19:50:27.374056Z",
+      "scope": "One uninterrupted synthetic DOCX browser submission through hosted services and BoxLite Cloud to verified output/session export, protected download and same-sandbox stop.",
+      "application_source_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
+      "runner_provider_source_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
+      "request_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
+      "job_id": "job_c28141c3-1008-4539-a041-6141b01ee45b",
+      "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
+      "run_id": "run_08ef722652fc4acb8b4ceb5d3e7904bb",
+      "runner_attempt_count": 1,
+      "operator_export_recovery_used": false,
+      "export_complete": true,
+      "sandbox_stopped": true,
+      "verified_export_roles": [
+        "input",
+        "output",
+        "request_manifest",
+        "result_manifest",
+        "session"
+      ],
+      "output": {
+        "file_id": "3624e244-0d58-4bb3-bcbb-c6d7ed645dfb",
+        "size_bytes": 5281,
+        "sha256": "9011e87907218c2d988827ca019c90cbb93abf2c2171c8b23fb1ecb990663260"
+      },
+      "evidence": [
+        "../../docs/release/hosted-application-journey.json",
+        "../../docs/release/hosted-automatic-checkpoints.json",
+        "../../docs/release/hosted-automatic-logs.json"
+      ],
+      "limits": [
+        "Single synthetic DOCX workflow; stable release and broader infrastructure readiness are separate decisions.",
+        "No semantic accuracy, translation quality, rendered layout or pagination qualification.",
+        "No general network/port isolation, host-reboot or full Cloud disk restore qualification.",
+        "Replacement and completed-capture restore checks are tracked separately in release evidence."
+      ]
+    }
+  },
+  "controller_profile": {
+    "source": "guest.py",
+    "sha256": "30ec761dc160c31c417db46a549f81d39b35cb94e2ec9c22287e8b64663376a0",
+    "distribution": "checksum-bound constant compressed source in the immutable v4 workload profile; readonly copy under each request config folder",
+    "tools": "Reuse the unchanged prepared rc3 archive; no runtime reupload or shared-tool mutation",
+    "prompt_delivery": "Default policy and request instructions form one text prompt; attachments remain separated reference data",
+    "provider_api": "openai-completions"
   },
   "hosted_qualification": {
-    "recorded_at_utc": "2026-11-03T19:50:27.374056Z",
-    "scope": "One uninterrupted synthetic DOCX browser submission through hosted services and BoxLite Cloud to verified output/session export, protected download and same-sandbox stop.",
-    "application_source_commit": "1d21e27a571388484774e401cc5d5a5a3cec0973",
-    "runner_provider_source_commit": "8387b5da2084e062e7409b1af5ce81ae57b45dfd",
-    "request_id": "6f3085e0-7d6f-4b9e-8ad5-7ba76f587189",
-    "job_id": "job_c28141c3-1008-4539-a041-6141b01ee45b",
-    "sandbox_id": "sbx_e48b86cf6f5644bdbbb7f2c5d94faf86",
-    "run_id": "run_08ef722652fc4acb8b4ceb5d3e7904bb",
-    "runner_attempt_count": 1,
-    "operator_export_recovery_used": false,
-    "export_complete": true,
-    "sandbox_stopped": true,
-    "verified_export_roles": [
-      "input",
-      "output",
-      "request_manifest",
-      "result_manifest",
-      "session"
-    ],
-    "output": {
-      "file_id": "3624e244-0d58-4bb3-bcbb-c6d7ed645dfb",
-      "size_bytes": 5281,
-      "sha256": "9011e87907218c2d988827ca019c90cbb93abf2c2171c8b23fb1ecb990663260"
+    "application_source_commit": "73fc27fe8154dd14b7c74bdf1a726dee9c1266ac",
+    "infrastructure_source_commit": "0b816c4a127dd61a1704eac2bc8e7b1c9889adad",
+    "profile_source_commit": "1f46823e3241d03278892ff3fb7487746e2274ba",
+    "capacity_configuration_commit": "0e62bfc859c12385f06afe9d02d6d73dfbdda70a",
+    "session_overlap": {
+      "start": "2026-11-04T13:10:11.605Z",
+      "end": "2026-11-04T13:10:21.252Z",
+      "milliseconds": 9647
     },
-    "evidence": [
-      "../../docs/release/hosted-application-journey.json",
-      "../../docs/release/hosted-automatic-checkpoints.json",
-      "../../docs/release/hosted-automatic-logs.json"
+    "request_ids": [
+      "36144844-b877-43ee-a7c6-aec106341b4f",
+      "c627fb94-acc8-4d5c-a475-5ef3fb84ffca"
     ],
-    "limits": [
-      "Single synthetic DOCX workflow; stable release and broader infrastructure readiness are separate decisions.",
-      "No semantic accuracy, translation quality, rendered layout or pagination qualification.",
-      "No general network/port isolation, host-reboot or full Cloud disk restore qualification.",
-      "Replacement and completed-capture restore checks are tracked separately in release evidence."
+    "sandbox_id": "sbx_90cbc75fdd2c405cab2ffff81fee921c",
+    "attempt_count_per_request": 1,
+    "operator_export_recovery_used": false,
+    "scope": "Actual Chromium/GCC/Cloud/Pi/LiteLLM/OfficeCLI synthetic DOCX pair; overlap measured from saved sessions, separately from UI running labels. Exact edit/original/checksum and prompt snapshot checks. No rendered-layout, general semantic, OS-confinement or broad stability claim.",
+    "evidence": [
+      "../../docs/release/shared-hosted-concurrent.json",
+      "../../docs/release/shared-workspace-resume.json"
     ]
+  },
+  "combined_prompt_local_qualification": {
+    "outcome": "passed",
+    "model_calls": "actual Pi/LiteLLM/OfficeCLI in exact slim image",
+    "evidence": "../../docs/release/combined-prompt-local.json"
   }
 }

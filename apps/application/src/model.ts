@@ -15,6 +15,9 @@ export const requestRow = z.object({
   owner_id: z.string(),
   title: z.string(),
   instructions: z.string(),
+  system_prompt: z.string(),
+  workspace_id: id.nullable(),
+  progress_message: z.string().nullable(),
   status,
   created_at: iso,
   updated_at: iso,
@@ -48,6 +51,7 @@ export type FileRow = z.infer<typeof fileRow>;
 export const submitBody = z
   .object({
     instructions: z.string().trim().min(1).max(16000),
+    system_prompt: z.string().trim().min(1).max(16000).optional(),
     attachment_ids: z.array(id).max(8).default([]),
   })
   .strict();
@@ -128,3 +132,29 @@ export function permittedFile(name: string, mediaType: string) {
     "Attach a DOCX, TXT, or Markdown file.",
   );
 }
+
+export const workspaceRow = z.object({
+  owner_id: z.string(),
+  id,
+  sandbox_id: z.string().nullable(),
+  prepare_job_id: z.string().nullable(),
+  runtime_sha256: sha,
+  status: z.enum([
+    "pending",
+    "uploading",
+    "preparing",
+    "ready",
+    "stopping",
+    "stopped",
+    "failed",
+  ]),
+  sandbox_stopped: z.boolean(),
+  wake_requested: z.boolean(),
+  uploaded_bytes: z.number(),
+  total_bytes: z.number(),
+  failure_message: z.string().nullable(),
+  attempts: z.number(),
+  next_attempt_at: iso,
+  updated_at: iso,
+});
+export type WorkspaceRow = z.infer<typeof workspaceRow>;

@@ -4,6 +4,12 @@ This candidate implements three tasks: submit instructions with permitted files,
 
 The continuation defers the broader Phase 2 catalog, dashboards/analytics, workflow editor, infrastructure controls, chat, feedback/revisions, approvals, clarification dialogs, skill management, project/account administration and document editors. There are no hidden implementations of these features.
 
+## Request progress and duration
+
+Each request shows an automatically refreshed vertical status timeline, newest first, with browser-local dates and times including seconds. The application stores each changed progress message in its existing append-only audit; repeated polls do not add duplicates. Only allowlisted application status text is public. Reopening retains the history. Older requests show their recorded submission/dispatch/outcome milestones; missing historical intermediate steps are not invented.
+
+The request list's **Total time** measures submission to result delivery or failure, including workspace preparation and queue time. Active durations refresh every second. Terminal durations use the first audit for the current outcome, so idle-stop retries do not extend a delivered result's time and a recovered completion does not end at an older failure. Legacy terminal rows without a matching outcome audit use their last stored update timestamp. Both list and detail return `finished_at`; detail also returns the owner-scoped `timeline` array of stable event IDs, safe messages and timestamps. No schema migration is required; the existing seven-table checkpoint retains this history.
+
 ## Runtime configuration
 
 Use `.env.example` as the key inventory; the service does not automatically load dotenv. Inject secrets through the runtime deployment secret manager. Production Docker context is this directory alone. Startup applies the service-owned versioned schema, checks S3, then starts API and reconciliation worker. Exact npm dependencies are locked.
@@ -16,19 +22,27 @@ Preload the reviewed `workloads/pi-document-agent` runtime bundle into private S
 
 S3 must support conditional `PutObject` with `If-None-Match: *`. This behavior was executed against RustFS `rustfs/rustfs@sha256:1cfa82fb394a7c6a4ffc24f5333b52afee608d258503f94b37fcce5cc965c896` (`1.0.0-alpha.83`). Exact same-byte recovery succeeds; changed content at an existing object key fails. Keep S3 private and persistent. Default startup requires an existing bucket. The operator-only `INITIALIZE_STORAGE=true` mode creates only the configured missing bucket and installs the approved GitHub runtime asset after verifying the pinned checksum. Repeated startup checks the existing object bytes; conflicting bytes fail. No browser request controls bootstrap.
 
-Input limits: up to eight files, at most one DOCX plus UTF-8 TXT/Markdown, 10 MiB each and 20 MiB combined. DOCX inputs undergo bounded ZIP/XML structural checks, including encrypted/embedded/macro rejection. Workloads can impose a lower total text-context limit; rejection is a visible failure. Output files use the same per-file cap and 20 MiB combined. Runtime archives are limited to 256 MiB and transferred in chunks of at most 1 MiB. One worker processes requests serially; resource/load qualification remains separate.
+Input limits: up to eight files, at most one DOCX plus UTF-8 TXT/Markdown, 10 MiB each and 20 MiB combined. DOCX inputs undergo bounded ZIP/XML structural checks, including encrypted/embedded/macro rejection. Workloads can impose a lower total text-context limit; rejection is a visible failure. Output files use the same per-file cap and 20 MiB combined. Runtime archives are limited to 256 MiB and transferred in chunks of at most 1 MiB. The worker reconciles up to two requests concurrently and prepares up to two user workspaces in the background. Long uploads do not block reconciliation for ready workspaces. Resource/load qualification remains separate.
 
 ## Durable execution and delivery
 
 `POST /api/requests` atomically commits the request, owner-scoped idempotency fingerprint, attachment assignment and append-only audit. The row is the dispatch outbox. Changed reuse returns 409. Concurrent submissions sharing a key serialize; a lost response can be reconciled with that exact key.
 
-The worker creates a sandbox with stable request ownership/reference, uploads the reviewed runtime, originals and request JSON using scoped chunk APIs, then submits a generic Runner reuse job. It persists job/sandbox identities and deduplicated durable event IDs. Transport recovery repeats the same keys/payload; it never creates a new workload attempt to overcome an uncertain side effect. Request JSON and file/session metadata belong to the application, not infrastructure databases.
+On authenticated page load, `/api/session?prepare=1` queues one durable workspace for the configured stable owner. There is no registration flow. Workspace provisioning creates one retained sandbox with a stable workspace UUID/reference, uploads the reviewed runtime once with durable byte progress, and submits `PREPARE_WORKLOAD_PROFILE` (v3) with empty arguments and a maximum 180-second duration. Only a completed preparation job with exit zero and the exact expected runtime SHA256 acknowledgement makes the workspace ready. Requests can be admitted while it prepares. After readiness, the worker uploads only each request’s originals and versioned request JSON into its request-ID folder, then submits an independent generic Runner reuse job in that same sandbox. It persists job/sandbox identities and deduplicated durable event IDs. Transport recovery repeats the same keys/payload; it never creates a new workload attempt to overcome an uncertain side effect. Request JSON and file/session metadata belong to the application, not infrastructure databases.
 
 The workload reads `requests/<UUID>/request.json` below the fixed guest root. Input paths are safe basenames under that request's `inputs/`. The versioned result is `requests/<UUID>/outputs/result.json`; its request UUID must match the controller's known request. Artifact basenames resolve only inside `outputs/`; session basenames only inside `session/`. The application independently parses the manifest shape. Each saved session descriptor requires the canonical `media_type: application/x-ndjson`.
 
-Exit zero does not establish success. Completion requires transferred manifest/identity, declared sizes/SHA256, permitted formats, bounded actual DOCX ZIP/XML parsing, nonempty text or files, no failed workload validation and at least one saved Pi session. Originals, request/result JSON, output files and required session checkpoints are exported to immutable S3 objects before the result becomes visible. The same sandbox stops afterward without deletion. Failed stop remains a retry and cannot revoke delivery.
+Exit zero does not establish success. Completion requires transferred manifest/identity, declared sizes/SHA256, permitted formats, bounded actual DOCX ZIP/XML parsing, nonempty text or files, no failed workload validation and at least one saved Pi session. Originals, request/result JSON, output files and required session checkpoints are exported to immutable S3 objects before the result becomes visible. A shared sandbox stops after all requests are terminal and the configured `IDLE_STOP_SECONDS` has elapsed. A durable stop intent prevents new jobs from dispatching during stop while allowing new submissions; the next request or login starts the same saved disk without another runtime upload or installation. A delivered result never stops a running sibling. Failed stop remains a retry and cannot revoke delivery. Legacy requests from schema version 1 retain their original per-request sandbox/stop behavior and stable identities.
 
 Structural validation does not establish factual content, translation accuracy, pagination or actual rendered layout. The UI states that content accuracy and rendered layout were not independently reviewed. Failed/corrupt/missing output never becomes empty success. There is no automatic replay or overwrite of previously delivered files.
+
+## System prompt and request folders
+
+The button beside Instructions opens a default system prompt textarea. Edits save per owner when the field loses focus; submission also saves it and snapshots the exact text with that request. Later edits cannot change submitted requests. The request detail exposes its saved prompt. The saved default prompt and request instructions are combined into one text prompt sent to Pi, following the owner’s latest instruction. Attachment text remains separately labeled untrusted reference data. The guest binds the actual UUID directory and retains the constrained OfficeCLI tool target. Prompt wording does not enforce a filesystem boundary by itself.
+
+Each shared-workspace request uses `/opt/workflow-transfer/requests/<request UUID>/` for inputs, working copies, outputs, session and agent state. Pi sessions have independent histories. The runtime installation is shared and prepared before concurrent sessions start. This release keeps the existing DOCX/text capabilities; it does not expose arbitrary shell tools or permit unrestricted file creation.
+
+Configure a new immutable sandbox/workload profile pair with `max_concurrent_runs: 2` in the matching Provider and Runner sandbox profile copies plus matching global/owner capacity. Existing profiles default to one. The application cannot enable shared concurrency by itself; deploying it against a single-run profile only queues requests or fails profile admission. Keep the configured runtime SHA fixed for a retained workspace; mismatches require deliberate operator reconciliation, not silent replacement of the user’s disk.
 
 ## HTTP surface
 
@@ -36,7 +50,9 @@ Structural validation does not establish factual content, translation accuracy, 
 | --- | --- |
 | `GET /` | Authenticated minimal React application |
 | `POST /api/attachments` | One bounded multipart file; immutable owner-owned original |
-| `POST /api/requests` | Instructions and attachment UUIDs, mandatory `Idempotency-Key` |
+| `POST /api/requests` | Instructions, optional system prompt snapshot and attachment UUIDs, mandatory `Idempotency-Key` |
+| `GET /api/session?prepare=1` | Owner prompt, workspace preparation progress; queue background preparation/wake |
+| `PUT /api/settings` | Save the authenticated owner’s default system prompt |
 | `GET /api/requests?limit=25&cursor=...` | Authorized newest-first keyset pagination with explicit next cursor |
 | `GET /api/requests/:id` | Authorized status/text/validation and visible file metadata |
 | `GET /api/files/:id/download` | Reauthorizes owner/delivery state, verifies bytes/checksum, attachment download |

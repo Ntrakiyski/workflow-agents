@@ -3,6 +3,7 @@
  * This uses each application's own DB credentials, inside its container.
  * No database is exposed, and no Coolify S3 backup destination is required.
  */
+import { verifyApplicationScope } from './coolify-scope.mjs';
 import { createHash, randomUUID } from 'node:crypto';
 import { hostname } from 'node:os';
 import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
@@ -71,10 +72,8 @@ async function runningDeployment(app, uuid) {
 
 try {
   for (const resource of resources) {
-    const app = await api('GET', '/applications/' + resource.uuid);
-    if (app.name !== resource.name || app.environment?.uuid !== environment ||
-        app.environment?.project?.uuid !== project ||
-        (resource.publicOrigin ? app.fqdn !== resource.publicOrigin : app.fqdn) || app.ports_mappings)
+    const app = await verifyApplicationScope(api, { project, environment, uuid: resource.uuid, name: resource.name });
+    if ((resource.publicOrigin ? app.fqdn !== resource.publicOrigin : app.fqdn) || app.ports_mappings)
       throw Error('backup_source_scope_mismatch');
     const deployed = await runningDeployment(app, resource.uuid);
     const command = resource.command ?? ('curl -fsS --max-time 30 ' + source + '/deploy/migration-archive.' + resource.extension +
@@ -109,8 +108,8 @@ try {
         const catalog = JSON.parse(await readFile(new URL('./profiles.document.staging.json', import.meta.url), 'utf8'));
         const selected = Object.entries(catalog.workloads).filter(([, profile]) =>
           profile.argv.includes(snapshot.excluded_runtime.sha256));
-        if (selected.length !== 1) throw Error('backup_runtime_profile_mismatch');
-        const sandboxNames = selected[0][1].sandbox_profiles;
+        if (!selected.length) throw Error('backup_runtime_profile_mismatch');
+        const sandboxNames = [...new Set(selected.flatMap(([, profile]) => profile.sandbox_profiles))];
         const inventory = { version: 1, workloads: Object.fromEntries(selected),
           sandboxes: Object.fromEntries(sandboxNames.map(name => [name, catalog.sandboxes[name]])) };
         if (Object.values(inventory.sandboxes).some(value => !value)) throw Error('backup_sandbox_profile_missing');

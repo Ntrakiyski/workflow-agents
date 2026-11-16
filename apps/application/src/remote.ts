@@ -31,12 +31,17 @@ export type Job = z.infer<typeof jobSchema>;
 export type RunnerEvent = { event_id: string; type: string };
 export interface ExecutionServices {
   createSandbox(requestId: string): Promise<string>;
+  createWorkspaceSandbox(workspaceId: string): Promise<string>;
+  start(sandbox: string, correlation: string): Promise<void>;
+  inspect(sandbox: string, correlation: string): Promise<{ status: string }>;
+  prepare(workspaceId: string, sandbox: string): Promise<Job>;
   upload(
     sandbox: string,
     path: string,
     data: Buffer,
     key: string,
     correlation?: string,
+    progress?: (uploaded: number, total: number) => Promise<void>,
   ): Promise<void>;
   download(
     sandbox: string,
@@ -139,12 +144,82 @@ export class HttpExecutionServices implements ExecutionServices {
     );
     return z.object({ sandbox_id: z.string() }).parse(value).sandbox_id;
   }
+  async createWorkspaceSandbox(workspaceId: string) {
+    const value = await this.call(
+      "provider",
+      "/v1/sandboxes",
+      "POST",
+      workspaceId,
+      {
+        owner_ref: `application:user-workspace:${workspaceId}`,
+        profile: this.config.sandboxProfile,
+        persistent: true,
+      },
+      `workspace:create:${workspaceId}`,
+    );
+    return z.object({ sandbox_id: z.string() }).parse(value).sandbox_id;
+  }
+  async inspect(sandbox: string, correlation: string) {
+    return z
+      .object({
+        status: z.enum([
+          "creating",
+          "running",
+          "stopping",
+          "stopped",
+          "failed",
+          "destroying",
+          "destroyed",
+        ]),
+      })
+      .parse(
+        await this.call(
+          "provider",
+          `/v1/sandboxes/${encodeURIComponent(sandbox)}`,
+          "GET",
+          correlation,
+        ),
+      );
+  }
+  async start(sandbox: string, correlation: string) {
+    await this.call(
+      "provider",
+      `/v1/sandboxes/${encodeURIComponent(sandbox)}/start`,
+      "POST",
+      correlation,
+      {},
+    );
+  }
+  async prepare(workspaceId: string, sandbox: string) {
+    return jobSchema.parse(
+      await this.call(
+        "runner",
+        "/v1/jobs",
+        "POST",
+        workspaceId,
+        {
+          client_reference: `application:workspace:${workspaceId}`,
+          workload: {
+            profile: this.config.prepareWorkloadProfile,
+            arguments: {},
+          },
+          sandbox: { mode: "reuse", sandbox_id: sandbox },
+          limits: {
+            max_duration_seconds: Math.min(180, this.config.maxDurationSeconds),
+            max_attempts: 1,
+          },
+        },
+        `workspace:prepare:${workspaceId}`,
+      ),
+    );
+  }
   async upload(
     sandbox: string,
     path: string,
     data: Buffer,
     key: string,
     correlation = key,
+    progress?: (uploaded: number, total: number) => Promise<void>,
   ) {
     const prefix = `/v1/sandboxes/${encodeURIComponent(sandbox)}/files/uploads`;
     const upload = z
@@ -163,6 +238,7 @@ export class HttpExecutionServices implements ExecutionServices {
           key,
         ),
       );
+    await progress?.(upload.offset, data.length);
     if (upload.status === "completed") return;
     let offset = upload.offset;
     if (offset > data.length)
@@ -188,6 +264,7 @@ export class HttpExecutionServices implements ExecutionServices {
       if (next.offset !== offset + chunk.length)
         throw new RemoteError("upload_offset_mismatch", false, 502);
       offset = next.offset;
+      await progress?.(offset, data.length);
     }
     await this.call(
       "provider",

@@ -20,6 +20,10 @@ const approvedSources = new Map([
     "08a6dda2a800958428a2089639c721b19bf866d83e55976c8cf2ef167772094a",
     "https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.2/runtime-bundle.tar.gz",
   ],
+  [
+    "2ce2c1ee993c9f8706e208c99ac98d884c349408f1546fadbb7093ba211a22cc",
+    "https://github.com/Ntrakiyski/workflow-agents/releases/download/pi-document-runtime-v0.1.0-rc.3/runtime-bundle.tar.gz",
+  ],
 ]);
 const maxBundleBytes = 256 * 1024 * 1024;
 
